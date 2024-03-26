@@ -6,7 +6,7 @@ Entry point of the application
 """
 
 def main():
-    None
+    pass
     
 
 if __name__ == '__main__':
