@@ -12,8 +12,8 @@ def convert_s94_to_bmp(filename):
     try:
         if filename.lower().endswith('.s94'):
             print(f"Start converting {filename}")
-            output_name, x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag, tab = read_s94_file(filename)
-            save_bmp_from_s94(output_name, tab)
+            output_name, x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag, data = read_s94_file(filename)
+            save_bmp_from_s94(output_name, data)
             print(f"Done converting {filename}")
         else:
             print(f"Error: '{filename}' is not a .s94 file.")
