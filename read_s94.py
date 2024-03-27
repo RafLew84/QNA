@@ -51,7 +51,6 @@ format_string = "<hhhhiffffffhhffffhh"
 # The size (in bytes) of the binary data structure
 number_of_bytes = struct.calcsize(format_string)
 
-# Function to read data from an S94 file and return relevant information
 def read_s94_file(file_name):
     try:
         with open(file_name, 'rb') as file:
@@ -66,9 +65,33 @@ def read_s94_file(file_name):
             # Read image data into a NumPy array
             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))
 
-        # Return relevant information along with the image data
-        return (file_name, x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset,
-                Scan_Speed, Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag, image_data)
+        # Construct dictionary with relevant information
+        result = {
+            "file_name": file_name,
+            "x_points": x_points,
+            "y_points": y_points,
+            "Swapped": Swapped,
+            "image_mode": image_mode,
+            "Image_Number": Image_Number,
+            "x_size": x_size,
+            "y_size": y_size,
+            "x_offset": x_offset,
+            "y_offset": y_offset,
+            "Scan_Speed": Scan_Speed,
+            "Bias_Voltage": Bias_Voltage,
+            "z_gain": z_gain,
+            "Section": Section,
+            "Kp": Kp,
+            "Tn": Tn,
+            "Tv": Tv,
+            "It": It,
+            "Scan_Angle": Scan_Angle,
+            "z_Flag": z_Flag,
+            "image_data": image_data
+        }
+
+        # Return dictionary
+        return result
 
     except FileNotFoundError:
         print(f"Error: File '{file_name}' not found.")
@@ -78,3 +101,31 @@ def read_s94_file(file_name):
         print(f"Error reading file '{file_name}': {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+# # Function to read data from an S94 file and return relevant information
+# def read_s94_file(file_name):
+#     try:
+#         with open(file_name, 'rb') as file:
+#             # Unpack binary data using the specified format
+#             data = file.read(number_of_bytes)
+#             if len(data) != number_of_bytes:
+#                 raise ValueError("Incomplete data read")
+
+#             x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, \
+#                 Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(format_string, data)
+
+#             # Read image data into a NumPy array
+#             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))
+
+#         # Return relevant information along with the image data
+#         return (file_name, x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset,
+#                 Scan_Speed, Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag, image_data)
+
+#     except FileNotFoundError:
+#         print(f"Error: File '{file_name}' not found.")
+#     except struct.error as e:
+#         print(f"Error reading file '{file_name}': {e}")
+#     except ValueError as e:
+#         print(f"Error reading file '{file_name}': {e}")
+#     except Exception as e:
+#         print(f"An unexpected error occurred: {e}")
