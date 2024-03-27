@@ -65,6 +65,8 @@ def read_s94_file(file_name):
             # Read image data into a NumPy array
             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))
 
+            current_data = (20 * image_data) / 65536
+
         # Construct dictionary with relevant information
         result = {
             "file_name": file_name,
@@ -87,7 +89,7 @@ def read_s94_file(file_name):
             "It": It,
             "Scan_Angle": Scan_Angle,
             "z_Flag": z_Flag,
-            "image_data": image_data
+            "current_data": current_data
         }
 
         # Return dictionary
