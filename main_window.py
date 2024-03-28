@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from read_s94 import read_s94_file
+from read_stp import read_stp_file
 
 class App:
     def __init__(self, root):
@@ -88,8 +89,7 @@ def read_file(file_path, file_type):
     if file_type == ".s94":
         return read_s94_file(file_path)
     elif file_type == ".stp":
-        # return read_stp_file(file_path)
-        pass
+        return read_stp_file(file_path)
     elif file_type == ".mpp":
         # Different functionality for .mpp files
         pass
