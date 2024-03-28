@@ -138,7 +138,7 @@ def read_s94_file(file_name):
 #         print(f"An unexpected error occurred: {e}")
         
 def main():
-    file_name = "28933.S94"
+    file_name = "test_files/28933.S94"
     f = read_s94_file(file_name)
     if f:
         print(f['data'])
