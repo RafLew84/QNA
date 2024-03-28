@@ -7,7 +7,7 @@ read .stp file
 import struct
 import numpy as np
 
-def read_STP_data(file_name):
+def read_stp_file(file_name):
     try:
         data = []
         header_info = {}
@@ -60,7 +60,7 @@ def read_STP_data(file_name):
 
 def main():
     file_name = "28933.stp"
-    f = read_STP_data(file_name)
+    f = read_stp_file(file_name)
     if f:
         print(f['data'])
 
