@@ -67,9 +67,8 @@ def read_s94_file(file_name):
 
             current_data = (20 * image_data) / 65536
 
-        # Construct dictionary with relevant information
-        result = {
-            "file_name": file_name,
+        # Construct header information dictionary
+        header_info = {
             "x_points": x_points,
             "y_points": y_points,
             "Swapped": Swapped,
@@ -89,6 +88,12 @@ def read_s94_file(file_name):
             "It": It,
             "Scan_Angle": Scan_Angle,
             "z_Flag": z_Flag,
+        }
+
+        # Construct dictionary with relevant information
+        result = {
+            "file_name": file_name,
+            "header_info": header_info,
             "current_data": current_data
         }
 
