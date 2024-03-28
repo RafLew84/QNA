@@ -94,7 +94,7 @@ def read_s94_file(file_name):
         result = {
             "file_name": file_name,
             "header_info": header_info,
-            "current_data": current_data
+            "data": current_data
         }
 
         # Return dictionary
@@ -136,3 +136,12 @@ def read_s94_file(file_name):
 #         print(f"Error reading file '{file_name}': {e}")
 #     except Exception as e:
 #         print(f"An unexpected error occurred: {e}")
+        
+def main():
+    file_name = "28933.S94"
+    f = read_s94_file(file_name)
+    if f:
+        print(f['data'])
+
+if __name__ == '__main__':
+    main()
