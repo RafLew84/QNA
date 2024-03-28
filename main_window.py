@@ -18,33 +18,33 @@ class App:
 
         # Entry field for folder path
         self.path_entry = tk.Entry(root, width=50)
-        self.path_entry.grid(row=0, column=0, padx=5, pady=5)
+        self.path_entry.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
 
         # Button to browse for folder
         self.browse_button = tk.Button(root, text="Browse", command=self.browse_path)
-        self.browse_button.grid(row=0, column=1, padx=5, pady=5)
+        self.browse_button.grid(row=0, column=3, padx=5, pady=5)
 
         # File type selection
         self.file_type_label = tk.Label(root, text="Select File Type:")
-        self.file_type_label.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+        self.file_type_label.grid(row=1, column=0, padx=5, pady=5)
 
         self.file_type_var = tk.StringVar()
         self.file_type_var.set(".s94")  # Set .s94 as default
         self.file_type_dropdown = tk.OptionMenu(root, self.file_type_var, ".s94", ".mpp", ".stp", command=self.refresh_listbox)
-        self.file_type_dropdown.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
-
-        # Scrollbar for listbox
-        self.scrollbar = tk.Scrollbar(root, orient=tk.VERTICAL)
-        self.scrollbar.grid(row=3, column=1, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
-
-        # Listbox to display files
-        self.file_listbox = tk.Listbox(root, width=50, height=10, yscrollcommand=self.scrollbar.set)
-        self.file_listbox.grid(row=3, column=0, padx=5, pady=5)
-        self.scrollbar.config(command=self.file_listbox.yview)
+        self.file_type_dropdown.grid(row=1, column=1, padx=5, pady=5)
 
         # Load button
         self.load_button = tk.Button(root, text="Load", command=self.load_files, state=tk.DISABLED)
-        self.load_button.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
+        self.load_button.grid(row=1, column=2, padx=5, pady=5)
+
+        # Scrollbar for listbox
+        self.scrollbar = tk.Scrollbar(root, orient=tk.VERTICAL)
+        self.scrollbar.grid(row=2, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+
+        # Listbox to display files
+        self.file_listbox = tk.Listbox(root, width=50, height=10, yscrollcommand=self.scrollbar.set, selectmode=tk.NONE, activestyle='none')
+        self.file_listbox.grid(row=2, column=0, columnspan=4, padx=5, pady=5)
+        self.scrollbar.config(command=self.file_listbox.yview)
 
     def browse_path(self):
         folder_path = filedialog.askdirectory(title="Select a folder")
