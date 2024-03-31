@@ -61,14 +61,6 @@ class App:
         files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
         for file in files:
             self.file_listbox.insert(tk.END, file)
-        # self.check_file_type()
-
-    # def check_file_type(self):
-    #     selected_type = self.file_type_var.get().lower()  # Convert selected type to lowercase
-    #     if selected_type == ".mpp":
-    #         self.load_button.config(state=tk.DISABLED)
-    #     else:
-    #         self.load_button.config(state=tk.NORMAL)
 
     def load_files(self):
         folder_path = self.path_entry.get()
