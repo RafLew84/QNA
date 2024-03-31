@@ -11,11 +11,12 @@ from tkinter import filedialog, messagebox
 
 from read_s94 import read_s94_file
 from read_stp import read_stp_file
+from read_mpp import read_mpp_file
 
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("File Converter")
+        self.root.title("QNA Software")
 
         # Entry field for folder path
         self.path_entry = tk.Entry(root, width=50)
@@ -35,7 +36,7 @@ class App:
         self.file_type_dropdown.grid(row=1, column=1, padx=5, pady=5)
 
         # Load button
-        self.load_button = tk.Button(root, text="Load All", command=self.load_files, state=tk.DISABLED)
+        self.load_button = tk.Button(root, text="Load All", command=self.load_files)
         self.load_button.grid(row=1, column=2, padx=5, pady=5)
 
         # Scrollbar for listbox
@@ -83,8 +84,7 @@ def read_file(file_path, file_type):
     elif file_type == ".stp":
         return read_stp_file(file_path)
     elif file_type == ".mpp":
-        # Different functionality for .mpp files
-        pass
+        return read_mpp_file(file_path)
 
 def main():
     root = tk.Tk()
