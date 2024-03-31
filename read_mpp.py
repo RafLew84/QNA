@@ -32,7 +32,6 @@ def read_mpp_file(file_name):
                 raise ValueError("Missing or invalid 'Number of columns' or 'Number of rows' or 'Number of Frames' in header.")
 
             # Read data points for each frame
-            # Assuming data are continous
             for _ in range(num_frames):
                 frame_data = []
                 for _ in range(num_columns * num_rows):
@@ -51,20 +50,22 @@ def read_mpp_file(file_name):
         }
 
         return result
-    except FileNotFoundError:
-        print(f"Error: File '{file_name}' not found.")
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Error: File '{file_name}' not found.") from e
     except struct.error as e:
-        print(f"Error reading file '{file_name}': {e}")
+        raise ValueError(f"Error reading file '{file_name}': {e}") from e
     except ValueError as e:
-        print(f"Error reading file '{file_name}': {e}")
+        raise ValueError(f"Error reading file '{file_name}': {e}") from e
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        raise RuntimeError(f"An unexpected error occurred: {e}") from e
 
 def main():
     file_name = "test_files/cut3_upper_part_of_stm_movie.mpp"
-    f = read_mpp_file(file_name)
-    if f:
+    try:
+        f = read_mpp_file(file_name)
         print(f['header_info'])
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == '__main__':
     main()
