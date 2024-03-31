@@ -35,7 +35,7 @@ class App:
         self.file_type_dropdown.grid(row=1, column=1, padx=5, pady=5)
 
         # Load button
-        self.load_button = tk.Button(root, text="Load", command=self.load_files, state=tk.DISABLED)
+        self.load_button = tk.Button(root, text="Load All", command=self.load_files, state=tk.DISABLED)
         self.load_button.grid(row=1, column=2, padx=5, pady=5)
 
         # Scrollbar for listbox
@@ -61,14 +61,14 @@ class App:
         files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
         for file in files:
             self.file_listbox.insert(tk.END, file)
-        self.check_file_type()
+        # self.check_file_type()
 
-    def check_file_type(self):
-        selected_type = self.file_type_var.get().lower()  # Convert selected type to lowercase
-        if selected_type == ".mpp":
-            self.load_button.config(state=tk.DISABLED)
-        else:
-            self.load_button.config(state=tk.NORMAL)
+    # def check_file_type(self):
+    #     selected_type = self.file_type_var.get().lower()  # Convert selected type to lowercase
+    #     if selected_type == ".mpp":
+    #         self.load_button.config(state=tk.DISABLED)
+    #     else:
+    #         self.load_button.config(state=tk.NORMAL)
 
     def load_files(self):
         folder_path = self.path_entry.get()
