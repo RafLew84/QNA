@@ -7,6 +7,7 @@
 
 import os
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from read_s94 import read_s94_file
@@ -18,49 +19,71 @@ class App:
         self.root = root
         self.root.title("QNA Software")
 
-        # Configure row and column weights for resizing
-        root.grid_rowconfigure(3, weight=1)  # Row with listbox and text
-        root.grid_columnconfigure(0, weight=1)  # First column (path_entry)
-        root.grid_columnconfigure(5, weight=1)  # Fifth column (loaded_files_text)
+        # Create a notebook (tabbed interface)
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
 
+        # Create the first tab: Load Data
+        self.load_data_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.load_data_tab, text="Load Data")
+        self.create_load_data_tab()
+
+        # Create the second tab: Tab 2 (empty for now)
+        self.tab2 = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab2, text="Tab 2")
+
+        # Create the third tab: Tab 3 (empty for now)
+        self.tab3 = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab3, text="Tab 3")
+
+        # Configure grid row and column weights for rescaling
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        # Configure grid row and column weights for Load Data tab
+        self.load_data_tab.grid_rowconfigure(3, weight=1)
+        self.load_data_tab.grid_columnconfigure(0, weight=1)
+        self.load_data_tab.grid_columnconfigure(5, weight=1)
+
+    def create_load_data_tab(self):
         # Entry field for folder path
-        self.path_entry = tk.Entry(root)
+        self.path_entry = tk.Entry(self.load_data_tab, width=50)
         self.path_entry.grid(row=0, column=0, columnspan=4, padx=5, pady=5, sticky="ew")
 
         # Button to browse for folder
-        self.browse_button = tk.Button(root, text="Browse", command=self.browse_path)
+        self.browse_button = tk.Button(self.load_data_tab, text="Browse", command=self.browse_path)
         self.browse_button.grid(row=0, column=4, padx=5, pady=5)
 
         # File type selection
-        self.file_type_label = tk.Label(root, text="Select File Type:")
+        self.file_type_label = tk.Label(self.load_data_tab, text="Select File Type:")
         self.file_type_label.grid(row=1, column=0, padx=5, pady=5)
 
         self.file_type_var = tk.StringVar()
         self.file_type_var.set(".s94")  # Set .s94 as default
-        self.file_type_dropdown = tk.OptionMenu(root, self.file_type_var, ".s94", ".mpp", ".stp", command=self.refresh_listbox)
+        self.file_type_dropdown = tk.OptionMenu(self.load_data_tab, self.file_type_var, ".s94", ".mpp", ".stp", command=self.refresh_listbox)
         self.file_type_dropdown.config(width=10)  # Set the width of the dropdown
         self.file_type_dropdown.grid(row=1, column=1, columnspan=2, padx=5, pady=5)
 
         # Load buttons
-        self.load_all_button = tk.Button(root, text="Load All", command=self.load_all_files)
+        self.load_all_button = tk.Button(self.load_data_tab, text="Load All", command=self.load_all_files)
         self.load_all_button.grid(row=1, column=3, padx=5, pady=5)
 
-        self.load_selected_button = tk.Button(root, text="Load Selected", command=self.load_selected_files)
+        self.load_selected_button = tk.Button(self.load_data_tab, text="Load Selected", command=self.load_selected_files)
         self.load_selected_button.grid(row=1, column=4, padx=5, pady=5)
 
         # Scrollbar for listbox
-        self.scrollbar = tk.Scrollbar(root, orient=tk.VERTICAL)
+        self.scrollbar = tk.Scrollbar(self.load_data_tab, orient=tk.VERTICAL)
         self.scrollbar.grid(row=3, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
         # Listbox to display files
-        self.file_listbox = tk.Listbox(root, width=50, height=10, yscrollcommand=self.scrollbar.set, selectmode=tk.MULTIPLE, activestyle='none')
+        self.file_listbox = tk.Listbox(self.load_data_tab, width=50, height=10, yscrollcommand=self.scrollbar.set, selectmode=tk.MULTIPLE, activestyle='none')
         self.file_listbox.grid(row=3, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
         self.scrollbar.config(command=self.file_listbox.yview)
 
         # Loaded files text box with scrollbar
-        self.loaded_files_text = Text(root, width=50, height=10)
+        self.loaded_files_text = Text(self.load_data_tab, width=50, height=10)
         self.loaded_files_text.grid(row=3, column=5, padx=5, pady=5, sticky="nsew")
-        self.loaded_files_scrollbar = Scrollbar(root, orient=tk.VERTICAL, command=self.loaded_files_text.yview)
+        self.loaded_files_scrollbar = Scrollbar(self.load_data_tab, orient=tk.VERTICAL, command=self.loaded_files_text.yview)
         self.loaded_files_text.config(yscrollcommand=self.loaded_files_scrollbar.set)
         self.loaded_files_scrollbar.grid(row=3, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
