@@ -19,6 +19,8 @@ class App:
         self.root = root
         self.root.title("QNA Software")
 
+        self.data = {}
+
         # Create a notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True)
@@ -28,20 +30,20 @@ class App:
         self.notebook.add(self.load_data_tab, text="Load Data")
         self.create_load_data_tab()
 
-        # Create the second tab: Tab 2 (empty for now)
+        # Create the second tab: Proccess Data
         self.tab2 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab2, text="Tab 2")
+        self.notebook.add(self.tab2, text="Proccess Data")
 
-        # Create the third tab: Tab 3 (empty for now)
+        # Create the third tab: Detection
         self.tab3 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab3, text="Tab 3")
+        self.notebook.add(self.tab3, text="Detection")
 
         # Configure grid row and column weights for rescaling
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
         # Configure grid row and column weights for Load Data tab
-        self.load_data_tab.grid_rowconfigure(3, weight=1)
+        self.load_data_tab.grid_rowconfigure(4, weight=1)
         self.load_data_tab.grid_columnconfigure(0, weight=1)
         self.load_data_tab.grid_columnconfigure(5, weight=1)
 
@@ -71,21 +73,31 @@ class App:
         self.load_selected_button = tk.Button(self.load_data_tab, text="Load Selected", command=self.load_selected_files)
         self.load_selected_button.grid(row=1, column=4, padx=5, pady=5)
 
+        # Proccess data buttons
+        self.calculate_I_ISET_button = tk.Button(self.load_data_tab, text="Calculate (I - ISET)^2", command=self.calculate_I_ISET)
+        self.calculate_I_ISET_button.grid(row=1, column=5, padx=5, pady=5)
+
+        self.calculate_raw_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from raw data", command=self.calculate_raw_l0)
+        self.calculate_raw_l0_button.grid(row=2, column=5, padx=5, pady=5)
+
+        self.calculate_I_ISET_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from (I - ISET)^2 map" , command=self.calculate_I_ISET_l0)
+        self.calculate_I_ISET_l0_button.grid(row=3, column=5, padx=5, pady=5)
+
         # Scrollbar for listbox
         self.scrollbar = tk.Scrollbar(self.load_data_tab, orient=tk.VERTICAL)
-        self.scrollbar.grid(row=3, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+        self.scrollbar.grid(row=4, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
         # Listbox to display files
         self.file_listbox = tk.Listbox(self.load_data_tab, width=50, height=10, yscrollcommand=self.scrollbar.set, selectmode=tk.MULTIPLE, activestyle='none')
-        self.file_listbox.grid(row=3, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
+        self.file_listbox.grid(row=4, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
         self.scrollbar.config(command=self.file_listbox.yview)
 
         # Loaded files text box with scrollbar
         self.loaded_files_text = Text(self.load_data_tab, width=50, height=10)
-        self.loaded_files_text.grid(row=3, column=5, padx=5, pady=5, sticky="nsew")
+        self.loaded_files_text.grid(row=4, column=5, padx=5, pady=5, sticky="nsew")
         self.loaded_files_scrollbar = Scrollbar(self.load_data_tab, orient=tk.VERTICAL, command=self.loaded_files_text.yview)
         self.loaded_files_text.config(yscrollcommand=self.loaded_files_scrollbar.set)
-        self.loaded_files_scrollbar.grid(row=3, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+        self.loaded_files_scrollbar.grid(row=4, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
     def browse_path(self):
         folder_path = filedialog.askdirectory(title="Select a folder")
@@ -114,7 +126,7 @@ class App:
         for file in files:
             file_path = os.path.join(folder_path, file)
             try:
-                data = read_file(file_path, file_type)
+                self.data = read_file(file_path, file_type)
                 loaded_files.append(file)
             except Exception as e:
                 print(f"Error loading file '{file}': {e}")
@@ -138,12 +150,21 @@ class App:
         for file in selected_files:
             file_path = os.path.join(folder_path, file)
             try:
-                data = read_file(file_path, file_type)
+                self.data = read_file(file_path, file_type)
                 loaded_files.append(file)
             except Exception as e:
                 print(f"Error loading file '{file}': {e}")
 
         self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+
+    def calculate_I_ISET(self):
+        pass
+    
+    def calculate_raw_l0(self):
+        pass
+
+    def calculate_I_ISET_l0(self):
+        pass
 
 def read_file(file_path, file_type):
     if file_type == ".s94":
