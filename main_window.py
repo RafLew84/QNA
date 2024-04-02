@@ -77,20 +77,20 @@ class App:
 
         # Proccess data labels
         self.iset_label = tk.Label(self.load_data_tab, text="ISET:")
-        self.iset_label.grid(row=0, column=5, padx=5, pady=5)
+        self.iset_label.grid(row=1, column=5, padx=5, pady=5, sticky="s")
 
-        self.iset_entry = tk.Entry(self.load_data_tab, width=5)
-        self.iset_entry.grid(row=1, column=5, padx=5, pady=5)
+        self.iset_entry = tk.Entry(self.load_data_tab, width=10)
+        self.iset_entry.grid(row=1, column=6, padx=5, pady=5, sticky="ew")
 
         # Proccess data buttons
         self.calculate_I_ISET_button = tk.Button(self.load_data_tab, text="Calculate (I - ISET)^2", command=self.calculate_I_ISET)
-        self.calculate_I_ISET_button.grid(row=2, column=5, padx=5, pady=5)
+        self.calculate_I_ISET_button.grid(row=1, column=7, columnspan=2, padx=5, pady=5)
 
         self.calculate_raw_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from raw data", command=self.calculate_raw_l0)
-        self.calculate_raw_l0_button.grid(row=3, column=5, padx=5, pady=5)
+        self.calculate_raw_l0_button.grid(row=2, column=5,columnspan=2, padx=5, pady=5)
 
         self.calculate_I_ISET_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from (I - ISET)^2 map" , command=self.calculate_I_ISET_l0)
-        self.calculate_I_ISET_l0_button.grid(row=4, column=5, padx=5, pady=5)
+        self.calculate_I_ISET_l0_button.grid(row=2, column=7,columnspan=2, padx=5, pady=5, sticky="ew")
 
         # Scrollbar for listbox
         self.scrollbar = tk.Scrollbar(self.load_data_tab, orient=tk.VERTICAL)
@@ -103,10 +103,10 @@ class App:
 
         # Loaded files text box with scrollbar
         self.loaded_files_text = Text(self.load_data_tab, width=50, height=10)
-        self.loaded_files_text.grid(row=5, column=5, padx=5, pady=5, sticky="nsew")
+        self.loaded_files_text.grid(row=5, column=5, columnspan=4, padx=5, pady=5, sticky="nsew")
         self.loaded_files_scrollbar = Scrollbar(self.load_data_tab, orient=tk.VERTICAL, command=self.loaded_files_text.yview)
         self.loaded_files_text.config(yscrollcommand=self.loaded_files_scrollbar.set)
-        self.loaded_files_scrollbar.grid(row=5, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+        self.loaded_files_scrollbar.grid(row=5, column=9, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
     def browse_path(self):
         folder_path = filedialog.askdirectory(title="Select a folder")
