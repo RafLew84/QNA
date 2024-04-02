@@ -132,14 +132,7 @@ class App:
         file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
         files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
 
-        loaded_files = []
-        for file in files:
-            file_path = os.path.join(folder_path, file)
-            try:
-                self.data.append(read_file(file_path, file_type))
-                loaded_files.append(file)
-            except Exception as e:
-                print(f"Error loading file '{file}': {e}")
+        loaded_files = self.load_files(files, folder_path, file_type)
 
         self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
 
@@ -156,17 +149,21 @@ class App:
         folder_path = self.path_entry.get()
         file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
         selected_files = [self.file_listbox.get(idx) for idx in selected_indices]
-        
+
+        loaded_files = self.load_files(selected_files, folder_path, file_type)
+
+        self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+    
+    def load_files(self, files, folder_path, file_type):
         loaded_files = []
-        for file in selected_files:
+        for file in files:
             file_path = os.path.join(folder_path, file)
             try:
                 self.data.append(read_file(file_path, file_type))
                 loaded_files.append(file)
             except Exception as e:
                 print(f"Error loading file '{file}': {e}")
-
-        self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+        return loaded_files
 
     def calculate_I_ISET(self):
         try:
@@ -180,14 +177,13 @@ class App:
             messagebox.showerror("Error", "Invalid value for ISET.")
             return
         if file_ext.lower() == "stp":
-            
             for data_set in self.data:
                 mapISET = (data_set['data'] - ISET) ** 2
 
                 header_info = data_set['header_info']
 
                 write_STP_file(
-                    file_name= data_set['file_name']+"_I-ISET",
+                    file_name= data_set['file_name'][:-4]+"_I-ISET",
                     x_points= int(header_info['Number of columns']),
                     y_points= int(header_info['Number of rows']),
                     z_amplitude= float(header_info['Z Amplitude'][:-3]),
@@ -199,6 +195,29 @@ class App:
                     z_gain= float(header_info['Z Gain']),
                     data= [i for row in mapISET for i in row]
                     )
+        elif file_ext.lower() == "s94":
+            for data_set in self.data:
+                mapISET = (data_set['data'] - ISET) ** 2
+
+                header_info = data_set['header_info']
+
+                height_array = [[5.5 * pow(4, header_info['z_gain'] - 1) * d / 65536 for d in row] for row in data_set['data']]
+                max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
+                z_amplitude = max_z - min_z
+
+                write_STP_file(
+                    file_name= data_set['file_name'][:-4]+"_I-ISET",
+                    x_points= header_info['x_points'],
+                    y_points= header_info['y_points'],
+                    z_amplitude= z_amplitude,
+                    image_mode= 1,
+                    x_size= header_info['x_size'],
+                    y_size= header_info['y_size'],
+                    x_offset= header_info['x_offset'],
+                    y_offset= header_info['y_offset'],
+                    z_gain= header_info['z_gain'],
+                    data= [i for row in mapISET for i in row]
+                )
             
             messagebox.showinfo("Done", "Processing complete.")
     
