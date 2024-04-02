@@ -195,6 +195,7 @@ class App:
                     z_gain= float(header_info['Z Gain']),
                     data= [i for row in mapISET for i in row]
                     )
+            messagebox.showinfo("Done", "Processing stp files complete.")
         elif file_ext.lower() == "s94":
             for data_set in self.data:
                 mapISET = (data_set['data'] - ISET) ** 2
@@ -218,8 +219,11 @@ class App:
                     z_gain= header_info['z_gain'],
                     data= [i for row in mapISET for i in row]
                 )
+            messagebox.showinfo("Done", "Processing s94 files complete.")
+        elif file_ext.lower() == "mpp":
+            pass
             
-            messagebox.showinfo("Done", "Processing complete.")
+            messagebox.showinfo("Done", "Processing mpp files complete.")
     
     def calculate_raw_l0(self):
         pass
