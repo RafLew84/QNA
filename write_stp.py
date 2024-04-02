@@ -6,6 +6,7 @@ write .stp file
 """
 
 import struct
+import os
 
 def write_STP_file(
         file_name, 
@@ -35,7 +36,11 @@ def write_STP_file(
     header_lines[3] = header_lines[3].format(X_Calibration, Z_Calibration, Z_Scale_Offset)
     header_lines[0] += str(len(''.join(header_lines)) + 4)
 
-    output_name = file_name + ".STP"
+    output_dir = os.path.join(os.path.dirname(file_name), "ISETmap")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_name = os.path.join(output_dir, os.path.basename(file_name) + ".STP")
 
     with open(output_name, "wb") as out:
         out.write("".join(header_lines).encode())
