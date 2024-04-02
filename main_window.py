@@ -11,10 +11,13 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from read_s94 import read_s94_file
+from read_s94 import calculate_z_amplitude
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from write_stp import write_STP_file
+
+from proccess import calculate_I_ISET_square
 
 class App:
     def __init__(self, root):
@@ -167,6 +170,7 @@ class App:
 
     def calculate_I_ISET(self):
         try:
+            # Extract extension
             file_ext = self.data[0]['file_name'][-3:]
         except IndexError:
             messagebox.showerror("Error", "No files selected")
@@ -178,7 +182,7 @@ class App:
             return
         if file_ext.lower() == "stp":
             for data_set in self.data:
-                mapISET = (data_set['data'] - ISET) ** 2
+                mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
 
                 header_info = data_set['header_info']
 
@@ -194,17 +198,18 @@ class App:
                     y_offset= float(header_info['Y-Offset'][:-3]),
                     z_gain= float(header_info['Z Gain']),
                     data= [i for row in mapISET for i in row]
-                    )
-            messagebox.showinfo("Done", "Processing stp files complete.")
+                )
+            messagebox.showinfo("Done", "Processing STP files complete.")
         elif file_ext.lower() == "s94":
             for data_set in self.data:
-                mapISET = (data_set['data'] - ISET) ** 2
+                mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
 
                 header_info = data_set['header_info']
 
-                height_array = [[5.5 * pow(4, header_info['z_gain'] - 1) * d / 65536 for d in row] for row in data_set['data']]
-                max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
-                z_amplitude = max_z - min_z
+                z_amplitude = calculate_z_amplitude(
+                    z_gain= header_info['z_gain'],
+                    data= data_set['data']
+                )
 
                 write_STP_file(
                     file_name= data_set['file_name'][:-4]+"_I-ISET",
@@ -219,11 +224,9 @@ class App:
                     z_gain= header_info['z_gain'],
                     data= [i for row in mapISET for i in row]
                 )
-            messagebox.showinfo("Done", "Processing s94 files complete.")
+            messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
-            pass
-            
-            messagebox.showinfo("Done", "Processing mpp files complete.")
+            messagebox.showinfo("Done", "Processing MPP files complete.")
     
     def calculate_raw_l0(self):
         pass
