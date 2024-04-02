@@ -109,6 +109,11 @@ def read_s94_file(file_name):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+def calculate_z_amplitude(z_gain, data):
+    height_array = [[5.5 * pow(4, z_gain - 1) * d / 65536 for d in row] for row in data]
+    max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
+    return max_z - min_z
+
 # # Function to read data from an S94 file and return relevant information
 # def read_s94_file(file_name):
 #     try:
