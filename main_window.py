@@ -14,12 +14,14 @@ from read_s94 import read_s94_file
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
+from write_stp import write_STP_file
+
 class App:
     def __init__(self, root):
         self.root = root
         self.root.title("QNA Software")
 
-        self.data = {}
+        self.data = []
 
         # Create a notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
@@ -43,9 +45,9 @@ class App:
         self.root.grid_columnconfigure(0, weight=1)
 
         # Configure grid row and column weights for Load Data tab
-        self.load_data_tab.grid_rowconfigure(4, weight=1)
+        self.load_data_tab.grid_rowconfigure(5, weight=1)
         self.load_data_tab.grid_columnconfigure(0, weight=1)
-        self.load_data_tab.grid_columnconfigure(5, weight=1)
+        self.load_data_tab.grid_columnconfigure(6, weight=1)
 
     def create_load_data_tab(self):
         # Entry field for folder path
@@ -73,31 +75,38 @@ class App:
         self.load_selected_button = tk.Button(self.load_data_tab, text="Load Selected", command=self.load_selected_files)
         self.load_selected_button.grid(row=1, column=4, padx=5, pady=5)
 
+        # Proccess data labels
+        self.iset_label = tk.Label(self.load_data_tab, text="ISET:")
+        self.iset_label.grid(row=0, column=5, padx=5, pady=5)
+
+        self.iset_entry = tk.Entry(self.load_data_tab, width=5)
+        self.iset_entry.grid(row=1, column=5, padx=5, pady=5)
+
         # Proccess data buttons
         self.calculate_I_ISET_button = tk.Button(self.load_data_tab, text="Calculate (I - ISET)^2", command=self.calculate_I_ISET)
-        self.calculate_I_ISET_button.grid(row=1, column=5, padx=5, pady=5)
+        self.calculate_I_ISET_button.grid(row=2, column=5, padx=5, pady=5)
 
         self.calculate_raw_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from raw data", command=self.calculate_raw_l0)
-        self.calculate_raw_l0_button.grid(row=2, column=5, padx=5, pady=5)
+        self.calculate_raw_l0_button.grid(row=3, column=5, padx=5, pady=5)
 
         self.calculate_I_ISET_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from (I - ISET)^2 map" , command=self.calculate_I_ISET_l0)
-        self.calculate_I_ISET_l0_button.grid(row=3, column=5, padx=5, pady=5)
+        self.calculate_I_ISET_l0_button.grid(row=4, column=5, padx=5, pady=5)
 
         # Scrollbar for listbox
         self.scrollbar = tk.Scrollbar(self.load_data_tab, orient=tk.VERTICAL)
-        self.scrollbar.grid(row=4, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+        self.scrollbar.grid(row=5, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
         # Listbox to display files
         self.file_listbox = tk.Listbox(self.load_data_tab, width=50, height=10, yscrollcommand=self.scrollbar.set, selectmode=tk.MULTIPLE, activestyle='none')
-        self.file_listbox.grid(row=4, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
+        self.file_listbox.grid(row=5, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
         self.scrollbar.config(command=self.file_listbox.yview)
 
         # Loaded files text box with scrollbar
         self.loaded_files_text = Text(self.load_data_tab, width=50, height=10)
-        self.loaded_files_text.grid(row=4, column=5, padx=5, pady=5, sticky="nsew")
+        self.loaded_files_text.grid(row=5, column=5, padx=5, pady=5, sticky="nsew")
         self.loaded_files_scrollbar = Scrollbar(self.load_data_tab, orient=tk.VERTICAL, command=self.loaded_files_text.yview)
         self.loaded_files_text.config(yscrollcommand=self.loaded_files_scrollbar.set)
-        self.loaded_files_scrollbar.grid(row=4, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
+        self.loaded_files_scrollbar.grid(row=5, column=6, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
     def browse_path(self):
         folder_path = filedialog.askdirectory(title="Select a folder")
@@ -117,6 +126,7 @@ class App:
     def load_all_files(self):
         # Clear loaded files before loading new ones
         self.loaded_files_text.delete('1.0', tk.END)
+        self.data.clear()
         
         folder_path = self.path_entry.get()
         file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
@@ -126,7 +136,7 @@ class App:
         for file in files:
             file_path = os.path.join(folder_path, file)
             try:
-                self.data = read_file(file_path, file_type)
+                self.data.append(read_file(file_path, file_type))
                 loaded_files.append(file)
             except Exception as e:
                 print(f"Error loading file '{file}': {e}")
@@ -136,6 +146,7 @@ class App:
     def load_selected_files(self):
         # Clear loaded files before loading new ones
         self.loaded_files_text.delete('1.0', tk.END)
+        self.data.clear()
         
         selected_indices = self.file_listbox.curselection()
         if not selected_indices:
@@ -150,7 +161,7 @@ class App:
         for file in selected_files:
             file_path = os.path.join(folder_path, file)
             try:
-                self.data = read_file(file_path, file_type)
+                self.data.append(read_file(file_path, file_type))
                 loaded_files.append(file)
             except Exception as e:
                 print(f"Error loading file '{file}': {e}")
@@ -158,7 +169,38 @@ class App:
         self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
 
     def calculate_I_ISET(self):
-        pass
+        try:
+            file_ext = self.data[0]['file_name'][-3:]
+        except IndexError:
+            messagebox.showerror("Error", "No files selected")
+            return
+        try:
+            ISET = float(self.iset_entry.get())  # Read the value of ISET from the iset_entry widget
+        except ValueError:
+            messagebox.showerror("Error", "Invalid value for ISET.")
+            return
+        if file_ext.lower() == "stp":
+            
+            for data_set in self.data:
+                mapISET = (data_set['data'] - ISET) ** 2
+
+                header_info = data_set['header_info']
+
+                write_STP_file(
+                    file_name= data_set['file_name']+"_I-ISET",
+                    x_points= int(header_info['Number of columns']),
+                    y_points= int(header_info['Number of rows']),
+                    z_amplitude= float(header_info['Z Amplitude'][:-3]),
+                    image_mode= 1,
+                    x_size= float(header_info['X Amplitude'][:-3]),
+                    y_size= float(header_info['Y Amplitude'][:-3]),
+                    x_offset= float(header_info['X-Offset'][:-3]),
+                    y_offset= float(header_info['Y-Offset'][:-3]),
+                    z_gain= float(header_info['Z Gain']),
+                    data= [i for row in mapISET for i in row]
+                    )
+            
+            messagebox.showinfo("Done", "Processing complete.")
     
     def calculate_raw_l0(self):
         pass
