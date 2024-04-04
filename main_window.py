@@ -10,12 +10,15 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
+import numpy as np
+
 from read_s94 import read_s94_file
 from read_s94 import calculate_z_amplitude
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from write_stp import write_STP_file
+from write_mpp import write_mpp_file
 
 from proccess import calculate_I_ISET_square
 
@@ -226,6 +229,25 @@ class App:
                 )
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
+            for data_set in self.data:
+                header_info = data_set['header_info']
+                num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
+                num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
+                data_frames = []
+                header_info = data_set['header_info']
+                header_length = data_set['header_length']
+                for frame in data_set['data']:
+                    data_array = np.array(frame).reshape((num_rows, num_columns))
+                    mapISET = calculate_I_ISET_square(data= data_array, ISET= ISET)
+                    data_frames.append(mapISET)
+                
+                write_mpp_file(
+                    file_name= "output.mpp",
+                    header_info= header_info,
+                    data_frames= [i for row in data_frames for i in row],
+                    header_length= header_length
+                )
+
             messagebox.showinfo("Done", "Processing MPP files complete.")
     
     def calculate_raw_l0(self):
