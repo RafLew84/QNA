@@ -2,6 +2,8 @@
 """
 write .mpp file 
 
+for some reason WSxM reads data in the wrong order
+
 @author
 """
 
@@ -22,7 +24,7 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
     Raises:
         ValueError: If the header information is incomplete or invalid.
     """
-
+    print(data_frames[0])
     try:
         # Create directory
         output_dir = os.path.join(os.path.dirname(file_name), "ISETmap")
@@ -45,6 +47,8 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
             for frame in data_frames:
                 for i in frame:
                     file.write(struct.pack('d', i))
+            
+            
 
     except Exception as e:
         raise RuntimeError(f"An unexpected error occurred: {e}")
