@@ -33,6 +33,10 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
         
         output_name = os.path.join(output_dir, os.path.basename(file_name) + ".MPP")
 
+        # num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
+        # num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
+        # num_frames = int(header_info.get("General Info", {}).get("Number of Frames", 0))
+
         # Write header information
         with open(output_name, "wb") as file:
             file.write(f"WSxM file copyright UAM\nMovie Image file\nImage header size: {header_length}\n\n".encode())
@@ -43,10 +47,26 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
                 file.write("\n".encode())
             file.write("[Header end]\n".encode())
 
+            # reversed_frames = []
+            # for i, frame in enumerate(data_frames):
+            #     half_col = int(num_columns / 2)
+            #     first_half = []
+            #     second_half = []
+            #     for j, data in enumerate(frame):
+            #         if j < half_col:
+            #             first_half.append(data)
+            #         else:
+            #             second_half.append(data)
+            #     reversed_frames += second_half
+            #     reversed_frames += first_half
+
             # Write data
             for frame in data_frames:
                 for i in frame:
                     file.write(struct.pack('d', i))
+            
+            # for data in reversed_frames:
+            #     file.write(struct.pack('d', data))
             
             
 
