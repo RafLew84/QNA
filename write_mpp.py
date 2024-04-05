@@ -6,6 +6,8 @@ write .mpp file
 """
 
 import struct
+import os
+
 from read_mpp import read_mpp_file
 
 def write_mpp_file(file_name, header_info, data_frames, header_length):
@@ -20,9 +22,17 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
     Raises:
         ValueError: If the header information is incomplete or invalid.
     """
+
     try:
+        # Create directory
+        output_dir = os.path.join(os.path.dirname(file_name), "ISETmap")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        output_name = os.path.join(output_dir, os.path.basename(file_name) + ".MPP")
+
         # Write header information
-        with open(file_name, "wb") as file:
+        with open(output_name, "wb") as file:
             file.write(f"WSxM file copyright UAM\nMovie Image file\nImage header size: {header_length}\n\n".encode())
             for section, content in header_info.items():
                 file.write(f"[{section}]\n\n".encode())
@@ -31,6 +41,7 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
                 file.write("\n".encode())
             file.write("[Header end]\n".encode())
 
+            # Write data
             for frame in data_frames:
                 for i in frame:
                     file.write(struct.pack('d', i))
@@ -43,7 +54,7 @@ def main():
     file_name = "test_files/cut_2_raw_low_part_of_stm_movie.mpp"
     try:
         result = read_mpp_file(file_name)
-        write_mpp_file("output.mpp", result["header_info"], result["data"], result["header_length"])
+        write_mpp_file(file_name, result["header_info"], result["data"], result["header_length"])
     except Exception as e:
         print(f"Error: {e}")
 
