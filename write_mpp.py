@@ -24,7 +24,7 @@ def write_mpp_file(file_name, header_info, data_frames, header_length):
     Raises:
         ValueError: If the header information is incomplete or invalid.
     """
-    print(data_frames[0])
+
     try:
         # Create directory
         output_dir = os.path.join(os.path.dirname(file_name), "ISETmap")
