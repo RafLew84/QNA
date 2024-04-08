@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Functions for analysis
+Functions for data proccessing
 
 @author: rlewandkow
 """

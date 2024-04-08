@@ -14,15 +14,12 @@ import numpy as np
 import re
 
 from read_s94 import read_s94_file
-from read_s94 import calculate_z_amplitude
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from write_stp import write_STP_file
 
-from data_proccess import calculate_I_ISET_square
-
-from file_proccess import create_dir_for_mpp_frames
+from file_proccess import proccess_stp_files, proccess_s94_files, proccess_mpp_files
 
 class App:
     def __init__(self, root):
@@ -186,83 +183,13 @@ class App:
             messagebox.showerror("Error", "Invalid value for ISET.")
             return
         if file_ext.lower() == "stp":
-            for data_set in self.data:
-                mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
-
-                header_info = data_set['header_info']
-
-                write_STP_file(
-                    file_name= data_set['file_name'][:-4]+"_I-ISET",
-                    x_points= int(header_info['Number of columns']),
-                    y_points= int(header_info['Number of rows']),
-                    z_amplitude= float(header_info['Z Amplitude'][:-3]),
-                    image_mode= 1,
-                    x_size= float(header_info['X Amplitude'][:-3]),
-                    y_size= float(header_info['Y Amplitude'][:-3]),
-                    x_offset= float(header_info['X-Offset'][:-3]),
-                    y_offset= float(header_info['Y-Offset'][:-3]),
-                    z_gain= float(header_info['Z Gain']),
-                    data= [i for row in mapISET for i in row]
-                )
+            proccess_stp_files(self.data, ISET)
             messagebox.showinfo("Done", "Processing STP files complete.")
         elif file_ext.lower() == "s94":
-            for data_set in self.data:
-                mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
-
-                header_info = data_set['header_info']
-
-                z_amplitude = calculate_z_amplitude(
-                    z_gain= header_info['z_gain'],
-                    data= data_set['data']
-                )
-
-                write_STP_file(
-                    file_name= data_set['file_name'][:-4]+"_I-ISET",
-                    x_points= header_info['x_points'],
-                    y_points= header_info['y_points'],
-                    z_amplitude= z_amplitude,
-                    image_mode= 1,
-                    x_size= header_info['x_size'],
-                    y_size= header_info['y_size'],
-                    x_offset= header_info['x_offset'],
-                    y_offset= header_info['y_offset'],
-                    z_gain= header_info['z_gain'],
-                    data= [i for row in mapISET for i in row]
-                )
+            proccess_s94_files(self.data, ISET)
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
-            for data_set in self.data:
-
-                header_info = data_set['header_info']
-                num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
-                num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
-                
-                for i, frame in enumerate(data_set['data'], start=1):
-                    data_array = np.array(frame).reshape((num_rows, num_columns))
-                    mapISET = calculate_I_ISET_square(data= data_array, ISET= ISET)
-
-                    frame_filename = create_dir_for_mpp_frames(data_set= data_set, frame_num= i)
-
-                    z_amplitude =  re.search(r'[\d.]+',header_info.get("General Info", {}).get("Z Amplitude", "")).group()
-                    x_size =  re.search(r'[\d.]+',header_info.get("Control", {}).get("X Amplitude", "")).group()
-                    y_size =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Y Amplitude", "")).group()
-                    x_offset =  re.search(r'[\d.]+',header_info.get("Control", {}).get("X Offset", "")).group()
-                    y_offset =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Y Offset", "")).group()
-                    z_gain =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Z Gain", "")).group()
-
-                    write_STP_file(
-                        file_name= frame_filename,
-                        x_points= num_columns,
-                        y_points= num_rows,
-                        z_amplitude= float(z_amplitude),
-                        image_mode= 1,
-                        x_size= float(x_size),
-                        y_size= float(y_size),
-                        x_offset= float(x_offset),
-                        y_offset= float(y_offset),
-                        z_gain= int(z_gain),
-                        data= [i for row in mapISET for i in row]
-                    )
+            proccess_mpp_files(self.data, ISET)
 
 
 
