@@ -54,6 +54,9 @@ class App:
         self.load_data_tab.grid_columnconfigure(0, weight=1)
         self.load_data_tab.grid_columnconfigure(6, weight=1)
 
+    ##########################################################################################################
+    #### Load Data Tab
+    ##########################################################################################################
     def create_load_data_tab(self):
         # Entry field for folder path
         self.path_entry = tk.Entry(self.load_data_tab, width=50)
