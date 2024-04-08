@@ -11,6 +11,7 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 import numpy as np
+import re
 
 from read_s94 import read_s94_file
 from read_s94 import calculate_z_amplitude
@@ -18,9 +19,10 @@ from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from write_stp import write_STP_file
-from write_mpp import write_mpp_file
 
-from proccess import calculate_I_ISET_square
+from data_proccess import calculate_I_ISET_square
+
+from file_proccess import create_dir_for_mpp_frames
 
 class App:
     def __init__(self, root):
@@ -230,23 +232,39 @@ class App:
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
             for data_set in self.data:
+
                 header_info = data_set['header_info']
                 num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
                 num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
-                data_frames = []
-                header_info = data_set['header_info']
-                header_length = data_set['header_length']
-                for frame in data_set['data']:
+                
+                for i, frame in enumerate(data_set['data'], start=1):
                     data_array = np.array(frame).reshape((num_rows, num_columns))
                     mapISET = calculate_I_ISET_square(data= data_array, ISET= ISET)
-                    data_frames.append(mapISET)
-                
-                write_mpp_file(
-                    file_name= "output.mpp",
-                    header_info= header_info,
-                    data_frames= [i for row in data_frames for i in row],
-                    header_length= header_length
-                )
+
+                    frame_filename = create_dir_for_mpp_frames(data_set= data_set, frame_num= i)
+
+                    z_amplitude =  re.search(r'[\d.]+',header_info.get("General Info", {}).get("Z Amplitude", "")).group()
+                    x_size =  re.search(r'[\d.]+',header_info.get("Control", {}).get("X Amplitude", "")).group()
+                    y_size =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Y Amplitude", "")).group()
+                    x_offset =  re.search(r'[\d.]+',header_info.get("Control", {}).get("X Offset", "")).group()
+                    y_offset =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Y Offset", "")).group()
+                    z_gain =  re.search(r'[\d.]+',header_info.get("Control", {}).get("Z Gain", "")).group()
+
+                    write_STP_file(
+                        file_name= frame_filename,
+                        x_points= num_columns,
+                        y_points= num_rows,
+                        z_amplitude= float(z_amplitude),
+                        image_mode= 1,
+                        x_size= float(x_size),
+                        y_size= float(y_size),
+                        x_offset= float(x_offset),
+                        y_offset= float(y_offset),
+                        z_gain= int(z_gain),
+                        data= [i for row in mapISET for i in row]
+                    )
+
+
 
             messagebox.showinfo("Done", "Processing MPP files complete.")
     
