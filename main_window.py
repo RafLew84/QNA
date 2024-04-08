@@ -193,9 +193,6 @@ class App:
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
             proccess_mpp_files(self.data, ISET)
-
-
-
             messagebox.showinfo("Done", "Processing MPP files complete.")
     
     def calculate_raw_l0(self):
