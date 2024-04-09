@@ -17,9 +17,8 @@ from read_s94 import read_s94_file
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
-from write_stp import write_STP_file
-
-from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map, proccess_mpp_files_I_ISET_map
+from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map
+from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_files_l0
 
 class App:
     def __init__(self, root):
@@ -196,7 +195,26 @@ class App:
             messagebox.showinfo("Done", "Processing MPP files complete.")
     
     def calculate_raw_l0(self):
-        pass
+        try:
+            # Extract extension
+            file_ext = self.data[0]['file_name'][-3:]
+        except IndexError:
+            messagebox.showerror("Error", "No files selected")
+            return
+        try:
+            ISET = float(self.iset_entry.get())  # Read the value of ISET from the iset_entry widget
+        except ValueError:
+            messagebox.showerror("Error", "Invalid value for ISET.")
+            return
+        if file_ext.lower() == "stp":
+            proccess_stp_files_l0(self.data, ISET)
+            messagebox.showinfo("Done", "Processing STP files complete.")
+        elif file_ext.lower() == "s94":
+            
+            messagebox.showinfo("Done", "Processing S94 files complete.")
+        elif file_ext.lower() == "mpp":
+            
+            messagebox.showinfo("Done", "Processing MPP files complete.")
 
     def calculate_I_ISET_l0(self):
         pass

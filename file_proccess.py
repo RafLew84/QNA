@@ -10,7 +10,8 @@ import re
 import numpy as np
 
 from write_stp import write_STP_file
-from data_proccess import calculate_I_ISET_square
+from write_txt import write_txt_file
+from data_proccess import calculate_I_ISET_square, calculate_l0
 
 def create_dir_for_mpp_frames(data_set, frame_num):
     path = data_set['file_name']
@@ -60,6 +61,13 @@ def proccess_stp_files_I_ISET_map(data, ISET):
             z_gain= float(header_info['Z Gain']),
             data= [i for row in mapISET for i in row]
         )
+
+def proccess_stp_files_l0(data, ISET):
+    for data_set in data:
+        mapISET = calculate_I_ISET_square(data_set['data'], ISET)
+        l0 = calculate_l0(data_set['data'], mapISET.flatten())
+        write_txt_file(data_set['file_name'], l0)
+
 
 def proccess_s94_files_I_ISET_map(data, ISET):
     for data_set in data:
