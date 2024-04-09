@@ -41,7 +41,7 @@ def calculate_z_amplitude_from_S94_file(z_gain, data):
     max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
     return max_z - min_z
 
-def proccess_stp_files(data, ISET):
+def proccess_stp_files_I_ISET_map(data, ISET):
     for data_set in data:
         mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
 
@@ -61,7 +61,7 @@ def proccess_stp_files(data, ISET):
             data= [i for row in mapISET for i in row]
         )
 
-def proccess_s94_files(data, ISET):
+def proccess_s94_files_I_ISET_map(data, ISET):
     for data_set in data:
         mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
 
@@ -86,7 +86,7 @@ def proccess_s94_files(data, ISET):
             data= [i for row in mapISET for i in row]
         )
 
-def proccess_mpp_files(data, ISET):
+def proccess_mpp_files_I_ISET_map(data, ISET):
     for data_set in data:
 
         header_info = data_set['header_info']

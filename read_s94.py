@@ -62,10 +62,13 @@ def read_s94_file(file_name):
             x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, \
                 Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(format_string, data)
 
-            # Read image data into a NumPy array
+            current = []
             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))
+            for i in reversed(range(x_points)):
+                for j in reversed(range(y_points)):
+                    current.append((20 * image_data[i][j]) / 65536)
 
-            current_data = (20 * image_data) / 65536
+            current = np.reshape(current,(x_points, y_points))
 
         # Construct header information dictionary
         header_info = {
@@ -94,7 +97,7 @@ def read_s94_file(file_name):
         result = {
             "file_name": file_name,
             "header_info": header_info,
-            "data": current_data
+            "data": current
         }
 
         # Return dictionary
@@ -108,11 +111,6 @@ def read_s94_file(file_name):
         print(f"Error reading file '{file_name}': {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-
-def calculate_z_amplitude(z_gain, data):
-    height_array = [[5.5 * pow(4, z_gain - 1) * d / 65536 for d in row] for row in data]
-    max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
-    return max_z - min_z
 
 # # Function to read data from an S94 file and return relevant information
 # def read_s94_file(file_name):
@@ -146,7 +144,7 @@ def main():
     file_name = "test_files/28933.S94"
     f = read_s94_file(file_name)
     if f:
-        print(f['data'])
+        print(sum(sum(f['data'])))
 
 if __name__ == '__main__':
     main()

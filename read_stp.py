@@ -59,10 +59,11 @@ def read_stp_file(file_name):
         print(f"An unexpected error occurred: {e}")
 
 def main():
-    file_name = "test_files/28933.stp"
+    file_name = "test_files/t/ISETmap/28933_I-ISET.stp"
     f = read_stp_file(file_name)
     if f:
-        print(f['data'])
+        print("Pop")
+        print(sum(sum(f['data'])))
 
 if __name__ == '__main__':
     main()
