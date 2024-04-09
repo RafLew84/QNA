@@ -12,6 +12,6 @@ def calculate_I_ISET_square(data, ISET):
 
 def calculate_l0(data, mapISET):
     length = np.prod(data.shape)
+    print(length)
     l0 = sqrt(sum(mapISET) / length)
-    print(l0)
     return l0

@@ -10,15 +10,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
-import numpy as np
-import re
-
 from read_s94 import read_s94_file
 from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map
 from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_files_l0
+from file_proccess import proccess_mpp_files_l0
 
 class App:
     def __init__(self, root):
@@ -213,7 +211,7 @@ class App:
             proccess_stp_and_s94_files_l0(self.data, ISET)
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
-            
+            proccess_mpp_files_l0(self.data, ISET)
             messagebox.showinfo("Done", "Processing MPP files complete.")
 
     def calculate_I_ISET_l0(self):

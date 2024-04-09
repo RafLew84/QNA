@@ -62,13 +62,6 @@ def proccess_stp_files_I_ISET_map(data, ISET):
             data= [i for row in mapISET for i in row]
         )
 
-def proccess_stp_and_s94_files_l0(data, ISET):
-    for data_set in data:
-        mapISET = calculate_I_ISET_square(data_set['data'], ISET)
-        l0 = calculate_l0(data_set['data'], mapISET.flatten())
-        write_txt_file(data_set['file_name'], l0)
-
-
 def proccess_s94_files_I_ISET_map(data, ISET):
     for data_set in data:
         mapISET = calculate_I_ISET_square(data= data_set['data'], ISET= ISET)
@@ -107,18 +100,36 @@ def proccess_mpp_files_I_ISET_map(data, ISET):
 
             frame_filename = create_dir_for_mpp_frames(data_set= data_set, frame_num= i)
 
-            extracted_heder_info = extract_data_from_mpp_header_for_stp_file(header_info)
+            extracted_header_info = extract_data_from_mpp_header_for_stp_file(header_info)
 
             write_STP_file(
                 file_name= frame_filename,
                 x_points= num_columns,
                 y_points= num_rows,
-                z_amplitude= float(extracted_heder_info['z_amplitude']),
+                z_amplitude= float(extracted_header_info['z_amplitude']),
                 image_mode= 1,
-                x_size= float(extracted_heder_info['x_size']),
-                y_size= float(extracted_heder_info['y_size']),
-                x_offset= float(extracted_heder_info['x_offset']),
-                y_offset= float(extracted_heder_info['y_offset']),
-                z_gain= int(extracted_heder_info['z_gain']),
+                x_size= float(extracted_header_info['x_size']),
+                y_size= float(extracted_header_info['y_size']),
+                x_offset= float(extracted_header_info['x_offset']),
+                y_offset= float(extracted_header_info['y_offset']),
+                z_gain= int(extracted_header_info['z_gain']),
                 data= [i for row in mapISET for i in row]
             )
+
+def proccess_stp_and_s94_files_l0(data, ISET):
+    for data_set in data:
+        mapISET = calculate_I_ISET_square(data_set['data'], ISET)
+        l0 = calculate_l0(data_set['data'], mapISET.flatten())
+        write_txt_file(data_set['file_name'], l0)
+
+def proccess_mpp_files_l0(data, ISET):
+    for data_set in data:
+        header_info = data_set['header_info']
+        num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
+        num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
+        for i, frame in enumerate(data_set['data'], start=1):
+            data_array = np.array(frame).reshape((num_rows, num_columns))
+
+            mapISET = calculate_I_ISET_square(data= data_array, ISET= ISET)
+            l0 = calculate_l0(data_array, mapISET.flatten())
+            write_txt_file(data_set['file_name'], l0, f"frame {i}")
