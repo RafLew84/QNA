@@ -18,7 +18,7 @@ from read_stp import read_stp_file
 from read_mpp import read_mpp_file
 
 from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map
-from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_files_l0
+from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_files_l0
 
 class App:
     def __init__(self, root):
@@ -207,10 +207,10 @@ class App:
             messagebox.showerror("Error", "Invalid value for ISET.")
             return
         if file_ext.lower() == "stp":
-            proccess_stp_files_l0(self.data, ISET)
+            proccess_stp_and_s94_files_l0(self.data, ISET)
             messagebox.showinfo("Done", "Processing STP files complete.")
         elif file_ext.lower() == "s94":
-            
+            proccess_stp_and_s94_files_l0(self.data, ISET)
             messagebox.showinfo("Done", "Processing S94 files complete.")
         elif file_ext.lower() == "mpp":
             

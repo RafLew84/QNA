@@ -62,7 +62,7 @@ def proccess_stp_files_I_ISET_map(data, ISET):
             data= [i for row in mapISET for i in row]
         )
 
-def proccess_stp_files_l0(data, ISET):
+def proccess_stp_and_s94_files_l0(data, ISET):
     for data_set in data:
         mapISET = calculate_I_ISET_square(data_set['data'], ISET)
         l0 = calculate_l0(data_set['data'], mapISET.flatten())
