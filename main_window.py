@@ -16,7 +16,8 @@ from read_mpp import read_mpp_file
 
 from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map
 from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_files_l0
-from file_proccess import proccess_mpp_files_l0
+from file_proccess import proccess_mpp_files_l0, proccess_mpp_files_l0_from_I_ISET_map
+from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map
 
 class App:
     def __init__(self, root):
@@ -215,7 +216,21 @@ class App:
             messagebox.showinfo("Done", "Processing MPP files complete.")
 
     def calculate_I_ISET_l0(self):
-        pass
+        try:
+            # Extract extension
+            file_ext = self.data[0]['file_name'][-3:]
+        except IndexError:
+            messagebox.showerror("Error", "No files selected")
+            return
+        if file_ext.lower() == "stp":
+            proccess_stp_and_s94_files_l0_from_I_ISET_map(self.data)
+            messagebox.showinfo("Done", "Processing STP files complete.")
+        elif file_ext.lower() == "s94":
+            proccess_stp_and_s94_files_l0_from_I_ISET_map(self.data)
+            messagebox.showinfo("Done", "Processing S94 files complete.")
+        elif file_ext.lower() == "mpp":
+            proccess_mpp_files_l0_from_I_ISET_map(self.data)
+            messagebox.showinfo("Done", "Processing MPP files complete.")
 
 def read_file(file_path, file_type):
     if file_type == ".s94":

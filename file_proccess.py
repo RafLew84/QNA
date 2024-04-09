@@ -133,3 +133,19 @@ def proccess_mpp_files_l0(data, ISET):
             mapISET = calculate_I_ISET_square(data= data_array, ISET= ISET)
             l0 = calculate_l0(data_array, mapISET.flatten())
             write_txt_file(data_set['file_name'], l0, f"frame {i}")
+
+def proccess_stp_and_s94_files_l0_from_I_ISET_map(data):
+    for data_set in data:
+        l0 = calculate_l0(data_set['data'])
+        write_txt_file(data_set['file_name'], l0)
+
+def proccess_mpp_files_l0_from_I_ISET_map(data):
+    for data_set in data:
+        header_info = data_set['header_info']
+        num_columns = int(header_info.get("General Info", {}).get("Number of columns", 0))
+        num_rows = int(header_info.get("General Info", {}).get("Number of rows", 0))
+        for i, frame in enumerate(data_set['data'], start=1):
+            data_array = np.array(frame).reshape((num_rows, num_columns))
+
+            l0 = calculate_l0(data_array)
+            write_txt_file(data_set['file_name'], l0, f"frame {i}")
