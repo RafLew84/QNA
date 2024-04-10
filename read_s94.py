@@ -37,6 +37,7 @@ Actual image:       -3.459 ...  7.025 nm  ( -2576 ... 5232 RAW)
 """
 
 import struct
+import logging
 import numpy as np
 
 #  Image modes
@@ -51,13 +52,22 @@ format_string = "<hhhhiffffffhhffffhh"
 # The size (in bytes) of the binary data structure
 number_of_bytes = struct.calcsize(format_string)
 
+logger = logging.getLogger(__name__)
+
 def read_s94_file(file_name):
+    if not isinstance(file_name, str):
+        msg = "read_s94_file: Invalid input. filename must be strings."
+        logger.error(msg)
+        raise ValueError(msg)
+    
     try:
         with open(file_name, 'rb') as file:
             # Unpack binary data using the specified format
             data = file.read(number_of_bytes)
             if len(data) != number_of_bytes:
-                raise ValueError("Incomplete data read")
+                msg = "read_s94_file: Incomplete data read"
+                logger.error(msg)
+                raise ValueError(msg)
 
             x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, \
                 Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(format_string, data)
@@ -104,41 +114,21 @@ def read_s94_file(file_name):
         return result
 
     except FileNotFoundError:
-        print(f"Error: File '{file_name}' not found.")
+        error_msg = f"read_s94_file: Error: File '{file_name}' not found."
+        logger.error(error_msg)
+        print(error_msg)
     except struct.error as e:
-        print(f"Error reading file '{file_name}': {e}")
+        error_msg = f"read_s94_file: Error reading file '{file_name}': {e}"
+        logger.error(error_msg)
+        print(error_msg)
     except ValueError as e:
-        print(f"Error reading file '{file_name}': {e}")
+        error_msg = f"read_s94_file: Error reading file '{file_name}': {e}"
+        logger.error(error_msg)
+        print(error_msg)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
-# # Function to read data from an S94 file and return relevant information
-# def read_s94_file(file_name):
-#     try:
-#         with open(file_name, 'rb') as file:
-#             # Unpack binary data using the specified format
-#             data = file.read(number_of_bytes)
-#             if len(data) != number_of_bytes:
-#                 raise ValueError("Incomplete data read")
-
-#             x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, \
-#                 Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(format_string, data)
-
-#             # Read image data into a NumPy array
-#             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))
-
-#         # Return relevant information along with the image data
-#         return (file_name, x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset,
-#                 Scan_Speed, Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag, image_data)
-
-#     except FileNotFoundError:
-#         print(f"Error: File '{file_name}' not found.")
-#     except struct.error as e:
-#         print(f"Error reading file '{file_name}': {e}")
-#     except ValueError as e:
-#         print(f"Error reading file '{file_name}': {e}")
-#     except Exception as e:
-#         print(f"An unexpected error occurred: {e}")
+        error_msg = f"read_s94_file: An unexpected error occurred: {e}"
+        logger.error(error_msg)
+        print(error_msg)
         
 def main():
     file_name = "test_files/28933.S94"

@@ -7,11 +7,16 @@ read .mpp file
 import numpy as np
 import struct
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 def read_mpp_file(file_name):
-    """
-    Read data from an MPP file
-    """
+    if not isinstance(file_name, str):
+        msg = "read_mpp_file: Invalid input. filename must be strings."
+        logger.error(msg)
+        raise ValueError(msg)
+    
     try:
         header_info = {}
         data_frames = []
@@ -41,7 +46,9 @@ def read_mpp_file(file_name):
             num_frames = int(header_info.get("General Info", {}).get("Number of Frames", 0))
 
             if num_columns == 0 or num_rows == 0 or num_frames == 0:
-                raise ValueError("Invalid dimensions in header.")
+                msg = "read_mpp_file: Invalid dimensions in header."
+                logger.error(msg)
+                raise ValueError(msg)
 
             for _ in range(num_frames):
                 frame_data = []
@@ -61,11 +68,17 @@ def read_mpp_file(file_name):
         }
     
     except FileNotFoundError:
-        raise FileNotFoundError(f"File '{file_name}' not found.")
+        error_msg = f"read_mpp_file: File '{file_name}' not found."
+        logger.error(error_msg)
+        print(error_msg)
     except ValueError as ve:
-        raise ValueError(f"Error reading file '{file_name}': {ve}")
+        error_msg = f"read_mpp_file: Error reading file '{file_name}': {ve}"
+        logger.error(error_msg)
+        print(error_msg)
     except Exception as e:
-        raise RuntimeError(f"An unexpected error occurred: {e}")
+        error_msg = f"read_mpp_file: An unexpected error occurred: {e}"
+        logger.error(error_msg)
+        print(error_msg)
 
 def main():
     file_name = "test_files/cut3_upper_part_of_stm_movie.mpp"

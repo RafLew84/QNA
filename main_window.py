@@ -19,6 +19,10 @@ from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_fi
 from file_proccess import proccess_mpp_files_l0, proccess_mpp_files_l0_from_I_ISET_map
 from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class App:
     def __init__(self, root):
         self.root = root
@@ -115,11 +119,16 @@ class App:
         self.loaded_files_scrollbar.grid(row=5, column=9, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
 
     def browse_path(self):
-        folder_path = filedialog.askdirectory(title="Select a folder")
-        if folder_path:
-            self.path_entry.delete(0, tk.END)
-            self.path_entry.insert(0, folder_path)
-            self.refresh_listbox()
+        try:
+            folder_path = filedialog.askdirectory(title="Select a folder")
+            if folder_path:
+                self.path_entry.delete(0, tk.END)
+                self.path_entry.insert(0, folder_path)
+                self.refresh_listbox()
+        except Exception as e:
+            error_msg = "browse_path: An error occurred while browsing for a folder:", str(e)
+            logger.error(error_msg)
+            messagebox.showerror(error_msg)
 
     def refresh_listbox(self, *args):
         folder_path = self.path_entry.get()
@@ -130,35 +139,57 @@ class App:
             self.file_listbox.insert(tk.END, file)
 
     def load_all_files(self):
-        # Clear loaded files before loading new ones
-        self.loaded_files_text.delete('1.0', tk.END)
-        self.data.clear()
-        
-        folder_path = self.path_entry.get()
-        file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
-        files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
+        try:
+            # Clear loaded files before loading new ones
+            self.loaded_files_text.delete('1.0', tk.END)
+            self.data.clear()
+            
+            folder_path = self.path_entry.get()
+            if not os.path.isdir(folder_path):
+                error_msg = "load_all_files: Invalid folder path"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+            
+            file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
+            files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
 
-        loaded_files = self.load_files(files, folder_path, file_type)
+            loaded_files = self.load_files(files, folder_path, file_type)
 
-        self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+            self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+        except Exception as e:
+            error_msg = "Error", f"load_all_files: An error occurred while refreshing the listbox: {str(e)}"
+            logger.error(error_msg)
+            messagebox.showerror(error_msg)
+            
 
     def load_selected_files(self):
-        # Clear loaded files before loading new ones
-        self.loaded_files_text.delete('1.0', tk.END)
-        self.data.clear()
-        
-        selected_indices = self.file_listbox.curselection()
-        if not selected_indices:
-            messagebox.showerror("Error", "No files selected.")
-            return
+        try:
+            # Clear loaded files before loading new ones
+            self.loaded_files_text.delete('1.0', tk.END)
+            self.data.clear()
+            
+            selected_indices = self.file_listbox.curselection()
+            if not selected_indices:
+                messagebox.showerror("Error", "No files selected.")
+                return
 
-        folder_path = self.path_entry.get()
-        file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
-        selected_files = [self.file_listbox.get(idx) for idx in selected_indices]
+            folder_path = self.path_entry.get()
+            if not os.path.isdir(folder_path):
+                    error_msg = "load_all_files: Invalid folder path"
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
+            
+            file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
+            selected_files = [self.file_listbox.get(idx) for idx in selected_indices]
 
-        loaded_files = self.load_files(selected_files, folder_path, file_type)
+            loaded_files = self.load_files(selected_files, folder_path, file_type)
 
-        self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+            self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+        except Exception as e:
+            error_msg = "load_selected_files: Error", f"An error occurred while loading selected files: {str(e)}"
+            logger.error(error_msg)
+            messagebox.showerror(error_msg)
+            
     
     def load_files(self, files, folder_path, file_type):
         loaded_files = []
@@ -168,7 +199,9 @@ class App:
                 self.data.append(read_file(file_path, file_type))
                 loaded_files.append(file)
             except Exception as e:
-                print(f"Error loading file '{file}': {e}")
+                error_msg = f"load_files: Error loading file '{file}': {e}"
+                logger.error(error_msg)
+                print(error_msg)
         return loaded_files
 
     def calculate_I_ISET(self):

@@ -7,7 +7,15 @@ read .stp file
 import struct
 import numpy as np
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def read_stp_file(file_name):
+    if not isinstance(file_name, str):
+        msg = "read_stp_file: Invalid input. filename must be strings."
+        logger.error(msg)
+        raise ValueError(msg)
     try:
         data = []
         header_info = {}
@@ -28,7 +36,9 @@ def read_stp_file(file_name):
             num_rows = int(header_info.get("Number of rows", 0))
 
             if num_columns == 0 or num_rows == 0:
-                raise ValueError("Missing or invalid 'Number of columns' or 'Number of rows' in header.")
+                msg = "read_stp_file: Missing or invalid 'Number of columns' or 'Number of rows' in header."
+                logger.error(msg)
+                raise ValueError(msg)
 
             # Read data points
             while True:
@@ -50,13 +60,21 @@ def read_stp_file(file_name):
         return result
     
     except FileNotFoundError:
-        print(f"Error: File '{file_name}' not found.")
+        error_msg = f"read_stp_file: File '{file_name}' not found."
+        logger.error(error_msg)
+        print(error_msg)
     except struct.error as e:
-        print(f"Error reading file '{file_name}': {e}")
+        error_msg = f"read_stp_file: Error unpacking struct '{file_name}': {e}"
+        logger.error(error_msg)
+        print(error_msg)
     except ValueError as e:
-        print(f"Error reading file '{file_name}': {e}")
+        error_msg = f"read_stp_file: Error reading file '{file_name}': {e}"
+        logger.error(error_msg)
+        print(error_msg)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        error_msg = f"read_stp_file: An unexpected error occurred: {e}"
+        logger.error(error_msg)
+        print(error_msg)
 
 def main():
     file_name = "test_files/t/ISETmap/28933_I-ISET.stp"

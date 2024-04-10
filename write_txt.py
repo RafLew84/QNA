@@ -7,14 +7,18 @@ write .txt file
 import os
 import logging
 
-logging.basicConfig(filename='error.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def write_txt_file(filename, l0, frame_name = None):
     if not isinstance(filename, str) or (frame_name and not isinstance(frame_name, str)):
-        raise ValueError("Invalid input. filename, and frame_name (if provided) must be strings.")
+        msg = "write_txt_file: Invalid input. filename, and frame_name (if provided) must be strings."
+        logger.error(msg)
+        raise ValueError(msg)
     
     if not isinstance(l0, float):
-        raise ValueError("Invalid input. l0 should be of type float")
+        msg = "write_txt_file: Invalid input. l0 should be of type float"
+        logger.error(msg)
+        raise ValueError(msg)
 
     try:
         output_dir = os.path.join(os.path.dirname(filename), "l0")
@@ -29,14 +33,14 @@ def write_txt_file(filename, l0, frame_name = None):
             else:
                 l0_file.write(f'l0 for {filename_only} {frame_name}: {l0}\n')
     except FileNotFoundError as e:
-        error_msg = f"Error: {e}. The specified file or directory does not exist."
+        error_msg = f"write_txt_file: Error: {e}. The specified file or directory does not exist."
         print(error_msg)
-        logging.error(error_msg)
+        logger.error(error_msg)
     except PermissionError as e:
-        error_msg = f"Error: {e}. Permission denied while trying to write the file."
+        error_msg = f"write_txt_file: Error: {e}. Permission denied while trying to write the file."
         print(error_msg)
-        logging.error(error_msg)
+        logger.error(error_msg)
     except Exception as e:
-        error_msg = f"An unexpected error occurred: {e}"
+        error_msg = f"write_txt_file: An unexpected error occurred: {e}"
         print(error_msg)
-        logging.error(error_msg)
+        logger.error(error_msg)

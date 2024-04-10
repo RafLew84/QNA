@@ -6,9 +6,13 @@ Entry point of the application
 """
 
 import tkinter as tk
+import config
 from main_window import App
 
+
+
 def main():
+    config.setup_logging()
     root = tk.Tk()
     app = App(root)
     root.mainloop()
