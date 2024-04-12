@@ -72,12 +72,12 @@ class App:
         self.data_canvas.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
     
     def insert_data_to_analisys(self):
+        self.data_listbox_analisys.delete(0, tk.END)
         for item in self.data:
             filename_only = os.path.basename(item['file_name'])
             self.data_listbox_analisys.insert(tk.END, filename_only)
 
     def show_data(self, event):
-        pass
         # Get the index of the selected filename
         selected_index = self.data_listbox_analisys.curselection()
         if selected_index:
