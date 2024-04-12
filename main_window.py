@@ -6,6 +6,8 @@
 """
 
 import os
+from PIL import Image, ImageTk
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
@@ -39,13 +41,14 @@ class App:
         self.notebook.add(self.load_data_tab, text="Load Data")
         self.create_load_data_tab()
 
-        # Create the second tab: Proccess Data
-        self.tab2 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab2, text="Proccess Data")
+        # Create the second tab: Noise Analisys
+        self.noise_analisys_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.noise_analisys_tab, text="Noise Analisys")
+        self.create_noise_analisys_tab()
 
-        # Create the third tab: Detection
-        self.tab3 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab3, text="Detection")
+        # # Create the third tab: Detection
+        # self.tab3 = ttk.Frame(self.notebook)
+        # self.notebook.add(self.tab3, text="Detection")
 
         # Configure grid row and column weights for rescaling
         self.root.grid_rowconfigure(0, weight=1)
@@ -55,7 +58,60 @@ class App:
         self.load_data_tab.grid_rowconfigure(5, weight=1)
         self.load_data_tab.grid_columnconfigure(0, weight=1)
         self.load_data_tab.grid_columnconfigure(6, weight=1)
+    ##########################################################################################################
+    #### Noise Analisys Tab
+    ##########################################################################################################
+    def create_noise_analisys_tab(self):
+        # Create listbox to display filenames
+        self.data_listbox_analisys = tk.Listbox(self.noise_analisys_tab, width=50, height=10, selectmode=tk.SINGLE)
+        self.data_listbox_analisys.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.data_listbox_analisys.bind("<<ListboxSelect>>", self.show_data)
 
+        # Add a canvas to display the data
+        self.data_canvas = tk.Canvas(self.noise_analisys_tab, width=400, height=300, bg="white")
+        self.data_canvas.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+    
+    def insert_data_to_analisys(self):
+        for item in self.data:
+            filename_only = os.path.basename(item['file_name'])
+            self.data_listbox_analisys.insert(tk.END, filename_only)
+
+    def show_data(self, event):
+        pass
+        # Get the index of the selected filename
+        selected_index = self.data_listbox_analisys.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            # Get the corresponding data
+            selected_data = self.data[index]
+            self.display_image(selected_data)
+
+    def display_image(self, data):
+        # Clear previous data
+        self.data_canvas.delete("all")
+        points = data['data']
+        
+        # Create a new grayscale image
+        img = Image.new('L', (len(points[0]), len(points)))
+
+        # Normalize the values in data to the range [0, 255]
+        max_z = max(map(max, points))
+        min_z = min(map(min, points))
+        if max_z == min_z:
+            max_z += 1
+        for i in range(len(points)):
+            for j in range(len(points[i])):
+                val = int(255 * (points[i][j] - min_z) / (max_z - min_z))
+                img.putpixel((j, i), val)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas.image = photo
     ##########################################################################################################
     #### Load Data Tab
     ##########################################################################################################
@@ -156,6 +212,7 @@ class App:
             loaded_files = self.load_files(files, folder_path, file_type)
 
             self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+            self.insert_data_to_analisys()
         except Exception as e:
             error_msg = "Error", f"load_all_files: An error occurred while refreshing the listbox: {str(e)}"
             logger.error(error_msg)
@@ -185,6 +242,7 @@ class App:
             loaded_files = self.load_files(selected_files, folder_path, file_type)
 
             self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
+            self.insert_data_to_analisys()
         except Exception as e:
             error_msg = "load_selected_files: Error", f"An error occurred while loading selected files: {str(e)}"
             logger.error(error_msg)
