@@ -47,8 +47,9 @@ class App:
         self.create_noise_analisys_tab()
 
         # # Create the third tab: Detection
-        # self.tab3 = ttk.Frame(self.notebook)
-        # self.notebook.add(self.tab3, text="Detection")
+        self.spots_detection_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.spots_detection_tab, text="Detection")
+        # self.create_spots_detection_tab()
 
         # Configure grid row and column weights for rescaling
         self.root.grid_rowconfigure(0, weight=1)
@@ -58,6 +59,10 @@ class App:
         self.load_data_tab.grid_rowconfigure(5, weight=1)
         self.load_data_tab.grid_columnconfigure(0, weight=1)
         self.load_data_tab.grid_columnconfigure(6, weight=1)
+    ##########################################################################################################
+    #### Spots Detection Tab
+    ##########################################################################################################
+
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
@@ -73,6 +78,7 @@ class App:
     
     def insert_data_to_analisys(self):
         self.data_listbox_analisys.delete(0, tk.END)
+
         for item in self.data:
             filename_only = os.path.basename(item['file_name'])
             self.data_listbox_analisys.insert(tk.END, filename_only)
