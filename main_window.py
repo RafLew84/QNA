@@ -72,14 +72,37 @@ class App:
         self.data_listbox_analisys.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         self.data_listbox_analisys.bind("<<ListboxSelect>>", self.show_data)
 
+        # Add a scrollbar for the listbox
+        listbox_scrollbar = tk.Scrollbar(self.noise_analisys_tab, orient=tk.VERTICAL)
+        listbox_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.data_listbox_analisys.config(yscrollcommand=listbox_scrollbar.set)
+        listbox_scrollbar.config(command=self.data_listbox_analisys.yview)
+
         # Add a canvas to display the data
-        self.data_canvas = tk.Canvas(self.noise_analisys_tab, width=400, height=300, bg="white")
-        self.data_canvas.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        self.data_canvas = tk.Canvas(self.noise_analisys_tab, bg="white")
+        self.data_canvas.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+
+        # Add vertical scrollbar
+        v_scrollbar = tk.Scrollbar(self.noise_analisys_tab, orient=tk.VERTICAL, command=self.data_canvas.yview)
+        v_scrollbar.grid(row=0, column=3, sticky="ns")
+        self.data_canvas.configure(yscrollcommand=v_scrollbar.set)
+
+        # Add horizontal scrollbar
+        h_scrollbar = tk.Scrollbar(self.noise_analisys_tab, orient=tk.HORIZONTAL, command=self.data_canvas.xview)
+        h_scrollbar.grid(row=1, column=2, sticky="ew")
+        self.data_canvas.configure(xscrollcommand=h_scrollbar.set)
 
         # Configure row and column weights for rescaling
         self.noise_analisys_tab.grid_rowconfigure(0, weight=1)
         self.noise_analisys_tab.grid_columnconfigure(0, weight=1)
-        self.noise_analisys_tab.grid_columnconfigure(1, weight=1)
+        self.noise_analisys_tab.grid_columnconfigure(2, weight=1)
+
+        # Bind the function to handle resizing events
+        self.noise_analisys_tab.bind("<Configure>", self.resize_canvas_scrollregion)
+
+    def resize_canvas_scrollregion(self, event):
+        # Update the scroll region to cover the entire canvas
+        self.data_canvas.config(scrollregion=self.data_canvas.bbox("all"))
     
     def insert_data_to_analisys(self):
         self.data_listbox_analisys.delete(0, tk.END)
