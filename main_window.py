@@ -66,35 +66,105 @@ class App:
         # Create listbox to display filenames
         self.data_listbox_detection = tk.Listbox(self.spots_detection_tab, width=20, height=10, selectmode=tk.SINGLE)
         self.data_listbox_detection.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_for_detection)
 
-        # Add a scrollbar for the listbox
-        listbox_scrollbar = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL)
-        listbox_scrollbar.grid(row=0, column=1, sticky="ns")
-        self.data_listbox_detection.config(yscrollcommand=listbox_scrollbar.set)
-        listbox_scrollbar.config(command=self.data_listbox_detection.yview)
+        # Add scrollbar for the listbox
+        self.listbox_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL, command=self.data_listbox_detection.yview)
+        self.listbox_scrollbar_detection.grid(row=0, column=1, sticky="ns")
+        self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
+
+        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_for_detection)
 
         # Add a canvas to display the data
         self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
         self.data_canvas_detection.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
 
-        # Add vertical scrollbar
-        v_scrollbar = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL, command=self.data_canvas_detection.yview)
-        v_scrollbar.grid(row=0, column=3, sticky="ns")
-        self.data_canvas_detection.configure(yscrollcommand=v_scrollbar.set)
+        # Create vertical scrollbar for the canvas
+        self.vertical_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL, command=self.data_canvas_detection.yview)
+        self.vertical_scrollbar_detection.grid(row=0, column=3, sticky="ns")
+        self.data_canvas_detection.configure(yscrollcommand=self.vertical_scrollbar_detection.set)
 
-        # Add horizontal scrollbar
-        h_scrollbar = tk.Scrollbar(self.spots_detection_tab, orient=tk.HORIZONTAL, command=self.data_canvas_detection.xview)
-        h_scrollbar.grid(row=1, column=2, sticky="ew")
-        self.data_canvas_detection.configure(xscrollcommand=h_scrollbar.set)
+        # Create horizontal scrollbar for the canvas
+        self.horizontal_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.HORIZONTAL, command=self.data_canvas_detection.xview)
+        self.horizontal_scrollbar_detection.grid(row=1, column=2, sticky="ew")
+        self.data_canvas_detection.configure(xscrollcommand=self.horizontal_scrollbar_detection.set)
 
-        # Configure row and column weights for rescaling
+        # Set row and column weights
         self.spots_detection_tab.grid_rowconfigure(0, weight=1)
-        self.spots_detection_tab.grid_columnconfigure(0, weight=1)
         self.spots_detection_tab.grid_columnconfigure(2, weight=1)
 
-        # Bind the function to handle resizing events
-        self.spots_detection_tab.bind("<Configure>", self.resize_canvas_detection_scrollregion)
+        # Scale factor label and slider
+        self.scale_factor_label = tk.Label(self.spots_detection_tab, text="Scale Factor:")
+        self.scale_factor_label.grid(row=2, column=1, padx=5, pady=5, sticky="e")
+
+        self.scale_factor_var = tk.DoubleVar()
+        self.scale_factor_var.set(1.0)  # Default scale factor
+        self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=1.0, to=5.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
+        self.scale_factor_slider.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+
+        # Bind event for canvas resizing
+        self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
+
+        # Bind event for slider changes
+        self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_slider_change)
+
+
+    def update_image_on_slider_change(self, event):
+        selected_index = self.data_listbox_detection.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            file_ext = self.data[0]['file_name'][-3:]
+            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                selected_data = self.data[index]
+                self.display_image_detection(selected_data)
+            elif file_ext.lower() == "mpp":
+                selected_name = self.data_listbox_detection.get(index)
+                parts = selected_name.split(':')
+                mpp_file_name = parts[0].strip()
+                frame_number = int(parts[1].strip().split()[1])
+                mpp_data = None
+                for item in self.data:
+                    filename_only = os.path.basename(item['file_name'])
+                    if filename_only == mpp_file_name:
+                        mpp_data = item
+                        break
+                selected_data = mpp_data['data'][frame_number - 1]
+                self.display_image_detection(selected_data, True)
+
+    def display_image_detection(self, data, mpp=False):
+        # Clear previous data
+        self.data_canvas_detection.delete("all")
+        points = []
+        if mpp:
+            points = data
+        else:
+            points = data['data']
+        
+        # Create a new grayscale image
+        img = Image.new('L', (len(points[0]), len(points)))
+
+        # Normalize the values in data to the range [0, 255]
+        max_z = max(map(max, points))
+        min_z = min(map(min, points))
+        if max_z == min_z:
+            max_z += 1
+        for i in range(len(points)):
+            for j in range(len(points[i])):
+                val = int(255 * (points[i][j] - min_z) / (max_z - min_z))
+                img.putpixel((j, i), val)
+
+        # Retrieve the scale factor
+        scale_factor = self.scale_factor_var.get()
+        # Resize the image
+        img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas_detection.image = photo
 
     def resize_canvas_detection_scrollregion(self, event):
         # Update the scroll region to cover the entire canvas
@@ -123,7 +193,7 @@ class App:
             # Get the corresponding data
             if file_ext.lower() == "stp" or file_ext.lower() == "s94":
                 selected_data = self.data[index]
-                self.display_detection_image(selected_data)
+                self.display_image_detection(selected_data)
             elif file_ext.lower() == "mpp":
                 selected_name = self.data_listbox_detection.get(index)
                 parts = selected_name.split(':')
@@ -136,38 +206,7 @@ class App:
                         mpp_data = item
                         break
                 selected_data = mpp_data['data'][frame_number - 1]
-                self.display_detection_image(selected_data, True)
-
-    def display_detection_image(self, data, mpp=False):
-        # Clear previous data
-        self.data_canvas_detection.delete("all")
-        points = []
-        if mpp:
-            points = data
-        else:
-            points = data['data']
-        
-        # Create a new grayscale image
-        img = Image.new('L', (len(points[0]), len(points)))
-
-        # Normalize the values in data to the range [0, 255]
-        max_z = max(map(max, points))
-        min_z = min(map(min, points))
-        if max_z == min_z:
-            max_z += 1
-        for i in range(len(points)):
-            for j in range(len(points[i])):
-                val = int(255 * (points[i][j] - min_z) / (max_z - min_z))
-                img.putpixel((j, i), val)
-
-        # Convert the PIL image to a Tkinter PhotoImage
-        photo = ImageTk.PhotoImage(img)
-
-        # Display the image on the canvas
-        self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
-
-        # Save a reference to the PhotoImage to prevent garbage collection
-        self.data_canvas_detection.image = photo
+                self.display_image_detection(selected_data, True)
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
