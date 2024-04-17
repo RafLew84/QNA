@@ -68,13 +68,18 @@ class App:
     ##########################################################################################################
     def create_noise_analisys_tab(self):
         # Create listbox to display filenames
-        self.data_listbox_analisys = tk.Listbox(self.noise_analisys_tab, width=50, height=10, selectmode=tk.SINGLE)
+        self.data_listbox_analisys = tk.Listbox(self.noise_analisys_tab, width=20, height=10, selectmode=tk.SINGLE)
         self.data_listbox_analisys.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         self.data_listbox_analisys.bind("<<ListboxSelect>>", self.show_data)
 
         # Add a canvas to display the data
         self.data_canvas = tk.Canvas(self.noise_analisys_tab, width=400, height=300, bg="white")
         self.data_canvas.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+
+        # Configure row and column weights for rescaling
+        self.noise_analisys_tab.grid_rowconfigure(0, weight=1)
+        self.noise_analisys_tab.grid_columnconfigure(0, weight=1)
+        self.noise_analisys_tab.grid_columnconfigure(1, weight=1)
     
     def insert_data_to_analisys(self):
         self.data_listbox_analisys.delete(0, tk.END)
@@ -112,7 +117,6 @@ class App:
                         mpp_data = item
                         break
                 selected_data = mpp_data['data'][frame_number - 1]
-                #print(selected_data)
                 self.display_image(selected_data, True)
 
     def display_image(self, data, mpp=False):
