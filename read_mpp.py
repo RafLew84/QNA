@@ -58,7 +58,8 @@ def read_mpp_file(file_name):
                         break
                     value = struct.unpack('d', raw_data)[0]
                     frame_data.append(value)
-                data_frames.append(frame_data)
+                data_array = np.array(frame_data).reshape((num_rows, num_columns))
+                data_frames.append(data_array)
 
         return {
             "file_name": file_name,

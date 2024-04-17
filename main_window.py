@@ -79,23 +79,50 @@ class App:
     def insert_data_to_analisys(self):
         self.data_listbox_analisys.delete(0, tk.END)
 
+        file_ext = self.data[0]['file_name'][-3:]
         for item in self.data:
-            filename_only = os.path.basename(item['file_name'])
-            self.data_listbox_analisys.insert(tk.END, filename_only)
+            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                filename_only = os.path.basename(item['file_name'])
+                self.data_listbox_analisys.insert(tk.END, filename_only)
+            elif file_ext.lower() == "mpp":
+                filename_only = os.path.basename(item['file_name'])
+                for i, frame in enumerate(item['data'], start=1):
+                    frame_name = f"{filename_only}: frame {i}"
+                    self.data_listbox_analisys.insert(tk.END, frame_name)
 
     def show_data(self, event):
+        file_ext = self.data[0]['file_name'][-3:]
         # Get the index of the selected filename
         selected_index = self.data_listbox_analisys.curselection()
         if selected_index:
             index = int(selected_index[0])
             # Get the corresponding data
-            selected_data = self.data[index]
-            self.display_image(selected_data)
+            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                selected_data = self.data[index]
+                self.display_image(selected_data)
+            elif file_ext.lower() == "mpp":
+                selected_name = self.data_listbox_analisys.get(index)
+                parts = selected_name.split(':')
+                mpp_file_name = parts[0].strip()
+                frame_number = int(parts[1].strip().split()[1])
+                mpp_data = None
+                for item in self.data:
+                    filename_only = os.path.basename(item['file_name'])
+                    if filename_only == mpp_file_name:
+                        mpp_data = item
+                        break
+                selected_data = mpp_data['data'][frame_number - 1]
+                #print(selected_data)
+                self.display_image(selected_data, True)
 
-    def display_image(self, data):
+    def display_image(self, data, mpp=False):
         # Clear previous data
         self.data_canvas.delete("all")
-        points = data['data']
+        points = []
+        if mpp:
+            points = data
+        else:
+            points = data['data']
         
         # Create a new grayscale image
         img = Image.new('L', (len(points[0]), len(points)))
