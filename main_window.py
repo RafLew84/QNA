@@ -129,6 +129,7 @@ class App:
                         break
                 selected_data = mpp_data['data'][frame_number - 1]
                 self.display_image_detection(selected_data, True)
+        self.resize_canvas_detection_scrollregion(event)
 
     def display_image_detection(self, data, mpp=False):
         # Clear previous data
