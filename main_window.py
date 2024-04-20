@@ -98,7 +98,7 @@ class App:
 
         self.scale_factor_var = tk.DoubleVar()
         self.scale_factor_var.set(1.0)  # Default scale factor
-        self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=0.1, to=5.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
+        self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=0.1, to=10.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
         self.scale_factor_slider.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
 
         # Slider for navigation
@@ -160,15 +160,6 @@ class App:
                 self.data_listbox_detection.see(selected_index)
                 self.resize_canvas_detection_scrollregion(event)
         self.resize_canvas_detection_scrollregion(event)
-        # selected_index = int(self.navigation_slider.get() * (len(self.data) - 1) / 100)
-        # if selected_index >= 0 and selected_index < len(self.data):
-        #     selected_data = self.data[selected_index]
-        #     self.display_image_detection(selected_data)
-        #     # Update listbox selection
-        #     self.data_listbox_detection.selection_clear(0, tk.END)
-        #     self.data_listbox_detection.selection_set(selected_index)
-        #     self.data_listbox_detection.see(selected_index)  # Ensure the selected item is visible in the listbox
-        #     self.resize_canvas_detection_scrollregion(event)
 
     def update_navigation_slider_range(self):
         num_items = len(self.data_listbox_detection.get(0, tk.END))
