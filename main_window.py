@@ -31,6 +31,7 @@ class App:
         self.root.title("QNA Software")
 
         self.data = []
+        self.header_info = {}
 
         # Create a notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
@@ -65,58 +66,120 @@ class App:
     def create_spots_detection_tab(self):
         # Create listbox to display filenames
         self.data_listbox_detection = tk.Listbox(self.spots_detection_tab, width=20, height=10, selectmode=tk.SINGLE)
-        self.data_listbox_detection.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.data_listbox_detection.grid(row=0, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
 
         # Add scrollbar for the listbox
         self.listbox_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL, command=self.data_listbox_detection.yview)
-        self.listbox_scrollbar_detection.grid(row=0, column=1, sticky="ns")
+        self.listbox_scrollbar_detection.grid(row=0, column=1, rowspan=2, sticky="ns")
         self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
 
         self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_for_detection)
 
         # Add a canvas to display the data
         self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
-        self.data_canvas_detection.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
 
         # Create vertical scrollbar for the canvas
         self.vertical_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.VERTICAL, command=self.data_canvas_detection.yview)
-        self.vertical_scrollbar_detection.grid(row=0, column=3, sticky="ns")
+        self.vertical_scrollbar_detection.grid(row=1, column=3, sticky="ns")
         self.data_canvas_detection.configure(yscrollcommand=self.vertical_scrollbar_detection.set)
 
         # Create horizontal scrollbar for the canvas
         self.horizontal_scrollbar_detection = tk.Scrollbar(self.spots_detection_tab, orient=tk.HORIZONTAL, command=self.data_canvas_detection.xview)
-        self.horizontal_scrollbar_detection.grid(row=1, column=2, sticky="ew")
+        self.horizontal_scrollbar_detection.grid(row=2, column=2, sticky="ew")
         self.data_canvas_detection.configure(xscrollcommand=self.horizontal_scrollbar_detection.set)
 
         # Set row and column weights
-        self.spots_detection_tab.grid_rowconfigure(0, weight=1)
+        self.spots_detection_tab.grid_rowconfigure(1, weight=1)
         self.spots_detection_tab.grid_columnconfigure(2, weight=1)
 
         # Scale factor label and slider
         self.scale_factor_label = tk.Label(self.spots_detection_tab, text="Scale Factor:")
-        self.scale_factor_label.grid(row=2, column=1, padx=5, pady=5, sticky="e")
+        self.scale_factor_label.grid(row=3, column=1, padx=5, pady=5, sticky="e")
 
         self.scale_factor_var = tk.DoubleVar()
         self.scale_factor_var.set(1.0)  # Default scale factor
         self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=0.1, to=10.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
-        self.scale_factor_slider.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+        self.scale_factor_slider.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
 
         # Slider for navigation
         self.navigation_slider = tk.Scale(self.spots_detection_tab, from_=1, to=1, orient=tk.HORIZONTAL, command=self.update_image_from_slider)
-        self.navigation_slider.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
+        self.navigation_slider.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
 
         # Navigation buttons
         self.prev_button = tk.Button(self.spots_detection_tab, text="Prev", command=self.navigate_prev)
-        self.prev_button.grid(row=3, column=0, padx=5, pady=5)
+        self.prev_button.grid(row=4, column=0, padx=5, pady=5)
 
         self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next)
-        self.next_button.grid(row=3, column=4, padx=5, pady=5)
+        self.next_button.grid(row=4, column=4, padx=5, pady=5)
 
         # Bind event for canvas resizing
         self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
 
         # Bind event for slider changes
         self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_slider_change)
+
+        # Display header information labels
+        self.header_section_frame = ttk.Frame(self.spots_detection_tab, padding="5")
+        self.header_section_frame.grid(row=0, column=2, padx=5, pady=2, sticky="nsew")
+
+        # Header section name label
+        self.header_section_name_label = tk.Label(self.header_section_frame, text="Header Info:")
+        self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
+
+        self.display_header_info_labels()
+    
+    def display_header_info_labels(self):
+        # Clear previous header
+        for widget in self.header_section_frame.winfo_children():
+            widget.destroy()
+        # Header info labels
+        header_labels = []
+
+        selected_index = self.data_listbox_detection.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            file_ext = self.data[0]['file_name'][-3:]
+            if file_ext.lower() == "s94":
+                header_info = self.data[index]['header_info']
+                header_labels = [
+                    f"X Points: {header_info['x_points']}", f"Y Points: {header_info['y_points']}", f"X Size: {header_info['x_size']}", f"Y Size: {header_info['y_size']}",
+                    f"X Offset: {header_info['x_offset']}", f"Y Offset: {header_info['y_offset']}", f"Z Gain: {header_info['z_gain']}", f"Scan Angle: {header_info['Scan_Angle']}", f"Kp: {header_info['Kp']}", f"Tn: {header_info['Tn']}", f"Tv: {header_info['Tv']}", f"It: {header_info['It']}"
+                ]
+            elif file_ext.lower() == "stp":
+                header_info = self.data[index]['header_info']
+                header_labels = [
+                    f"X Amplitude: {header_info['X Amplitude']}", f"Y Amplitude: {header_info['Y Amplitude']}", f"Z Amplitude: {header_info['Z Amplitude']}", f"Number of cols: {header_info['Number of columns']}",
+                    f"Number of rows: {header_info['Number of rows']}", f"X Offset: {header_info['X-Offset']}", f"Y Offset: {header_info['Y-Offset']}", f"Z Gain: {header_info['Z Gain']}"
+                ]
+            elif file_ext.lower() == "mpp":
+                selected_name = self.data_listbox_detection.get(index)
+                parts = selected_name.split(':')
+                mpp_file_name = parts[0].strip()
+                frame_number = index = int(self.navigation_slider.get())
+                header_info = {}
+                for item in self.data:
+                    filename_only = os.path.basename(item['file_name'])
+                    if filename_only == mpp_file_name:
+                        header_info = item['header_info']
+                        print(item['header_info'])
+                header_labels = [
+                    f"X Amplitude: {header_info.get('Control', {}).get('X Amplitude', '')}", 
+                    f"Y Amplitude: {header_info.get('Control', {}).get('Y Amplitude', '')}", 
+                    f"Z Amplitude: {header_info.get('General Info', {}).get('Z Amplitude', '')}", 
+                    f"Number of cols: {header_info.get('General Info', {}).get('Number of columns', '')}",
+                    f"Number of rows: {header_info.get('General Info', {}).get('Number of rows', '')}", 
+                    f"X Offset: {header_info.get('Control', {}).get('X Offset', '')}", 
+                    f"Y Offset: {header_info.get('Control', {}).get('Y Offset', '')}", 
+                    f"Z Gain: {header_info.get('Control', {}).get('Z Gain', '')}"
+                ]
+            # Create labels and grid them
+            num_labels_per_row = (len(header_labels) + 2) // 3  # Distribute labels into three rows
+            for i, label_text in enumerate(header_labels):
+                row = i // num_labels_per_row
+                column = i % num_labels_per_row
+                label = tk.Label(self.header_section_frame, text=label_text)
+                label.grid(row=row, column=column, padx=5, pady=2, sticky="e")
 
     def navigate_prev(self):
         current_value = self.navigation_slider.get()
@@ -196,6 +259,7 @@ class App:
             points = data
         else:
             points = data['data']
+        self.display_header_info_labels()
         
         # Create a new grayscale image
         img = Image.new('L', (len(points[0]), len(points)))
@@ -268,30 +332,6 @@ class App:
                         break
                 selected_data = mpp_data['data'][frame_number - 1]
                 self.display_image_detection(selected_data, True)
-
-    # def show_data_for_detection(self, event):
-    #     file_ext = self.data[0]['file_name'][-3:]
-    #     # Get the index of the selected filename
-    #     selected_index = self.data_listbox_detection.curselection()
-    #     if selected_index:
-    #         index = int(selected_index[0])
-    #         # Get the corresponding data
-    #         if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-    #             selected_data = self.data[index]
-    #             self.display_image_detection(selected_data)
-    #         elif file_ext.lower() == "mpp":
-    #             selected_name = self.data_listbox_detection.get(index)
-    #             parts = selected_name.split(':')
-    #             mpp_file_name = parts[0].strip()
-    #             frame_number = int(parts[1].strip().split()[1])
-    #             mpp_data = None
-    #             for item in self.data:
-    #                 filename_only = os.path.basename(item['file_name'])
-    #                 if filename_only == mpp_file_name:
-    #                     mpp_data = item
-    #                     break
-    #             selected_data = mpp_data['data'][frame_number - 1]
-    #             self.display_image_detection(selected_data, True)
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
