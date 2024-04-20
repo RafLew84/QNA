@@ -12,6 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def write_STP_file(
+        output_dir_name,
         file_name, 
         x_points, 
         y_points, 
@@ -46,7 +47,7 @@ def write_STP_file(
     header_lines[3] = header_lines[3].format(X_Calibration, Z_Calibration, Z_Scale_Offset)
     header_lines[0] += str(len(''.join(header_lines)) + 4)
 
-    output_dir = os.path.join(os.path.dirname(file_name), "ISETmap")
+    output_dir = os.path.join(os.path.dirname(file_name), output_dir_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

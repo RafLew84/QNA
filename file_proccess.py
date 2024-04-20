@@ -115,6 +115,7 @@ def proccess_stp_files_I_ISET_map(data, ISET):
             header_info = data_set['header_info']
 
             write_STP_file(
+                output_dir_name="I-ISETmap",
                 file_name= data_set['file_name'][:-4]+"_I-ISET",
                 x_points= int(header_info['Number of columns']),
                 y_points= int(header_info['Number of rows']),
@@ -131,6 +132,29 @@ def proccess_stp_files_I_ISET_map(data, ISET):
             error_msg = f"proccess_stp_files_I_ISET_map: Error processing data set: {data_set['file_name']}. Error: {e}"
             logger.error(error_msg)
             print(error_msg)
+
+def convert_s94_files_to_stp(file):
+    if not isinstance(file, dict) and 'data' in file and 'header_info' in file and 'file_name' in file:
+        error_msg = "convert_s94_files_to_stp: Element must be a dictionary with 'data', 'header_info', and 'file_name' keys."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+    
+    header_info = file['header_info']
+    
+    write_STP_file(
+        output_dir_name="STP_files",
+        file_name=file['file_name'][:-4],
+        x_points= header_info['x_points'],
+        y_points= header_info['y_points'],
+        z_amplitude= calculate_z_amplitude_from_S94_file(header_info['z_gain'], file['data']),
+        image_mode= header_info['image_mode'],
+        x_size= header_info['x_size'],
+        y_size= header_info['y_size'],
+        x_offset= header_info['x_offset'],
+        y_offset= header_info['y_offset'],
+        z_gain= header_info['z_gain'],
+        data= [i for row in file['data'] for i in row]
+    )
 
 def proccess_s94_files_I_ISET_map(data, ISET):
     if not isinstance(data, list):
@@ -158,6 +182,7 @@ def proccess_s94_files_I_ISET_map(data, ISET):
             )
 
             write_STP_file(
+                output_dir_name="I-ISETmap",
                 file_name= data_set['file_name'][:-4]+"_I-ISET",
                 x_points= header_info['x_points'],
                 y_points= header_info['y_points'],
@@ -208,6 +233,7 @@ def proccess_mpp_files_I_ISET_map(data, ISET):
                 extracted_header_info = extract_data_from_mpp_header_for_stp_file(header_info)
 
                 write_STP_file(
+                    output_dir_name= "I-ISETmap",
                     file_name= frame_filename,
                     x_points= num_columns,
                     y_points= num_rows,

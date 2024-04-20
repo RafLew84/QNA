@@ -19,7 +19,7 @@ from read_mpp import read_mpp_file
 from file_proccess import proccess_stp_files_I_ISET_map, proccess_s94_files_I_ISET_map
 from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_files_l0
 from file_proccess import proccess_mpp_files_l0, proccess_mpp_files_l0_from_I_ISET_map
-from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map
+from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map, convert_s94_files_to_stp
 
 import logging
 
@@ -487,6 +487,10 @@ class App:
         self.calculate_I_ISET_l0_button = tk.Button(self.load_data_tab, text="Calculate l0 from (I - ISET)^2 map" , command=self.calculate_I_ISET_l0)
         self.calculate_I_ISET_l0_button.grid(row=2, column=7,columnspan=2, padx=5, pady=5, sticky="ew")
 
+        # Covert button
+        self.convert_s94_stp_button = tk.Button(self.load_data_tab, text="Convert", command=self.convert_s94_stp)
+        self.convert_s94_stp_button.grid(row=2, column=0, padx=5, pady=5)
+
         # Scrollbar for listbox
         self.scrollbar = tk.Scrollbar(self.load_data_tab, orient=tk.VERTICAL)
         self.scrollbar.grid(row=5, column=4, sticky=tk.N+tk.S, padx=(0, 5), pady=5)
@@ -522,6 +526,31 @@ class App:
         files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
         for file in files:
             self.file_listbox.insert(tk.END, file)
+
+    def convert_s94_stp(self):
+        try:
+            folder_path = self.path_entry.get()
+            if not os.path.isdir(folder_path):
+                error_msg = "load_all_files: Invalid folder path"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+            files = []
+            file_type = self.file_type_var.get().lower()  # Convert file type to lowercase
+            if file_type == ".s94":
+                files = [file for file in os.listdir(folder_path) if file.lower().endswith(file_type)]
+                for file in files:
+                    file_path = os.path.join(folder_path, file)
+                    #self.data.append(read_file(file_path, file_type))
+                    f = read_file(file_path, file_type)
+                    convert_s94_files_to_stp(f)
+            else:
+                messagebox.showinfo("Wrong file type", "Use only with s94 files")
+            messagebox.showinfo("Done", "Proccessing s94 files complete.")
+            
+        except Exception as e:
+            error_msg = "Error", f"convert: An error occurred while refreshing the listbox: {str(e)}"
+            logger.error(error_msg)
+            messagebox.showerror(error_msg)
 
     def load_all_files(self):
         try:
