@@ -98,8 +98,19 @@ class App:
 
         self.scale_factor_var = tk.DoubleVar()
         self.scale_factor_var.set(1.0)  # Default scale factor
-        self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=1.0, to=5.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
+        self.scale_factor_slider = tk.Scale(self.spots_detection_tab, from_=0.1, to=5.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.scale_factor_var, length=200)
         self.scale_factor_slider.grid(row=2, column=2, padx=5, pady=5, sticky="ew")
+
+        # Slider for navigation
+        self.navigation_slider = tk.Scale(self.spots_detection_tab, from_=1, to=1, orient=tk.HORIZONTAL, command=self.update_image_from_slider)
+        self.navigation_slider.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
+
+        # Navigation buttons
+        self.prev_button = tk.Button(self.spots_detection_tab, text="Prev", command=self.navigate_prev)
+        self.prev_button.grid(row=3, column=0, padx=5, pady=5)
+
+        self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next)
+        self.next_button.grid(row=3, column=4, padx=5, pady=5)
 
         # Bind event for canvas resizing
         self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
@@ -107,6 +118,61 @@ class App:
         # Bind event for slider changes
         self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_slider_change)
 
+    def navigate_prev(self):
+        current_value = self.navigation_slider.get()
+        if current_value > 0:
+            self.navigation_slider.set(current_value - 1)
+
+    def navigate_next(self):
+        current_value = self.navigation_slider.get()
+        self.navigation_slider.set(current_value + 1)
+
+    def update_image_from_slider(self, event):
+        selected_index = self.data_listbox_detection.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            file_ext = self.data[0]['file_name'][-3:]
+            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                index = int(self.navigation_slider.get())
+                selected_data = self.data[index - 1]
+                self.display_image_detection(selected_data)
+                # Update listbox selection
+                self.data_listbox_detection.selection_clear(0, tk.END)
+                self.data_listbox_detection.selection_set(selected_index)
+                self.data_listbox_detection.see(selected_index)
+                self.resize_canvas_detection_scrollregion(event)
+            elif file_ext.lower() == "mpp":
+                selected_name = self.data_listbox_detection.get(index)
+                parts = selected_name.split(':')
+                mpp_file_name = parts[0].strip()
+                frame_number = index = int(self.navigation_slider.get())
+                mpp_data = None
+                for item in self.data:
+                    filename_only = os.path.basename(item['file_name'])
+                    if filename_only == mpp_file_name:
+                        mpp_data = item
+                        break
+                selected_data = mpp_data['data'][frame_number - 1]
+                self.display_image_detection(selected_data, True)
+                # Update listbox selection
+                self.data_listbox_detection.selection_clear(0, tk.END)
+                self.data_listbox_detection.selection_set(selected_index)
+                self.data_listbox_detection.see(selected_index)
+                self.resize_canvas_detection_scrollregion(event)
+        self.resize_canvas_detection_scrollregion(event)
+        # selected_index = int(self.navigation_slider.get() * (len(self.data) - 1) / 100)
+        # if selected_index >= 0 and selected_index < len(self.data):
+        #     selected_data = self.data[selected_index]
+        #     self.display_image_detection(selected_data)
+        #     # Update listbox selection
+        #     self.data_listbox_detection.selection_clear(0, tk.END)
+        #     self.data_listbox_detection.selection_set(selected_index)
+        #     self.data_listbox_detection.see(selected_index)  # Ensure the selected item is visible in the listbox
+        #     self.resize_canvas_detection_scrollregion(event)
+
+    def update_navigation_slider_range(self):
+        num_items = len(self.data_listbox_detection.get(0, tk.END))
+        self.navigation_slider.config(from_=1, to=num_items)
 
     def update_image_on_slider_change(self, event):
         selected_index = self.data_listbox_detection.curselection()
@@ -184,6 +250,7 @@ class App:
                 for i, frame in enumerate(item['data'], start=1):
                     frame_name = f"{filename_only}: frame {i}"
                     self.data_listbox_detection.insert(tk.END, frame_name)
+        self.update_navigation_slider_range()
 
     def show_data_for_detection(self, event):
         file_ext = self.data[0]['file_name'][-3:]
@@ -191,6 +258,8 @@ class App:
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(selected_index[0])
+            # Update navigation slider
+            self.navigation_slider.set(index + 1)
             # Get the corresponding data
             if file_ext.lower() == "stp" or file_ext.lower() == "s94":
                 selected_data = self.data[index]
@@ -208,6 +277,30 @@ class App:
                         break
                 selected_data = mpp_data['data'][frame_number - 1]
                 self.display_image_detection(selected_data, True)
+
+    # def show_data_for_detection(self, event):
+    #     file_ext = self.data[0]['file_name'][-3:]
+    #     # Get the index of the selected filename
+    #     selected_index = self.data_listbox_detection.curselection()
+    #     if selected_index:
+    #         index = int(selected_index[0])
+    #         # Get the corresponding data
+    #         if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+    #             selected_data = self.data[index]
+    #             self.display_image_detection(selected_data)
+    #         elif file_ext.lower() == "mpp":
+    #             selected_name = self.data_listbox_detection.get(index)
+    #             parts = selected_name.split(':')
+    #             mpp_file_name = parts[0].strip()
+    #             frame_number = int(parts[1].strip().split()[1])
+    #             mpp_data = None
+    #             for item in self.data:
+    #                 filename_only = os.path.basename(item['file_name'])
+    #                 if filename_only == mpp_file_name:
+    #                     mpp_data = item
+    #                     break
+    #             selected_data = mpp_data['data'][frame_number - 1]
+    #             self.display_image_detection(selected_data, True)
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
