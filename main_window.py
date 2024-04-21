@@ -21,6 +21,8 @@ from file_proccess import proccess_mpp_files_I_ISET_map, proccess_stp_and_s94_fi
 from file_proccess import proccess_mpp_files_l0, proccess_mpp_files_l0_from_I_ISET_map
 from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map, convert_s94_files_to_stp
 
+from data_proccess import create_greyscale_image
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,9 @@ class App:
     #### Spots Detection Tab
     ##########################################################################################################
     def create_spots_detection_tab(self):
+        # Data for analisys
+        self.data_for_detection = []
+        
         # Create listbox to display filenames
         self.data_listbox_detection = tk.Listbox(self.spots_detection_tab, width=20, height=10, selectmode=tk.SINGLE)
         self.data_listbox_detection.grid(row=0, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
@@ -163,30 +168,21 @@ class App:
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(selected_index[0])
-            file_ext = self.data[0]['file_name'][-3:]
+            file_ext = self.data_for_detection[0]['file_name'][-3:]
             if file_ext.lower() == "s94":
-                header_info = self.data[index]['header_info']
+                header_info = self.data_for_detection[index]['header_info']
                 header_labels = [
                     f"X Points: {header_info['x_points']}", f"Y Points: {header_info['y_points']}", f"X Size: {header_info['x_size']}", f"Y Size: {header_info['y_size']}",
                     f"X Offset: {header_info['x_offset']}", f"Y Offset: {header_info['y_offset']}", f"Z Gain: {header_info['z_gain']}", f"Scan Angle: {header_info['Scan_Angle']}", f"Kp: {header_info['Kp']}", f"Tn: {header_info['Tn']}", f"Tv: {header_info['Tv']}", f"It: {header_info['It']}"
                 ]
             elif file_ext.lower() == "stp":
-                header_info = self.data[index]['header_info']
+                header_info = self.data_for_detection[index]['header_info']
                 header_labels = [
                     f"X Amplitude: {header_info['X Amplitude']}", f"Y Amplitude: {header_info['Y Amplitude']}", f"Z Amplitude: {header_info['Z Amplitude']}", f"Number of cols: {header_info['Number of columns']}",
                     f"Number of rows: {header_info['Number of rows']}", f"X Offset: {header_info['X-Offset']}", f"Y Offset: {header_info['Y-Offset']}", f"Z Gain: {header_info['Z Gain']}"
                 ]
             elif file_ext.lower() == "mpp":
-                selected_name = self.data_listbox_detection.get(index)
-                parts = selected_name.split(':')
-                mpp_file_name = parts[0].strip()
-                frame_number = index = int(self.navigation_slider.get())
-                header_info = {}
-                for item in self.data:
-                    filename_only = os.path.basename(item['file_name'])
-                    if filename_only == mpp_file_name:
-                        header_info = item['header_info']
-                        print(item['header_info'])
+                header_info = self.data_for_detection[index]['header_info']
                 header_labels = [
                     f"X Amplitude: {header_info.get('Control', {}).get('X Amplitude', '')}", 
                     f"Y Amplitude: {header_info.get('Control', {}).get('Y Amplitude', '')}", 
@@ -217,35 +213,14 @@ class App:
     def update_image_from_slider(self, event):
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
-            index = int(selected_index[0])
-            file_ext = self.data[0]['file_name'][-3:]
-            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-                index = int(self.navigation_slider.get())
-                selected_data = self.data[index - 1]
-                self.display_image_detection(selected_data)
-                # Update listbox selection
-                self.data_listbox_detection.selection_clear(0, tk.END)
-                self.data_listbox_detection.selection_set(selected_index)
-                self.data_listbox_detection.see(selected_index)
-                self.resize_canvas_detection_scrollregion(event)
-            elif file_ext.lower() == "mpp":
-                selected_name = self.data_listbox_detection.get(index)
-                parts = selected_name.split(':')
-                mpp_file_name = parts[0].strip()
-                frame_number = index = int(self.navigation_slider.get())
-                mpp_data = None
-                for item in self.data:
-                    filename_only = os.path.basename(item['file_name'])
-                    if filename_only == mpp_file_name:
-                        mpp_data = item
-                        break
-                selected_data = mpp_data['data'][frame_number - 1]
-                self.display_image_detection(selected_data, True)
-                # Update listbox selection
-                self.data_listbox_detection.selection_clear(0, tk.END)
-                self.data_listbox_detection.selection_set(selected_index)
-                self.data_listbox_detection.see(selected_index)
-                self.resize_canvas_detection_scrollregion(event)
+            index = int(self.navigation_slider.get())
+            self.display_image_detection(index - 1)
+
+            # Update listbox selection
+            self.data_listbox_detection.selection_clear(0, tk.END)
+            self.data_listbox_detection.selection_set(selected_index)
+            self.data_listbox_detection.see(selected_index)
+            self.resize_canvas_detection_scrollregion(event)
         self.resize_canvas_detection_scrollregion(event)
 
     def update_navigation_slider_range(self):
@@ -257,46 +232,17 @@ class App:
         if selected_index:
             index = int(selected_index[0])
             file_ext = self.data[0]['file_name'][-3:]
-            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-                selected_data = self.data[index]
-                self.display_image_detection(selected_data)
-            elif file_ext.lower() == "mpp":
-                selected_name = self.data_listbox_detection.get(index)
-                parts = selected_name.split(':')
-                mpp_file_name = parts[0].strip()
-                frame_number = int(parts[1].strip().split()[1])
-                mpp_data = None
-                for item in self.data:
-                    filename_only = os.path.basename(item['file_name'])
-                    if filename_only == mpp_file_name:
-                        mpp_data = item
-                        break
-                selected_data = mpp_data['data'][frame_number - 1]
-                self.display_image_detection(selected_data, True)
+            self.display_image_detection(index)
         self.resize_canvas_detection_scrollregion(event)
 
-    def display_image_detection(self, data, mpp=False):
+    #def display_image_detection(self, data, mpp=False):
+    def display_image_detection(self, index):
         # Clear previous data
         self.data_canvas_detection.delete("all")
-        points = []
-        if mpp:
-            points = data
-        else:
-            points = data['data']
         self.display_header_info_labels()
-        
-        # Create a new grayscale image
-        img = Image.new('L', (len(points[0]), len(points)))
 
-        # Normalize the values in data to the range [0, 255]
-        max_z = max(map(max, points))
-        min_z = min(map(min, points))
-        if max_z == min_z:
-            max_z += 1
-        for i in range(len(points)):
-            for j in range(len(points[i])):
-                val = int(255 * (points[i][j] - min_z) / (max_z - min_z))
-                img.putpixel((j, i), val)
+        # Load greyscale image
+        img = self.data_for_detection[index]['greyscale_image']
 
         # Retrieve the scale factor
         scale_factor = self.scale_factor_var.get()
@@ -317,6 +263,7 @@ class App:
         self.data_canvas_detection.config(scrollregion=self.data_canvas_detection.bbox("all"))
 
     def insert_data_to_detection(self):
+        self.data_for_detection.clear()
         self.data_listbox_detection.delete(0, tk.END)
 
         file_ext = self.data[0]['file_name'][-3:]
@@ -324,11 +271,26 @@ class App:
             if file_ext.lower() == "stp" or file_ext.lower() == "s94":
                 filename_only = os.path.basename(item['file_name'])
                 self.data_listbox_detection.insert(tk.END, filename_only)
+                self.data_for_detection.append({
+                    "file_name": item['file_name'],
+                    "header_info": item['header_info'],
+                    "original_data": item['data'],
+                    "greyscale_image": create_greyscale_image(item['data']),
+                    "operations": []
+                })
             elif file_ext.lower() == "mpp":
                 filename_only = os.path.basename(item['file_name'])
                 for i, frame in enumerate(item['data'], start=1):
                     frame_name = f"{filename_only}: frame {i}"
                     self.data_listbox_detection.insert(tk.END, frame_name)
+                    self.data_for_detection.append({
+                    "file_name": item['file_name'],
+                    "frame_number": i,
+                    "header_info": item['header_info'],
+                    "original_data": frame,
+                    "greyscale_image": create_greyscale_image(frame),
+                    "operations": []
+                    })
         self.update_navigation_slider_range()
 
     def show_data_for_detection(self, event):
@@ -339,23 +301,7 @@ class App:
             index = int(selected_index[0])
             # Update navigation slider
             self.navigation_slider.set(index + 1)
-            # Get the corresponding data
-            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-                selected_data = self.data[index]
-                self.display_image_detection(selected_data)
-            elif file_ext.lower() == "mpp":
-                selected_name = self.data_listbox_detection.get(index)
-                parts = selected_name.split(':')
-                mpp_file_name = parts[0].strip()
-                frame_number = int(parts[1].strip().split()[1])
-                mpp_data = None
-                for item in self.data:
-                    filename_only = os.path.basename(item['file_name'])
-                    if filename_only == mpp_file_name:
-                        mpp_data = item
-                        break
-                selected_data = mpp_data['data'][frame_number - 1]
-                self.display_image_detection(selected_data, True)
+            self.display_image_detection(index)
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
