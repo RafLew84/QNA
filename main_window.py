@@ -127,7 +127,31 @@ class App:
         self.header_section_name_label = tk.Label(self.header_section_frame, text="Header Info:")
         self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
 
+        # Display Preproccess Options
+        self.preproccess_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
+        self.preproccess_section_frame.grid(row=0, column=4, columnspan=2, padx=5, pady=2, sticky="nsew")
+
+        # Preproccess section name label
+        self.preproccess_section_name_label = tk.Label(self.preproccess_section_frame, text="Preproccess:")
+        self.preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="e")
+
+        # Display Detection Options
+        self.detection_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
+        self.detection_section_frame.grid(row=1, column=4, columnspan=2, padx=5, pady=2, sticky="nsew")
+
+        # Detection section name label
+        self.detection_section_name_label = tk.Label(self.detection_section_frame, text="Detection:")
+        self.detection_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="e")
+
         self.display_header_info_labels()
+        self.display_preproccess_frame()
+        self.display_detection_frame()
+
+    def display_detection_frame(self):
+        pass
+
+    def display_preproccess_frame(self):
+        pass
     
     def display_header_info_labels(self):
         # Clear previous header
