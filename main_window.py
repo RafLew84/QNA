@@ -7,8 +7,11 @@
 
 import os
 from PIL import Image, ImageTk
+import numpy as np
 
 import tkinter as tk
+import tkinter.font as tkFont
+
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
@@ -23,6 +26,8 @@ from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map, convert
 
 from data_proccess import create_greyscale_image
 
+from img_proccess import NlMeansDenois, GaussianBlur
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,6 +39,12 @@ class App:
 
         self.data = []
         self.header_info = {}
+        self.preprocess_params = {
+            "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
+            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7}
+        }
+
+        self.selected_option = None
 
         # Create a notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
@@ -133,30 +144,133 @@ class App:
         self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
 
         # Display Preproccess Options
-        self.preproccess_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
-        self.preproccess_section_frame.grid(row=0, column=4, columnspan=2, padx=5, pady=2, sticky="nsew")
-
-        # Preproccess section name label
-        self.preproccess_section_name_label = tk.Label(self.preproccess_section_frame, text="Preproccess:")
-        self.preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="e")
-
-        # Display Detection Options
         self.detection_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
         self.detection_section_frame.grid(row=1, column=4, columnspan=2, padx=5, pady=2, sticky="nsew")
 
-        # Detection section name label
-        self.detection_section_name_label = tk.Label(self.detection_section_frame, text="Detection:")
-        self.detection_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="e")
-
         self.display_header_info_labels()
-        self.display_preproccess_frame()
         self.display_detection_frame()
 
     def display_detection_frame(self):
-        pass
+        # Clear existing widgets in the preprocessing frame
+        for widget in self.detection_section_frame.winfo_children():
+            widget.destroy()
+        
+        # Preproccess section name label
+        preproccess_section_name_label = tk.Label(self.detection_section_frame, text="Preproccess:")
+        preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="n")
 
-    def display_preproccess_frame(self):
-        pass
+        # Dropdown menu options
+        preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising"]
+
+        # Create and place dropdown menu
+        dropdown_var = tk.StringVar()
+        dropdown_var.set(preprocessing_options[0])  # Set default option
+        dropdown = tk.OptionMenu(self.detection_section_frame, dropdown_var, *preprocessing_options, command=self.update_labels)
+        dropdown.config(width=10)
+        dropdown.grid(row=1, column=0,rowspan=2, padx=5, pady=1, sticky="n")
+
+        # Labels for function parameters
+        self.parameter_entries = {}
+        self.parameter_labels = {}
+        row = 2
+        for param_name in self.preprocess_params[preprocessing_options[0]].keys():
+            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_labels[param_name] = label
+            entry = tk.Entry(self.detection_section_frame)
+            entry.grid(row=row, column=1, padx=5, pady=1, sticky="w")
+            entry.insert(0, str(self.preprocess_params[preprocessing_options[0]][param_name]))
+            self.parameter_entries[param_name] = entry
+            row += 1
+
+        # # Apply button
+        self.apply_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_preprocessing)
+        self.apply_button.grid(row=row, column=0, columnspan=2, padx=5, pady=5)
+
+        # Listbox to show all operations
+        operations_listbox = tk.Listbox(self.detection_section_frame)
+        operations_listbox.grid(row=0, column=1,rowspan=2, padx=5, pady=5, sticky="nsew")
+
+        # Add scrollbar to the listbox
+        scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=operations_listbox.yview)
+        scrollbar.grid(row=1, column=2, padx=5, pady=5, sticky="ns")
+        operations_listbox.config(yscrollcommand=scrollbar.set)
+    
+    def update_labels(self, selected_option):
+        self.selected_option = selected_option
+        # Destroy existing parameter labels and entries
+        for entry in self.parameter_entries.values():
+            entry.destroy()
+        for label in self.parameter_labels.values():
+            label.destroy()
+        self.parameter_entries.clear()
+        self.parameter_labels.clear()
+        # # Update labels with function parameters based on selected option
+        row = 2
+        for param_name, param_value in self.preprocess_params[selected_option].items():
+            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            entry = tk.Entry(self.detection_section_frame)
+            entry.grid(row=row, column=1, padx=5, pady=1, sticky="w")
+            entry.insert(0, str(param_value))
+            self.parameter_entries[param_name] = entry
+            self.parameter_labels[param_name] = label
+            row += 1
+        self.apply_button.grid_remove()
+        self.apply_button.grid(row=row, column=0, columnspan=2, padx=5, pady=5)
+
+    def apply_preprocessing(self):
+        if self.selected_option is None:
+            return  # No option selected
+        params = {}
+        selected_index = self.data_listbox_detection.curselection()
+        index = None
+        index = int(selected_index[0])
+        img = self.data_for_detection[index]['greyscale_image']
+
+        for param_name, entry in self.parameter_entries.items():
+            try:
+                params[param_name] = int(entry.get())
+            except ValueError:
+                params[param_name] = entry.get()
+        # Apply preprocessing based on selected option and parameters
+        if self.selected_option == "GaussianBlur":
+            result_image = GaussianBlur(
+                img=np.array(img), 
+                sigmaX=params['sigmaX'],
+                sigmaY=params['sigmaY']
+                )
+        elif self.selected_option == "Non-local Mean Denoising":
+            result_image = NlMeansDenois(
+                img=np.array(img),
+                h=params['h'],
+                searchWinwowSize=params['searchWindowSize'],
+                templateWindowSize=params['templateWindowSize']
+                )
+        
+        #self.display_processed_image()
+    
+    # def display_processed_image(self, index):
+    #     # Clear previous data
+    #     self.data_canvas_detection.delete("all")
+    #     self.display_header_info_labels()
+
+    #     # Load greyscale image
+    #     img = self.data_for_detection[index]['greyscale_image']
+
+    #     # Retrieve the scale factor
+    #     scale_factor = self.scale_factor_var.get()
+    #     # Resize the image
+    #     img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+
+    #     # Convert the PIL image to a Tkinter PhotoImage
+    #     photo = ImageTk.PhotoImage(img)
+
+    #     # Display the image on the canvas
+    #     self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+
+    #     # Save a reference to the PhotoImage to prevent garbage collection
+    #     self.data_canvas_detection.image = photo
     
     def display_header_info_labels(self):
         # Clear previous header
@@ -235,7 +349,6 @@ class App:
             self.display_image_detection(index)
         self.resize_canvas_detection_scrollregion(event)
 
-    #def display_image_detection(self, data, mpp=False):
     def display_image_detection(self, index):
         # Clear previous data
         self.data_canvas_detection.delete("all")
