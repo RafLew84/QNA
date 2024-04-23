@@ -188,13 +188,13 @@ class App:
         self.apply_button.grid(row=row, column=0, columnspan=2, padx=5, pady=5)
 
         # Listbox to show all operations
-        operations_listbox = tk.Listbox(self.detection_section_frame)
-        operations_listbox.grid(row=0, column=1,rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.operations_listbox = tk.Listbox(self.detection_section_frame)
+        self.operations_listbox.grid(row=0, column=1,rowspan=2, padx=5, pady=5, sticky="nsew")
 
         # Add scrollbar to the listbox
-        scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=operations_listbox.yview)
-        scrollbar.grid(row=1, column=2, padx=5, pady=5, sticky="ns")
-        operations_listbox.config(yscrollcommand=scrollbar.set)
+        self.scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=self.operations_listbox.yview)
+        self.scrollbar.grid(row=0, column=2, rowspan=2, padx=5, pady=5, sticky="ns")
+        self.operations_listbox.config(yscrollcommand=self.scrollbar.set)
     
     def update_labels(self, selected_option):
         self.selected_option = selected_option
@@ -228,6 +228,9 @@ class App:
         index = int(selected_index[0])
         img = self.data_for_detection[index]['greyscale_image']
 
+        result_image = None
+        process_name = None
+
         for param_name, entry in self.parameter_entries.items():
             try:
                 params[param_name] = int(entry.get())
@@ -235,21 +238,27 @@ class App:
                 params[param_name] = entry.get()
         # Apply preprocessing based on selected option and parameters
         if self.selected_option == "GaussianBlur":
+            process_name = "GaussianBlur"
             result_image = GaussianBlur(
                 img=np.array(img), 
                 sigmaX=params['sigmaX'],
                 sigmaY=params['sigmaY']
                 )
         elif self.selected_option == "Non-local Mean Denoising":
+            process_name = "Non-local Mean Denoising"
             result_image = NlMeansDenois(
                 img=np.array(img),
                 h=params['h'],
                 searchWinwowSize=params['searchWindowSize'],
                 templateWindowSize=params['templateWindowSize']
                 )
-        
+        operation = {
+            "processed_image": result_image,
+            "process_name": process_name,
+            "params": params
+        }
+        self.data_for_detection[index]['operations'].append(operation)
         #self.display_processed_image()
-    
     # def display_processed_image(self, index):
     #     # Clear previous data
     #     self.data_canvas_detection.delete("all")
