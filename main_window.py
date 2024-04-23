@@ -145,7 +145,7 @@ class App:
 
         # Display Preproccess Options
         self.detection_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
-        self.detection_section_frame.grid(row=1, column=4, columnspan=2, padx=5, pady=2, sticky="nsew")
+        self.detection_section_frame.grid(row=0, column=4,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
         self.display_header_info_labels()
         self.display_detection_frame()
@@ -258,28 +258,41 @@ class App:
             "params": params
         }
         self.data_for_detection[index]['operations'].append(operation)
-        #self.display_processed_image()
-    # def display_processed_image(self, index):
-    #     # Clear previous data
-    #     self.data_canvas_detection.delete("all")
-    #     self.display_header_info_labels()
+        self.refresh_data_to_preprocess()
+        self.display_processed_image(index, 0)
+    
+    def refresh_data_to_preprocess(self):
+        self.operations_listbox.delete(0, tk.END)
 
-    #     # Load greyscale image
-    #     img = self.data_for_detection[index]['greyscale_image']
+        selected_index = self.data_listbox_detection.curselection()
+        if selected_index:
+            index = int(selected_index[0])
 
-    #     # Retrieve the scale factor
-    #     scale_factor = self.scale_factor_var.get()
-    #     # Resize the image
-    #     img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+        for item in self.data_for_detection[index]['operations']:
+                name = item["process_name"]
+                self.operations_listbox.insert(tk.END, name)
 
-    #     # Convert the PIL image to a Tkinter PhotoImage
-    #     photo = ImageTk.PhotoImage(img)
+    def display_processed_image(self, index, operation_index):
+        # Clear previous data
+        self.data_canvas_detection.delete("all")
 
-    #     # Display the image on the canvas
-    #     self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+        # Load greyscale image
+        img_data = self.data_for_detection[index]['operations'][operation_index]['processed_image']
+        img = Image.fromarray(img_data)
 
-    #     # Save a reference to the PhotoImage to prevent garbage collection
-    #     self.data_canvas_detection.image = photo
+        # Retrieve the scale factor
+        scale_factor = self.scale_factor_var.get()
+        # Resize the image
+        img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas_detection.image = photo
     
     def display_header_info_labels(self):
         # Clear previous header
@@ -424,6 +437,7 @@ class App:
             # Update navigation slider
             self.navigation_slider.set(index + 1)
             self.display_image_detection(index)
+            self.refresh_data_to_preprocess()
     ##########################################################################################################
     #### Noise Analisys Tab
     ##########################################################################################################
