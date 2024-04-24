@@ -119,7 +119,7 @@ class App:
         self.scale_factor_slider.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
 
         # Slider for navigation
-        self.navigation_slider = tk.Scale(self.spots_detection_tab, from_=1, to=1, orient=tk.HORIZONTAL, command=self.update_image_from_slider)
+        self.navigation_slider = tk.Scale(self.spots_detection_tab, from_=1, to=1, orient=tk.HORIZONTAL, command=self.update_image_from_navigation_slider)
         self.navigation_slider.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
 
         # Navigation buttons
@@ -133,7 +133,7 @@ class App:
         self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
 
         # Bind event for slider changes
-        self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_slider_change)
+        self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
 
         # Display header information labels
         self.header_section_frame = ttk.Frame(self.spots_detection_tab, padding="5")
@@ -348,16 +348,17 @@ class App:
         current_value = self.navigation_slider.get()
         self.navigation_slider.set(current_value + 1)
 
-    def update_image_from_slider(self, event):
+    def update_image_from_navigation_slider(self, event):
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(self.navigation_slider.get())
             self.display_image_detection(index - 1)
+            print(index)
 
             # Update listbox selection
             self.data_listbox_detection.selection_clear(0, tk.END)
-            self.data_listbox_detection.selection_set(selected_index)
-            self.data_listbox_detection.see(selected_index)
+            self.data_listbox_detection.selection_set(index - 1)
+            self.data_listbox_detection.see(index - 1)
             self.resize_canvas_detection_scrollregion(event)
         self.resize_canvas_detection_scrollregion(event)
 
@@ -365,11 +366,10 @@ class App:
         num_items = len(self.data_listbox_detection.get(0, tk.END))
         self.navigation_slider.config(from_=1, to=num_items)
 
-    def update_image_on_slider_change(self, event):
+    def update_image_on_rescale_slider_change(self, event):
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(selected_index[0])
-            file_ext = self.data[0]['file_name'][-3:]
             self.display_image_detection(index)
         self.resize_canvas_detection_scrollregion(event)
 
