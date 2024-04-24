@@ -368,6 +368,8 @@ class App:
             self.data_listbox_detection.see(index - 1)
 
             self.data_index = index - 1
+            #if not self.data_for_detection[index - 1]['operations']:
+            self.refresh_data_to_preprocess()
             self.resize_canvas_detection_scrollregion(event)
         self.resize_canvas_detection_scrollregion(event)
 
