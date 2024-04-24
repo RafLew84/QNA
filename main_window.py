@@ -26,7 +26,7 @@ from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map, convert
 
 from data_proccess import create_greyscale_image
 
-from img_proccess import NlMeansDenois, GaussianBlur
+from img_proccess import NlMeansDenois, GaussianBlur, GaussianFilter
 
 import logging
 
@@ -41,7 +41,8 @@ class App:
         self.header_info = {}
         self.preprocess_params = {
             "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
-            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7}
+            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
+            "GaussianFilter": {"sigma": 4}
         }
 
         self.selected_option = None
@@ -161,7 +162,7 @@ class App:
         preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="n")
 
         # Dropdown menu options
-        preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising"]
+        preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
 
         # Create and place dropdown menu
         dropdown_var = tk.StringVar()
@@ -255,6 +256,12 @@ class App:
                 searchWinwowSize=params['searchWindowSize'],
                 templateWindowSize=params['templateWindowSize']
                 )
+        elif self.selected_option == "GaussianFilter":
+            process_name = "GaussianFilter"
+            result_image = GaussianFilter(
+                img=np.array(img),
+                sigma=params['sigma']
+            )
         operation = {
             "processed_image": result_image,
             "process_name": process_name,

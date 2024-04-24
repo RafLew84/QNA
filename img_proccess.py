@@ -6,6 +6,7 @@ Functions for image proccessing
 """
 
 import cv2
+from scipy import ndimage as ndi
 
 def NlMeansDenois(img, h=3, searchWinwowSize=21, templateWindowSize=7):
     denoised_image = cv2.fastNlMeansDenoising(
@@ -27,3 +28,10 @@ def GaussianBlur(img, sigmaX=5, sigmaY=5, borderType=0):
         borderType
     )
     return blurred_image
+
+def GaussianFilter(img, sigma=4):
+    gaussian_image = ndi.gaussian_filter(
+        input=img,
+        sigma=sigma
+    )
+    return gaussian_image
