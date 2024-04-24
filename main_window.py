@@ -79,6 +79,7 @@ class App:
     def create_spots_detection_tab(self):
         # Data for analisys
         self.data_for_detection = []
+        self.data_index = None
         
         # Create listbox to display filenames
         self.data_listbox_detection = tk.Listbox(self.spots_detection_tab, width=20, height=10, selectmode=tk.SINGLE)
@@ -191,6 +192,8 @@ class App:
         self.operations_listbox = tk.Listbox(self.detection_section_frame)
         self.operations_listbox.grid(row=0, column=1,rowspan=2, padx=5, pady=5, sticky="nsew")
 
+        self.operations_listbox.bind("<<ListboxSelect>>", self.show_data_for_preprocess)
+
         # Add scrollbar to the listbox
         self.scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=self.operations_listbox.yview)
         self.scrollbar.grid(row=0, column=2, rowspan=2, padx=5, pady=5, sticky="ns")
@@ -223,9 +226,9 @@ class App:
         if self.selected_option is None:
             return  # No option selected
         params = {}
-        selected_index = self.data_listbox_detection.curselection()
-        index = None
-        index = int(selected_index[0])
+        # selected_index = self.data_listbox_detection.curselection()
+        # index = None
+        index = self.data_index
         img = self.data_for_detection[index]['greyscale_image']
 
         result_image = None
@@ -265,13 +268,19 @@ class App:
     def refresh_data_to_preprocess(self):
         self.operations_listbox.delete(0, tk.END)
 
-        selected_index = self.data_listbox_detection.curselection()
-        if selected_index:
-            index = int(selected_index[0])
+        selected_index = self.data_index
 
-        for item in self.data_for_detection[index]['operations']:
+        for item in self.data_for_detection[selected_index]['operations']:
                 name = item["process_name"]
                 self.operations_listbox.insert(tk.END, name)
+    
+    def show_data_for_preprocess(self, event):
+
+        operations_selected_index = self.operations_listbox.curselection()
+        operations_index = int(operations_selected_index[0])
+
+        self.display_processed_image(self.data_index, operations_index)
+
 
     def display_processed_image(self, index, operation_index):
         # Clear previous data
@@ -279,7 +288,6 @@ class App:
 
         # Load greyscale image
         img_data = self.data_for_detection[index]['operations'][operation_index]['processed_image']
-        print(operation_index)
         img = Image.fromarray(img_data)
 
         # Retrieve the scale factor
@@ -353,12 +361,13 @@ class App:
         if selected_index:
             index = int(self.navigation_slider.get())
             self.display_image_detection(index - 1)
-            print(index)
 
             # Update listbox selection
             self.data_listbox_detection.selection_clear(0, tk.END)
             self.data_listbox_detection.selection_set(index - 1)
             self.data_listbox_detection.see(index - 1)
+
+            self.data_index = index - 1
             self.resize_canvas_detection_scrollregion(event)
         self.resize_canvas_detection_scrollregion(event)
 
@@ -380,6 +389,8 @@ class App:
 
         # Load greyscale image
         img = self.data_for_detection[index]['greyscale_image']
+
+        self.data_index = index
 
         # Retrieve the scale factor
         scale_factor = self.scale_factor_var.get()
