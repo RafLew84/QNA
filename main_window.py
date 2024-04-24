@@ -259,7 +259,8 @@ class App:
         }
         self.data_for_detection[index]['operations'].append(operation)
         self.refresh_data_to_preprocess()
-        self.display_processed_image(index, 0)
+        operations_index = self.operations_listbox.size() - 1
+        self.display_processed_image(index, operations_index)
     
     def refresh_data_to_preprocess(self):
         self.operations_listbox.delete(0, tk.END)
@@ -278,6 +279,7 @@ class App:
 
         # Load greyscale image
         img_data = self.data_for_detection[index]['operations'][operation_index]['processed_image']
+        print(operation_index)
         img = Image.fromarray(img_data)
 
         # Retrieve the scale factor
