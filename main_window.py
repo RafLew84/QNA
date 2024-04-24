@@ -161,20 +161,32 @@ class App:
         preproccess_section_name_label = tk.Label(self.detection_section_frame, text="Preproccess:")
         preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="n")
 
-        # Dropdown menu options
+        # Preprocess Dropdown menu options
         preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
+
+        # Show Picture Options
+        picture_options = {
+            "Proprocess": ["processed", "both", "original"]
+        }
 
         # Create and place dropdown menu
         dropdown_var = tk.StringVar()
         dropdown_var.set(preprocessing_options[0])  # Set default option
         dropdown = tk.OptionMenu(self.detection_section_frame, dropdown_var, *preprocessing_options, command=self.update_labels)
         dropdown.config(width=10)
-        dropdown.grid(row=1, column=0,rowspan=2, padx=5, pady=1, sticky="n")
+        dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
+
+        # Create and place second dropdown menu
+        self.image_option_dropdown_var = tk.StringVar()
+        self.image_option_dropdown_var.set("")  # Set default option
+        self.image_dropdown = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_var, "", command=self.update_image)
+        self.image_dropdown.config(width=10)
+        self.image_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
 
         # Labels for function parameters
         self.parameter_entries = {}
         self.parameter_labels = {}
-        row = 2
+        row = 3
         for param_name in self.preprocess_params[preprocessing_options[0]].keys():
             label = tk.Label(self.detection_section_frame, text=param_name, width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
@@ -191,14 +203,23 @@ class App:
 
         # Listbox to show all operations
         self.operations_listbox = tk.Listbox(self.detection_section_frame)
-        self.operations_listbox.grid(row=0, column=1,rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.operations_listbox.grid(row=0, column=1,rowspan=3, padx=5, pady=5, sticky="nsew")
 
         self.operations_listbox.bind("<<ListboxSelect>>", self.show_data_for_preprocess)
 
         # Add scrollbar to the listbox
         self.scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=self.operations_listbox.yview)
-        self.scrollbar.grid(row=0, column=2, rowspan=2, padx=5, pady=5, sticky="ns")
+        self.scrollbar.grid(row=0, column=2, rowspan=3, padx=5, pady=5, sticky="ns")
         self.operations_listbox.config(yscrollcommand=self.scrollbar.set)
+
+    def update_image(self, selected_option):
+        pass
+
+    def update_image_dropdown_options(self, options):
+        self.image_option_dropdown_var.set(options[0])
+        self.image_dropdown['menu'].delete(0, 'end')
+        for option in options:
+            self.image_dropdown['menu'].add_command(label=option, command=tk._setit(self.image_option_dropdown_var, option))
     
     def update_labels(self, selected_option):
         self.selected_option = selected_option
@@ -270,7 +291,7 @@ class App:
         self.data_for_detection[index]['operations'].append(operation)
         self.refresh_data_to_preprocess()
         operations_index = self.operations_listbox.size() - 1
-        self.display_processed_image(index, operations_index)
+        self.display_processed_image(operations_index)
     
     def refresh_data_to_preprocess(self):
         self.operations_listbox.delete(0, tk.END)
@@ -286,16 +307,19 @@ class App:
         operations_selected_index = self.operations_listbox.curselection()
         operations_index = int(operations_selected_index[0])
 
-        self.display_processed_image(self.data_index, operations_index)
+        self.display_processed_image(operations_index)
 
 
-    def display_processed_image(self, index, operation_index):
+    def display_processed_image(self, operation_index):
         # Clear previous data
         self.data_canvas_detection.delete("all")
 
         # Load greyscale image
-        img_data = self.data_for_detection[index]['operations'][operation_index]['processed_image']
+        img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
         img = Image.fromarray(img_data)
+        # processed_img = Image.fromarray(img_data)
+        # original_img = self.data_for_detection[index]['greyscale_image']
+
 
         # Retrieve the scale factor
         scale_factor = self.scale_factor_var.get()
