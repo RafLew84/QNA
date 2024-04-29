@@ -163,10 +163,12 @@ class App:
 
         # Preprocess Dropdown menu options
         preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
+        detection_options = ["Canny"]
 
         # Show Picture Options
         self.picture_options = {
-            "Preprocess": ["processed", "both", "original"]
+            "Preprocess": ["processed", "both", "original"],
+            "Detection": ["detect", "all", "original", "processed", "detect and original", "detect and processed"]
         }
 
         # Create and place dropdown menu
@@ -192,25 +194,65 @@ class App:
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
             self.parameter_labels[param_name] = label
             entry = tk.Entry(self.detection_section_frame)
-            entry.grid(row=row, column=1, padx=5, pady=1, sticky="w")
+            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             entry.insert(0, str(self.preprocess_params[preprocessing_options[0]][param_name]))
             self.parameter_entries[param_name] = entry
-            row += 1
+            row += 2
 
         # # Apply button
         self.apply_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_preprocessing)
-        self.apply_button.grid(row=row, column=0, columnspan=2, padx=5, pady=5)
+        self.apply_button.grid(row=row, column=0, padx=5, pady=5)
 
         # Listbox to show all operations
         self.operations_listbox = tk.Listbox(self.detection_section_frame)
-        self.operations_listbox.grid(row=0, column=1,rowspan=3, padx=5, pady=5, sticky="nsew")
+        self.operations_listbox.grid(row=0, column=1,rowspan=20, padx=5, pady=5, sticky="nsew")
 
         self.operations_listbox.bind("<<ListboxSelect>>", self.show_data_for_preprocess)
 
         # Add scrollbar to the listbox
         self.scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=self.operations_listbox.yview)
-        self.scrollbar.grid(row=0, column=2, rowspan=3, padx=5, pady=5, sticky="ns")
+        self.scrollbar.grid(row=0, column=2, rowspan=20, padx=5, pady=5, sticky="ns")
         self.operations_listbox.config(yscrollcommand=self.scrollbar.set)
+
+        row = row + 1
+
+        # Analysis section name label
+        analisys_section_name_label = tk.Label(self.detection_section_frame, text="Detection:")
+        analisys_section_name_label.grid(row=row, column=0, padx=1, pady=2, sticky="n")
+
+        row = row + 1
+
+        # Create and place dropdown menu for detection options
+        detection_dropdown_var = tk.StringVar()
+        detection_dropdown_var.set(detection_options[0])  # Set default option
+        detection_dropdown = tk.OptionMenu(self.detection_section_frame, detection_dropdown_var, *detection_options, command=self.update_detection_options_labels)
+        detection_dropdown.config(width=10)
+        detection_dropdown.grid(row=row, column=0, padx=5, pady=1, sticky="n")
+
+        row = row + 1
+
+        # Create and place dropdown menu for display options
+        self.image_option_dropdown_for_detection_var = tk.StringVar()
+        self.image_option_dropdown_for_detection_var.set("")  # Set default option
+        self.image_dropdown_for_detection = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_for_detection_var, *self.picture_options["Detection"], command=self.update_image_detection)
+        self.image_dropdown_for_detection.config(width=10)
+        self.image_dropdown_for_detection.grid(row=row, column=0, padx=5, pady=1, sticky="n")
+
+        row = row + 1
+
+        # Apply button for detection
+        self.apply_detection_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_detection)
+        self.apply_detection_button.grid(row=row, column=0, padx=5, pady=5)
+
+    def update_detection_options_labels(self):
+        pass
+
+    def update_image_detection(self):
+        pass
+    
+    def apply_detection(self):
+        pass
+
 
     def update_image(self, selected_option):
         operations_selected_index = self.operations_listbox.curselection()
@@ -242,13 +284,13 @@ class App:
             label = tk.Label(self.detection_section_frame, text=param_name, width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
             entry = tk.Entry(self.detection_section_frame)
-            entry.grid(row=row, column=1, padx=5, pady=1, sticky="w")
+            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             entry.insert(0, str(param_value))
             self.parameter_entries[param_name] = entry
             self.parameter_labels[param_name] = label
-            row += 1
+            row += 2
         self.apply_button.grid_remove()
-        self.apply_button.grid(row=row, column=0, columnspan=2, padx=5, pady=5)
+        self.apply_button.grid(row=row, column=0, padx=5, pady=5)
 
     def apply_preprocessing(self):
         if self.selected_option is None:
