@@ -165,8 +165,8 @@ class App:
         preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
 
         # Show Picture Options
-        picture_options = {
-            "Proprocess": ["processed", "both", "original"]
+        self.picture_options = {
+            "Preprocess": ["processed", "both", "original"]
         }
 
         # Create and place dropdown menu
@@ -179,7 +179,7 @@ class App:
         # Create and place second dropdown menu
         self.image_option_dropdown_var = tk.StringVar()
         self.image_option_dropdown_var.set("")  # Set default option
-        self.image_dropdown = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_var, "", command=self.update_image)
+        self.image_dropdown = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_var, *self.picture_options["Preprocess"], command=self.update_image)
         self.image_dropdown.config(width=10)
         self.image_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
 
@@ -213,7 +213,13 @@ class App:
         self.operations_listbox.config(yscrollcommand=self.scrollbar.set)
 
     def update_image(self, selected_option):
-        pass
+        operations_selected_index = self.operations_listbox.curselection()
+        operations_index = int(operations_selected_index[0])
+        self.display_processed_image(
+            operation_index= operations_index,
+            option_section= "Preprocess",
+            option= selected_option
+        )
 
     def update_image_dropdown_options(self, options):
         self.image_option_dropdown_var.set(options[0])
@@ -231,7 +237,7 @@ class App:
         self.parameter_entries.clear()
         self.parameter_labels.clear()
         # # Update labels with function parameters based on selected option
-        row = 2
+        row = 3
         for param_name, param_value in self.preprocess_params[selected_option].items():
             label = tk.Label(self.detection_section_frame, text=param_name, width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
@@ -291,7 +297,8 @@ class App:
         self.data_for_detection[index]['operations'].append(operation)
         self.refresh_data_to_preprocess()
         operations_index = self.operations_listbox.size() - 1
-        self.display_processed_image(operations_index)
+        self.display_processed_image(operations_index, "Preprocess", "both")
+        self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
     
     def refresh_data_to_preprocess(self):
         self.operations_listbox.delete(0, tk.END)
@@ -307,18 +314,32 @@ class App:
         operations_selected_index = self.operations_listbox.curselection()
         operations_index = int(operations_selected_index[0])
 
-        self.display_processed_image(operations_index)
+        self.display_processed_image(operations_index, "Preprocess", "both")
 
 
-    def display_processed_image(self, operation_index):
+    def display_processed_image(self, operation_index, option_section, option):
         # Clear previous data
         self.data_canvas_detection.delete("all")
+        img = None
 
-        # Load greyscale image
-        img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
-        img = Image.fromarray(img_data)
-        # processed_img = Image.fromarray(img_data)
-        # original_img = self.data_for_detection[index]['greyscale_image']
+        if option_section in self.picture_options:
+            options = self.picture_options[option_section]
+            if option in options:
+                # Perform operations for each option
+                if option == "processed":
+                    img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
+                    img = Image.fromarray(img_data)
+                elif option == "original":
+                    img = self.data_for_detection[self.data_index]['greyscale_image']
+                elif option == "both":
+                    img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
+                    processed_img = Image.fromarray(img_data)
+                    original_img = self.data_for_detection[self.data_index]['greyscale_image']
+
+                    # Concatenate the images horizontally
+                    img = Image.new('RGB', (processed_img.width + original_img.width + 10, max(processed_img.height, original_img.height)))
+                    img.paste(processed_img, (0, 0))
+                    img.paste(original_img, (processed_img.width + 10, 0))
 
 
         # Retrieve the scale factor
