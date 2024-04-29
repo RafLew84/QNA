@@ -299,6 +299,9 @@ class App:
         operations_index = self.operations_listbox.size() - 1
         self.display_processed_image(operations_index, "Preprocess", "both")
         self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
+
+        self.operations_listbox.focus()
+        self.operations_listbox.selection_set(tk.END)
     
     def refresh_data_to_preprocess(self):
         self.operations_listbox.delete(0, tk.END)
@@ -434,6 +437,11 @@ class App:
         if selected_index:
             index = int(selected_index[0])
             self.display_image_detection(index)
+        selected_index = self.operations_listbox.curselection()
+        if selected_index:
+            opertation_index = int(selected_index[0])
+            selected_option = self.image_option_dropdown_var.get()
+            self.display_processed_image(opertation_index, "Preprocess", selected_option)
         self.resize_canvas_detection_scrollregion(event)
 
     def display_image_detection(self, index):
