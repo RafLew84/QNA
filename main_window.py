@@ -321,7 +321,14 @@ class App:
             return  # No option selected
         params = {}
         index = self.data_index
-        img = self.data_for_detection[index]['greyscale_image']
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.data_listbox_detection:
+            img = self.data_for_detection[index]['greyscale_image']
+        elif focuse_widget == self.operations_listbox:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+            img = Image.fromarray(self.data_for_detection[self.data_index]['operations'][operations_index]['processed_image'])
+
 
         result_image = None
         process_name = None
@@ -367,7 +374,13 @@ class App:
         #     return  # No option selected
         params = {}
         index = self.data_index
-        img = self.data_for_detection[index]['greyscale_image']
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.data_listbox_detection:
+            img = self.data_for_detection[index]['greyscale_image']
+        elif focuse_widget == self.operations_listbox:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+            img = Image.fromarray(self.data_for_detection[self.data_index]['operations'][operations_index]['processed_image'])
 
         result_image = None
 
@@ -420,8 +433,8 @@ class App:
         # Save a reference to the PhotoImage to prevent garbage collection
         self.data_canvas_detection.image = photo
 
-        self.operations_listbox.focus()
-        self.operations_listbox.selection_set(tk.END)
+        # self.operations_listbox.focus()
+        # self.operations_listbox.selection_set(tk.END)
 
     def display_edged_image(self, operation_index, option_section, option):
         # Clear previous data
@@ -517,7 +530,14 @@ class App:
         # selected_index = self.data_listbox_detection.curselection()
         # index = None
         index = self.data_index
-        img = self.data_for_detection[index]['greyscale_image']
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.data_listbox_detection:
+            img = self.data_for_detection[index]['greyscale_image']
+        elif focuse_widget == self.operations_listbox:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+            img = Image.fromarray(self.data_for_detection[self.data_index]['operations'][operations_index]['processed_image'])
+
 
         result_image = None
         process_name = None
