@@ -26,7 +26,7 @@ from file_proccess import proccess_stp_and_s94_files_l0_from_I_ISET_map, convert
 
 from data_proccess import create_greyscale_image
 
-from img_proccess import NlMeansDenois, GaussianBlur, GaussianFilter
+from img_proccess import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection
 
 import logging
 
@@ -171,8 +171,7 @@ class App:
 
         # Show Picture Options
         self.picture_options = {
-            "Preprocess": ["processed", "both", "original"],
-            "Detection": ["detect", "all", "original", "processed", "detect and original", "detect and processed"]
+            "Preprocess": ["processed", "both", "original"]
         }
 
         # Create and place dropdown menu
@@ -190,17 +189,17 @@ class App:
         self.image_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
 
         # Labels for function parameters
-        self.parameter_entries = {}
-        self.parameter_labels = {}
+        self.parameter_preprocess_entries = {}
+        self.parameter_preprocess_labels = {}
         row = 3
         for param_name in self.preprocess_params[preprocessing_options[0]].keys():
             label = tk.Label(self.detection_section_frame, text=param_name, width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.parameter_labels[param_name] = label
+            self.parameter_preprocess_labels[param_name] = label
             entry = tk.Entry(self.detection_section_frame)
             entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             entry.insert(0, str(self.preprocess_params[preprocessing_options[0]][param_name]))
-            self.parameter_entries[param_name] = entry
+            self.parameter_preprocess_entries[param_name] = entry
             row += 2
 
         # # Apply button
@@ -238,34 +237,239 @@ class App:
         # Create and place dropdown menu for display options
         self.image_option_dropdown_for_detection_var = tk.StringVar()
         self.image_option_dropdown_for_detection_var.set("")  # Set default option
-        self.image_dropdown_for_detection = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_for_detection_var, *self.picture_options["Detection"], command=self.update_image_detection)
+        self.image_dropdown_for_detection = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_for_detection_var, *self.picture_options["Preprocess"], command=self.update_image_detection)
         self.image_dropdown_for_detection.config(width=10)
         self.image_dropdown_for_detection.grid(row=row, column=0, padx=5, pady=1, sticky="n")
 
         row = row + 1
-
-        for param_name in self.detection_params[detection_options[0]].keys():
-            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.parameter_labels[param_name] = label
-            entry = tk.Entry(self.detection_section_frame)
-            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-            entry.insert(0, str(self.detection_params[detection_options[0]][param_name]))
-            self.parameter_entries[param_name] = entry
+        # Labels for function parameters
+        self.parameter_detection_entries = {}
+        self.parameter_detection_labels = {}
+        self.parameter_detection_sliders = {}
+        for param_name, param_value in self.detection_params[detection_options[0]].items():
+            if param_name == "sigma":
+                # Create a slider for sigma parameter
+                label_text = f"{param_name}: {param_value:.1f}"
+                label = tk.Label(self.detection_section_frame, text=label_text, width=15)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                slider = ttk.Scale(self.detection_section_frame, from_=0.1, to=5.0, length=100, orient="horizontal", command=lambda value=param_value, param_name=param_name: self.sigma_slider_change(value, param_name))
+                slider.set(param_value)  # Set default value
+                slider.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_detection_sliders[param_name] = slider
+                self.parameter_detection_labels[param_name] = label
+            else:
+                # Create entry for other parameters
+                label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                entry = tk.Entry(self.detection_section_frame)
+                entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
+                entry.insert(0, str(param_value))
+                self.parameter_detection_entries[param_name] = entry
+                self.parameter_detection_labels[param_name] = label
             row += 2
 
         # Apply button for detection
-        self.apply_detection_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_detection)
-        self.apply_detection_button.grid(row=row, column=0, padx=5, pady=5)
+        self.find_edges_button = tk.Button(self.detection_section_frame, text="Find Edges", command=self.apply_detection)
+        self.find_edges_button.grid(row=row, column=0, padx=5, pady=5)
 
-    def update_detection_options_labels(self):
-        pass
+    def update_detection_options_labels(self, selected_option):
+        self.selected_detection_option = selected_option
+        # Destroy existing parameter labels and entries
+        for entry in self.parameter_detection_entries.values():
+            entry.destroy()
+        for label in self.parameter_detection_labels.values():
+            label.destroy()
+        self.parameter_detection_entries.clear()
+        self.parameter_detection_labels.clear()
+        row = 11
+        # # Update labels with function parameters based on selected option
+        for param_name, param_value in self.detection_params[selected_option].items():
+            if param_name == "sigma":
+                # Create a slider for sigma parameter
+                label_text = f"{param_name}: {param_value:.1f}"
+                label = tk.Label(self.detection_section_frame, text=label_text, width=15)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                slider = ttk.Scale(self.detection_section_frame, from_=0.1, to=5.0, length=100, orient="horizontal", command=lambda value=param_value, param_name=param_name: self.sigma_slider_change(value, param_name))
+                slider.set(param_value)  # Set default value
+                slider.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_detection_sliders[param_name] = slider
+                self.parameter_detection_labels[param_name] = label
+            else:
+                # Create entry for other parameters
+                label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                entry = tk.Entry(self.detection_section_frame)
+                entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
+                entry.insert(0, str(param_value))
+                self.parameter_detection_entries[param_name] = entry
+                self.parameter_detection_labels[param_name] = label
+            row += 2
+        self.find_edges_button.grid_remove()
+        self.find_edges_button.grid(row=row, column=0, padx=5, pady=5)
 
-    def update_image_detection(self):
-        pass
+    def update_image_detection(self, selected_option):
+        operations_selected_index = self.operations_listbox.curselection()
+        operations_index = int(operations_selected_index[0])
+        self.display_edged_image(
+            operation_index= operations_index,
+            option_section= "Preprocess",
+            option= selected_option
+        )
     
     def apply_detection(self):
-        pass
+        if self.selected_detection_option is None:
+            return  # No option selected
+        params = {}
+        index = self.data_index
+        img = self.data_for_detection[index]['greyscale_image']
+
+        result_image = None
+        process_name = None
+
+        for param_name, entry in self.parameter_detection_entries.items():
+            try:
+                params[param_name] = int(entry.get())
+            except ValueError:
+                params[param_name] = entry.get()
+        
+        for param_name, slider in self.parameter_detection_sliders.items():
+            try:
+                params[param_name] = float(slider.get())
+            except ValueError:
+                params[param_name] = slider.get()
+        # Apply detection process based on selected option and parameters
+        if self.selected_detection_option == "Canny":
+            process_name = "Canny"
+            result_image = EdgeDetection(
+                img=np.asanyarray(img), 
+                sigma=params['sigma'],
+                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
+                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
+                )
+        operation = {
+            "processed_image": result_image,
+            "process_name": process_name,
+            "params": params,
+            "contours": None,
+            "labeled_image": None
+        }
+        self.data_for_detection[index]['operations'].append(operation)
+        self.refresh_data_to_detection()
+        operations_index = self.operations_listbox.size() - 1
+        self.display_edged_image(operations_index, "Preprocess", "both")
+        self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
+
+        self.operations_listbox.focus()
+        self.operations_listbox.selection_set(tk.END)
+
+    def refresh_image_on_sigma_slider_change(self, sigma_value):
+        # if self.selected_detection_option is None:
+        #     return  # No option selected
+        params = {}
+        index = self.data_index
+        img = self.data_for_detection[index]['greyscale_image']
+
+        result_image = None
+
+        for param_name, entry in self.parameter_detection_entries.items():
+            try:
+                params[param_name] = int(entry.get())
+            except ValueError:
+                params[param_name] = entry.get()
+        # Apply detection process based on selected option and parameters
+        if self.selected_detection_option == "Canny":
+            # process_name = "Canny"
+            result_image = EdgeDetection(
+                img=np.asanyarray(img), 
+                sigma=sigma_value,
+                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
+                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
+                )
+        # operation = {
+        #     "processed_image": result_image,
+        #     "process_name": process_name,
+        #     "params": params,
+        #     "contours": None,
+        #     "labeled_image": None
+        # }
+        # self.data_for_detection[index]['operations'].append(operation)
+        # self.refresh_data_to_detection()
+        # operations_index = self.operations_listbox.size() - 1
+        # self.display_edged_image(operations_index, "Preprocess", "both")
+        # self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
+            
+        # img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
+        processed_img = Image.fromarray(result_image)
+        original_img = img
+
+        img = Image.new('RGB', (processed_img.width + original_img.width + 10, max(processed_img.height, original_img.height)))
+        img.paste(processed_img, (0, 0))
+        img.paste(original_img, (processed_img.width + 10, 0))
+
+        # Retrieve the scale factor
+        scale_factor = self.scale_factor_var.get()
+        # Resize the image
+        img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas_detection.image = photo
+
+        self.operations_listbox.focus()
+        self.operations_listbox.selection_set(tk.END)
+
+    def display_edged_image(self, operation_index, option_section, option):
+        # Clear previous data
+        self.data_canvas_detection.delete("all")
+        img = None
+
+        if option_section in self.picture_options:
+            options = self.picture_options[option_section]
+            if option in options:
+                # Perform operations for each option
+                if option == "processed":
+                    img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
+                    img = Image.fromarray(img_data)
+                elif option == "original":
+                    img = self.data_for_detection[self.data_index]['greyscale_image']
+                elif option == "both":
+                    img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
+                    processed_img = Image.fromarray(img_data)
+                    original_img = self.data_for_detection[self.data_index]['greyscale_image']
+
+                    # Concatenate the images horizontally
+                    img = Image.new('RGB', (processed_img.width + original_img.width + 10, max(processed_img.height, original_img.height)))
+                    img.paste(processed_img, (0, 0))
+                    img.paste(original_img, (processed_img.width + 10, 0))
+
+
+        # Retrieve the scale factor
+        scale_factor = self.scale_factor_var.get()
+        # Resize the image
+        img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas_detection.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas_detection.image = photo
+
+    def refresh_data_to_detection(self):
+        self.operations_listbox.delete(0, tk.END)
+
+        selected_index = self.data_index
+
+        for item in self.data_for_detection[selected_index]['operations']:
+                name = item["process_name"]
+                self.operations_listbox.insert(tk.END, name)
 
 
     def update_image(self, selected_option):
@@ -286,12 +490,12 @@ class App:
     def update_labels(self, selected_option):
         self.selected_option = selected_option
         # Destroy existing parameter labels and entries
-        for entry in self.parameter_entries.values():
+        for entry in self.parameter_preprocess_entries.values():
             entry.destroy()
-        for label in self.parameter_labels.values():
+        for label in self.parameter_preprocess_labels.values():
             label.destroy()
-        self.parameter_entries.clear()
-        self.parameter_labels.clear()
+        self.parameter_preprocess_entries.clear()
+        self.parameter_preprocess_labels.clear()
         # # Update labels with function parameters based on selected option
         row = 3
         for param_name, param_value in self.preprocess_params[selected_option].items():
@@ -300,8 +504,8 @@ class App:
             entry = tk.Entry(self.detection_section_frame)
             entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             entry.insert(0, str(param_value))
-            self.parameter_entries[param_name] = entry
-            self.parameter_labels[param_name] = label
+            self.parameter_preprocess_entries[param_name] = entry
+            self.parameter_preprocess_labels[param_name] = label
             row += 2
         self.apply_button.grid_remove()
         self.apply_button.grid(row=row, column=0, padx=5, pady=5)
@@ -318,7 +522,7 @@ class App:
         result_image = None
         process_name = None
 
-        for param_name, entry in self.parameter_entries.items():
+        for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
             except ValueError:
@@ -457,6 +661,13 @@ class App:
                 column = i % num_labels_per_row
                 label = tk.Label(self.header_section_frame, text=label_text)
                 label.grid(row=row, column=column, padx=5, pady=2, sticky="e")
+
+    def sigma_slider_change(self, value, param_name):
+        if param_name in self.parameter_detection_labels:
+            label_text = f"{param_name}: {float(value):.1f}"
+            self.parameter_detection_labels[param_name].config(text=label_text)
+            self.data_canvas_detection.delete("all")
+            self.refresh_image_on_sigma_slider_change(value)
 
     def navigate_prev(self):
         current_value = self.navigation_slider.get()

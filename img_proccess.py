@@ -8,6 +8,10 @@ Functions for image proccessing
 import cv2
 from scipy import ndimage as ndi
 
+import numpy as np
+
+from skimage import feature
+
 def NlMeansDenois(img, h=3, searchWinwowSize=21, templateWindowSize=7):
     denoised_image = cv2.fastNlMeansDenoising(
         img, None, 
@@ -35,3 +39,17 @@ def GaussianFilter(img, sigma=4):
         sigma=sigma
     )
     return gaussian_image
+
+def EdgeDetection(img, sigma=1.0, low_threshold=None, high_threshold=None):
+    edges = feature.canny(
+        image=img, 
+        sigma=np.float64(sigma),
+        low_threshold=low_threshold, 
+        high_threshold=high_threshold
+    )
+    img = edges.astype('uint8') * 255
+    return img
+
+def ContourFinder(img):
+    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    return contours
