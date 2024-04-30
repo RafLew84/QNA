@@ -45,6 +45,10 @@ class App:
             "GaussianFilter": {"sigma": 4}
         }
 
+        self.detection_params = {
+            "Canny": {"sigma": 1., "low_threshold": None, "high_threshold": None}
+        }
+
         self.selected_option = None
 
         # Create a notebook (tabbed interface)
@@ -239,6 +243,16 @@ class App:
         self.image_dropdown_for_detection.grid(row=row, column=0, padx=5, pady=1, sticky="n")
 
         row = row + 1
+
+        for param_name in self.detection_params[detection_options[0]].keys():
+            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_labels[param_name] = label
+            entry = tk.Entry(self.detection_section_frame)
+            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
+            entry.insert(0, str(self.detection_params[detection_options[0]][param_name]))
+            self.parameter_entries[param_name] = entry
+            row += 2
 
         # Apply button for detection
         self.apply_detection_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_detection)
