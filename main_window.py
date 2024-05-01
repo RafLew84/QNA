@@ -45,12 +45,6 @@ class App:
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
-        def update_data(self, new_data):
-            self.data = new_data
-
-        def get_data(self):
-            return self.data
-
 
         self.header_info = {}
         self.preprocess_params = {
@@ -90,6 +84,12 @@ class App:
         # self.load_data_tab.grid_rowconfigure(5, weight=1)
         # self.load_data_tab.grid_columnconfigure(0, weight=1)
         # self.load_data_tab.grid_columnconfigure(6, weight=1)
+
+    def update_data(self, new_data):
+        self.data = new_data
+
+    def get_data(self):
+        return self.data
     ##########################################################################################################
     #### Spots Detection Tab
     ##########################################################################################################

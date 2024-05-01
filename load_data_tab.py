@@ -165,8 +165,10 @@ class LoadDataTab:
             loaded_files = self.load_files(files, folder_path, file_type)
 
             self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
-            self.insert_data_to_analisys()
-            self.insert_data_to_detection()
+            # self.insert_data_to_analisys()
+            # self.insert_data_to_detection()
+
+            self.app.update_data(self.data)
             
         except Exception as e:
             error_msg = "Error", f"load_all_files: An error occurred while refreshing the listbox: {str(e)}"
@@ -197,8 +199,10 @@ class LoadDataTab:
             loaded_files = self.load_files(selected_files, folder_path, file_type)
 
             self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
-            self.insert_data_to_analisys()
-            self.insert_data_to_detection()
+            # self.insert_data_to_analisys()
+            # self.insert_data_to_detection()
+
+            self.app.update_data(self.data)
         except Exception as e:
             error_msg = "load_selected_files: Error", f"An error occurred while loading selected files: {str(e)}"
             logger.error(error_msg)
