@@ -9,7 +9,6 @@ import os
 
 import tkinter as tk
 from tkinter import ttk
-from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from PIL import Image, ImageTk
 
@@ -35,7 +34,7 @@ class SpotsDetectionTab:
         self.header_info = {}
         self.preprocess_params = {
             "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
-            # "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
+            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
             "GaussianFilter": {"sigma": 4}
         }
 
@@ -123,128 +122,88 @@ class SpotsDetectionTab:
         self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
 
         # Display Preproccess Options
-        self.detection_section_frame = ttk.Frame(self.spots_detection_tab, padding="3")
-        self.detection_section_frame.grid(row=0, column=4,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
+        self.detection_section_menu = ttk.Frame(self.spots_detection_tab, padding="3")
+        self.detection_section_menu.grid(row=0, column=4,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
         self.display_header_info_labels()
-        self.display_detection_frame()
+        self.display_detection_section_menu()
 
-    def display_detection_frame(self):
-        # Clear existing widgets in the preprocessing frame
-        for widget in self.detection_section_frame.winfo_children():
-            widget.destroy()
-        
-        # Preproccess section name label
-        preproccess_section_name_label = tk.Label(self.detection_section_frame, text="Preproccess:")
-        preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="n")
-
+    def display_preprocess_options_menu(self):
         # Preprocess Dropdown menu options
-        # preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
-        preprocessing_options = ["GaussianBlur", "GaussianFilter"]
-        detection_options = ["Canny"]
+        preprocessing_options = ["GaussianBlur", "GaussianFilter", "Non-local Mean Denoising"]
 
-        # Show Picture Options
-        self.picture_options = {
+        self.image_show_options = {
             "Preprocess": ["processed", "both", "original"]
         }
 
         # Create and place dropdown menu
         dropdown_var = tk.StringVar()
         dropdown_var.set("")  # Set default option
-        dropdown = tk.OptionMenu(self.detection_section_frame, dropdown_var, *preprocessing_options, command=self.update_labels)
+        dropdown = tk.OptionMenu(self.detection_section_menu, dropdown_var, *preprocessing_options, command=self.update_preprocess_options)
         dropdown.config(width=10)
         dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
 
         # Create and place second dropdown menu
         self.image_option_dropdown_var = tk.StringVar()
         self.image_option_dropdown_var.set("")  # Set default option
-        self.image_dropdown = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_var, *self.picture_options["Preprocess"], command=self.update_image)
+        self.image_dropdown = tk.OptionMenu(self.detection_section_menu, self.image_option_dropdown_var, *self.image_show_options["Preprocess"], command=self.update_image)
         self.image_dropdown.config(width=10)
         self.image_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
 
         # Labels for function parameters
         self.parameter_preprocess_entries = {}
         self.parameter_preprocess_labels = {}
-        row = 3
-        for param_name in self.preprocess_params[preprocessing_options[0]].keys():
-            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.parameter_preprocess_labels[param_name] = label
-            entry = tk.Entry(self.detection_section_frame)
-            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-            entry.insert(0, str(self.preprocess_params[preprocessing_options[0]][param_name]))
-            self.parameter_preprocess_entries[param_name] = entry
-            row += 2
+        self.parameter_detection_buttons = []
 
-        # # Apply button
-        self.apply_button = tk.Button(self.detection_section_frame, text="Apply", command=self.apply_preprocessing)
-        self.apply_button.grid(row=row, column=0, padx=5, pady=5)
+    def display_detection_options_menu(self):
+        detection_options = ["Canny"]
+
+        # Create and place dropdown menu for detection options
+        detection_dropdown_var = tk.StringVar()
+        detection_dropdown_var.set("")  # Set default option
+        detection_dropdown = tk.OptionMenu(self.detection_section_menu, detection_dropdown_var, *detection_options, command=self.update_detection_options_labels)
+        detection_dropdown.config(width=10)
+        detection_dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
+
+        # Labels for function parameters
+        self.parameter_detection_entries = {}
+        self.parameter_detection_labels = {}
+        self.parameter_detection_sliders = {}
+        self.parameter_detection_buttons = []
+
+
+    def display_detection_section_menu(self):
+        display_options = ["Preprocess", "Detection"]
+
+        # Create and place dropdown menu for detection options
+        self.detection_menu_dropdown_var = tk.StringVar()
+        self.detection_menu_dropdown_var.set("Preprocess")  # Set default option
+        self.detection_menu_dropdown = tk.OptionMenu(self.detection_section_menu, self.detection_menu_dropdown_var, *display_options, command=self.update_detection_menu)
+        self.detection_menu_dropdown.config(width=10)
+        self.detection_menu_dropdown.grid(row=0, column=0, padx=5, pady=1, sticky="n")
+
+        self.display_preprocess_options_menu()
 
         # Listbox to show all operations
-        self.operations_listbox = tk.Listbox(self.detection_section_frame)
+        self.operations_listbox = tk.Listbox(self.detection_section_menu)
         self.operations_listbox.grid(row=0, column=1,rowspan=20, padx=5, pady=5, sticky="nsew")
 
         self.operations_listbox.bind("<<ListboxSelect>>", self.show_data_for_preprocess)
 
         # Add scrollbar to the listbox
-        self.scrollbar = tk.Scrollbar(self.detection_section_frame, orient="vertical", command=self.operations_listbox.yview)
+        self.scrollbar = tk.Scrollbar(self.detection_section_menu, orient="vertical", command=self.operations_listbox.yview)
         self.scrollbar.grid(row=0, column=2, rowspan=20, padx=5, pady=5, sticky="ns")
         self.operations_listbox.config(yscrollcommand=self.scrollbar.set)
 
-        row = row + 1
-
-        # Analysis section name label
-        analisys_section_name_label = tk.Label(self.detection_section_frame, text="Detection:")
-        analisys_section_name_label.grid(row=row, column=0, padx=1, pady=2, sticky="n")
-
-        row = row + 1
-
-        # Create and place dropdown menu for detection options
-        detection_dropdown_var = tk.StringVar()
-        detection_dropdown_var.set("")  # Set default option
-        detection_dropdown = tk.OptionMenu(self.detection_section_frame, detection_dropdown_var, *detection_options, command=self.update_detection_options_labels)
-        detection_dropdown.config(width=10)
-        detection_dropdown.grid(row=row, column=0, padx=5, pady=1, sticky="n")
-
-        row = row + 1
-
-        # Create and place dropdown menu for display options
-        self.image_option_dropdown_for_detection_var = tk.StringVar()
-        self.image_option_dropdown_for_detection_var.set("")  # Set default option
-        self.image_dropdown_for_detection = tk.OptionMenu(self.detection_section_frame, self.image_option_dropdown_for_detection_var, *self.picture_options["Preprocess"], command=self.update_image_detection)
-        self.image_dropdown_for_detection.config(width=10)
-        self.image_dropdown_for_detection.grid(row=row, column=0, padx=5, pady=1, sticky="n")
-
-        row = row + 1
-        # Labels for function parameters
-        self.parameter_detection_entries = {}
-        self.parameter_detection_labels = {}
-        self.parameter_detection_sliders = {}
-        for param_name, param_value in self.detection_params[detection_options[0]].items():
-            if param_name == "sigma":
-                # Create a slider for sigma parameter
-                label_text = f"{param_name}: {param_value:.1f}"
-                label = tk.Label(self.detection_section_frame, text=label_text, width=15)
-                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-                slider = ttk.Scale(self.detection_section_frame, from_=0.1, to=5.0, length=100, orient="horizontal", command=lambda value=param_value, param_name=param_name: self.sigma_slider_change(value, param_name))
-                slider.set(param_value)  # Set default value
-                slider.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-                self.parameter_detection_sliders[param_name] = slider
-                self.parameter_detection_labels[param_name] = label
-            else:
-                # Create entry for other parameters
-                label = tk.Label(self.detection_section_frame, text=param_name, width=15)
-                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-                entry = tk.Entry(self.detection_section_frame)
-                entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-                entry.insert(0, str(param_value))
-                self.parameter_detection_entries[param_name] = entry
-                self.parameter_detection_labels[param_name] = label
-            row += 2
-
-        # Apply button for detection
-        self.find_edges_button = tk.Button(self.detection_section_frame, text="Find Edges", command=self.apply_detection)
-        self.find_edges_button.grid(row=row, column=0, padx=5, pady=5)
+    def update_detection_menu(self, selected_option):
+        for widget in self.detection_section_menu.winfo_children():
+            if not widget in (self.operations_listbox, self.scrollbar, self.detection_menu_dropdown):
+                widget.destroy()
+        
+        if selected_option == "Preprocess":
+            self.display_preprocess_options_menu()
+        elif selected_option == "Detection":
+            self.display_detection_options_menu()
 
     def update_detection_options_labels(self, selected_option):
         self.selected_detection_option = selected_option
@@ -253,33 +212,41 @@ class SpotsDetectionTab:
             entry.destroy()
         for label in self.parameter_detection_labels.values():
             label.destroy()
+        for slider in self.parameter_detection_sliders.values():
+            slider.destroy()
+        for button in self.parameter_detection_buttons:
+            button.destroy()
         self.parameter_detection_entries.clear()
         self.parameter_detection_labels.clear()
-        row = 11
+        self.parameter_detection_sliders.clear()
+        self.parameter_detection_buttons.clear()
+        row = 3
         # # Update labels with function parameters based on selected option
         for param_name, param_value in self.detection_params[selected_option].items():
             if param_name == "sigma":
                 # Create a slider for sigma parameter
                 label_text = f"{param_name}: {param_value:.1f}"
-                label = tk.Label(self.detection_section_frame, text=label_text, width=15)
+                label = tk.Label(self.detection_section_menu, text=label_text, width=15)
                 label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-                slider = ttk.Scale(self.detection_section_frame, from_=0.1, to=5.0, length=100, orient="horizontal", command=lambda value=param_value, param_name=param_name: self.sigma_slider_change(value, param_name))
+                slider = ttk.Scale(self.detection_section_menu, from_=0.1, to=5.0, length=100, orient="horizontal", command=lambda value=param_value, param_name=param_name: self.sigma_slider_change(value, param_name))
                 slider.set(param_value)  # Set default value
                 slider.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
                 self.parameter_detection_sliders[param_name] = slider
                 self.parameter_detection_labels[param_name] = label
             else:
                 # Create entry for other parameters
-                label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+                label = tk.Label(self.detection_section_menu, text=param_name, width=15)
                 label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-                entry = tk.Entry(self.detection_section_frame)
+                entry = tk.Entry(self.detection_section_menu)
                 entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
                 entry.insert(0, str(param_value))
                 self.parameter_detection_entries[param_name] = entry
                 self.parameter_detection_labels[param_name] = label
             row += 2
-        self.find_edges_button.grid_remove()
-        self.find_edges_button.grid(row=row, column=0, padx=5, pady=5)
+        # Apply button for detection
+        find_edges_button = tk.Button(self.detection_section_menu, text="Find Edges", command=self.apply_detection)
+        find_edges_button.grid(row=row, column=0, padx=5, pady=5)
+        self.parameter_detection_buttons.append(find_edges_button)
 
     def update_image_detection(self, selected_option):
         operations_selected_index = self.operations_listbox.curselection()
@@ -338,7 +305,7 @@ class SpotsDetectionTab:
         self.refresh_data_to_detection()
         operations_index = self.operations_listbox.size() - 1
         self.display_edged_image(operations_index, "Preprocess", "both")
-        self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
+        self.image_option_dropdown_var.set(self.image_show_options["Preprocess"][1])
 
         self.operations_listbox.focus()
         self.operations_listbox.selection_set(tk.END)
@@ -395,8 +362,8 @@ class SpotsDetectionTab:
         self.data_canvas_detection.delete("all")
         img = None
 
-        if option_section in self.picture_options:
-            options = self.picture_options[option_section]
+        if option_section in self.image_show_options:
+            options = self.image_show_options[option_section]
             if option in options:
                 # Perform operations for each option
                 if option == "processed":
@@ -454,28 +421,33 @@ class SpotsDetectionTab:
         for option in options:
             self.image_dropdown['menu'].add_command(label=option, command=tk._setit(self.image_option_dropdown_var, option))
     
-    def update_labels(self, selected_option):
+    def update_preprocess_options(self, selected_option):
         self.selected_option = selected_option
         # Destroy existing parameter labels and entries
         for entry in self.parameter_preprocess_entries.values():
             entry.destroy()
         for label in self.parameter_preprocess_labels.values():
             label.destroy()
+        for button in self.parameter_detection_buttons:
+            button.destroy()
         self.parameter_preprocess_entries.clear()
         self.parameter_preprocess_labels.clear()
+        self.parameter_detection_buttons.clear()
         # # Update labels with function parameters based on selected option
         row = 3
         for param_name, param_value in self.preprocess_params[selected_option].items():
-            label = tk.Label(self.detection_section_frame, text=param_name, width=15)
+            label = tk.Label(self.detection_section_menu, text=param_name, width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            entry = tk.Entry(self.detection_section_frame)
+            entry = tk.Entry(self.detection_section_menu)
             entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             entry.insert(0, str(param_value))
             self.parameter_preprocess_entries[param_name] = entry
             self.parameter_preprocess_labels[param_name] = label
             row += 2
-        self.apply_button.grid_remove()
-        self.apply_button.grid(row=row, column=0, padx=5, pady=5)
+        # Apply button
+        apply_button = tk.Button(self.detection_section_menu, text="Apply", command=self.apply_preprocessing)
+        apply_button.grid(row=row, column=0, padx=5, pady=5)
+        self.parameter_detection_buttons.append(apply_button)
 
     def apply_preprocessing(self):
         if self.selected_option is None:
@@ -507,14 +479,14 @@ class SpotsDetectionTab:
                 sigmaX=params['sigmaX'],
                 sigmaY=params['sigmaY']
                 )
-        # elif self.selected_option == "Non-local Mean Denoising":
-        #     process_name = "Non-local Mean Denoising"
-        #     result_image = NlMeansDenois(
-        #         img=np.array(img),
-        #         h=params['h'],
-        #         searchWinwowSize=params['searchWindowSize'],
-        #         templateWindowSize=params['templateWindowSize']
-        #         )
+        elif self.selected_option == "Non-local Mean Denoising":
+            process_name = "Non-local Mean Denoising"
+            result_image = NlMeansDenois(
+                img=np.array(img),
+                h=params['h'],
+                searchWinwowSize=params['searchWindowSize'],
+                templateWindowSize=params['templateWindowSize']
+                )
         elif self.selected_option == "GaussianFilter":
             process_name = "GaussianFilter"
             result_image = GaussianFilter(
@@ -530,7 +502,7 @@ class SpotsDetectionTab:
         self.refresh_data_to_preprocess()
         operations_index = self.operations_listbox.size() - 1
         self.display_processed_image(operations_index, "Preprocess", "both")
-        self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
+        self.image_option_dropdown_var.set(self.image_show_options["Preprocess"][1])
 
         self.operations_listbox.focus()
         self.operations_listbox.selection_set(tk.END)
@@ -557,8 +529,8 @@ class SpotsDetectionTab:
         self.data_canvas_detection.delete("all")
         img = None
 
-        if option_section in self.picture_options:
-            options = self.picture_options[option_section]
+        if option_section in self.image_show_options:
+            options = self.image_show_options[option_section]
             if option in options:
                 # Perform operations for each option
                 if option == "processed":
