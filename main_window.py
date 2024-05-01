@@ -41,7 +41,7 @@ class App:
         self.header_info = {}
         self.preprocess_params = {
             "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
-            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
+            # "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
             "GaussianFilter": {"sigma": 4}
         }
 
@@ -166,7 +166,8 @@ class App:
         preproccess_section_name_label.grid(row=0, column=0, padx=1, pady=2, sticky="n")
 
         # Preprocess Dropdown menu options
-        preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
+        # preprocessing_options = ["GaussianBlur", "Non-local Mean Denoising", "GaussianFilter"]
+        preprocessing_options = ["GaussianBlur", "GaussianFilter"]
         detection_options = ["Canny"]
 
         # Show Picture Options
@@ -176,7 +177,7 @@ class App:
 
         # Create and place dropdown menu
         dropdown_var = tk.StringVar()
-        dropdown_var.set(preprocessing_options[0])  # Set default option
+        dropdown_var.set("")  # Set default option
         dropdown = tk.OptionMenu(self.detection_section_frame, dropdown_var, *preprocessing_options, command=self.update_labels)
         dropdown.config(width=10)
         dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
@@ -227,7 +228,7 @@ class App:
 
         # Create and place dropdown menu for detection options
         detection_dropdown_var = tk.StringVar()
-        detection_dropdown_var.set(detection_options[0])  # Set default option
+        detection_dropdown_var.set("")  # Set default option
         detection_dropdown = tk.OptionMenu(self.detection_section_frame, detection_dropdown_var, *detection_options, command=self.update_detection_options_labels)
         detection_dropdown.config(width=10)
         detection_dropdown.grid(row=row, column=0, padx=5, pady=1, sticky="n")
@@ -370,8 +371,6 @@ class App:
         self.operations_listbox.selection_set(tk.END)
 
     def refresh_image_on_sigma_slider_change(self, sigma_value):
-        # if self.selected_detection_option is None:
-        #     return  # No option selected
         params = {}
         index = self.data_index
         focuse_widget = self.root.focus_get()
@@ -391,27 +390,12 @@ class App:
                 params[param_name] = entry.get()
         # Apply detection process based on selected option and parameters
         if self.selected_detection_option == "Canny":
-            # process_name = "Canny"
             result_image = EdgeDetection(
                 img=np.asanyarray(img), 
                 sigma=sigma_value,
                 low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
                 high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
                 )
-        # operation = {
-        #     "processed_image": result_image,
-        #     "process_name": process_name,
-        #     "params": params,
-        #     "contours": None,
-        #     "labeled_image": None
-        # }
-        # self.data_for_detection[index]['operations'].append(operation)
-        # self.refresh_data_to_detection()
-        # operations_index = self.operations_listbox.size() - 1
-        # self.display_edged_image(operations_index, "Preprocess", "both")
-        # self.image_option_dropdown_var.set(self.picture_options["Preprocess"][1])
-            
-        # img_data = self.data_for_detection[self.data_index]['operations'][operation_index]['processed_image']
         processed_img = Image.fromarray(result_image)
         original_img = img
 
@@ -432,9 +416,6 @@ class App:
 
         # Save a reference to the PhotoImage to prevent garbage collection
         self.data_canvas_detection.image = photo
-
-        # self.operations_listbox.focus()
-        # self.operations_listbox.selection_set(tk.END)
 
     def display_edged_image(self, operation_index, option_section, option):
         # Clear previous data
@@ -527,8 +508,6 @@ class App:
         if self.selected_option is None:
             return  # No option selected
         params = {}
-        # selected_index = self.data_listbox_detection.curselection()
-        # index = None
         index = self.data_index
         focuse_widget = self.root.focus_get()
         if focuse_widget == self.data_listbox_detection:
@@ -555,14 +534,14 @@ class App:
                 sigmaX=params['sigmaX'],
                 sigmaY=params['sigmaY']
                 )
-        elif self.selected_option == "Non-local Mean Denoising":
-            process_name = "Non-local Mean Denoising"
-            result_image = NlMeansDenois(
-                img=np.array(img),
-                h=params['h'],
-                searchWinwowSize=params['searchWindowSize'],
-                templateWindowSize=params['templateWindowSize']
-                )
+        # elif self.selected_option == "Non-local Mean Denoising":
+        #     process_name = "Non-local Mean Denoising"
+        #     result_image = NlMeansDenois(
+        #         img=np.array(img),
+        #         h=params['h'],
+        #         searchWinwowSize=params['searchWindowSize'],
+        #         templateWindowSize=params['templateWindowSize']
+        #         )
         elif self.selected_option == "GaussianFilter":
             process_name = "GaussianFilter"
             result_image = GaussianFilter(
