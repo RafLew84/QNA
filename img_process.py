@@ -12,6 +12,10 @@ import numpy as np
 
 from skimage import feature
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def NlMeansDenois(img, h=3, searchWinwowSize=21, templateWindowSize=7):
     """
     Apply Non-Local Means Denoising to the input image.
@@ -34,7 +38,9 @@ def NlMeansDenois(img, h=3, searchWinwowSize=21, templateWindowSize=7):
         )
         return denoised_image
     except Exception as e:
-        raise ValueError(f"NlMeansDenois error: {e}")
+        msg = f"NlMeansDenois error: {e}"
+        logger.error(msg)
+        raise ValueError(msg)
 
 def GaussianBlur(img, sigmaX=5, sigmaY=5, borderType=0):
     """
@@ -61,7 +67,9 @@ def GaussianBlur(img, sigmaX=5, sigmaY=5, borderType=0):
         )
         return blurred_image
     except Exception as e:
-        raise ValueError(f"GaussianBlur error: {e}")
+        msg = f"GaussianBlur error: {e}"
+        logger.error(msg)
+        raise ValueError(msg)
 
 def GaussianFilter(img, sigma=4):
     """
@@ -81,7 +89,9 @@ def GaussianFilter(img, sigma=4):
         )
         return gaussian_image
     except Exception as e:
-        raise ValueError(f"GaussianFilter error: {e}")
+        msg = f"GaussianFilter error: {e}"
+        logger.error(msg)
+        raise ValueError(msg)
 
 def EdgeDetection(img, sigma=1.0, low_threshold=None, high_threshold=None):
     """
@@ -106,7 +116,9 @@ def EdgeDetection(img, sigma=1.0, low_threshold=None, high_threshold=None):
         img = edges.astype('uint8') * 255
         return img
     except Exception as e:
-        raise ValueError(f"EdgeDetection error: {e}")
+        msg = f"EdgeDetection error: {e}"
+        logger.error(msg)
+        raise ValueError(msg)
 
 def ContourFinder(img):
     """
@@ -122,4 +134,6 @@ def ContourFinder(img):
         contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return contours
     except Exception as e:
-        raise ValueError(f"ContourFinder error: {e}")
+        msg = f"ContourFinder error: {e}"
+        logger.error(msg)
+        raise ValueError(msg)
