@@ -220,6 +220,7 @@ class LoadDataTab:
             self.loaded_files_text.insert(tk.END, "\n".join(loaded_files))
 
             self.app.update_data(self.data)
+            
         except Exception as e:
             error_msg = "load_selected_files: Error", f"An error occurred while loading selected files: {str(e)}"
             logger.error(error_msg)
