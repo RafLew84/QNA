@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-read .s94 file
+Read .s94 file.
+
+This module contains a function to read data from a .s94 file.
 
 @author: rlewandkow
 """
@@ -41,20 +43,29 @@ import logging
 import numpy as np
 
 #  Image modes
-s94_image_mode = {
+S94_IMAGE_MODE = {
     "S94_TOPOGRAPHY": 0,
     "S94_CURRENT": 1,
 }
 
 # Define the format string used to read binary data from the file.
-format_string = "<hhhhiffffffhhffffhh"
+FORMAT_STRING = "<hhhhiffffffhhffffhh"
 
 # The size (in bytes) of the binary data structure
-number_of_bytes = struct.calcsize(format_string)
+NUMBER_OF_BYTES = struct.calcsize(FORMAT_STRING)
 
 logger = logging.getLogger(__name__)
 
 def read_s94_file(file_name):
+    """
+    Read data from a .s94 file.
+
+    Args:
+        file_name (str): The path to the .s94 file.
+
+    Returns:
+        dict: A dictionary containing the file name, header information, and data array.
+    """
     if not isinstance(file_name, str):
         msg = "read_s94_file: Invalid input. filename must be strings."
         logger.error(msg)
@@ -63,14 +74,14 @@ def read_s94_file(file_name):
     try:
         with open(file_name, 'rb') as file:
             # Unpack binary data using the specified format
-            data = file.read(number_of_bytes)
-            if len(data) != number_of_bytes:
+            data = file.read(NUMBER_OF_BYTES)
+            if len(data) != NUMBER_OF_BYTES:
                 msg = "read_s94_file: Incomplete data read"
                 logger.error(msg)
                 raise ValueError(msg)
 
             x_points, y_points, Swapped, image_mode, Image_Number, x_size, y_size, x_offset, y_offset, Scan_Speed, \
-                Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(format_string, data)
+                Bias_Voltage, z_gain, Section, Kp, Tn, Tv, It, Scan_Angle, z_Flag = struct.unpack(FORMAT_STRING, data)
 
             current = []
             image_data = np.fromfile(file, dtype=np.int16, count=x_points * y_points).reshape((x_points, y_points))

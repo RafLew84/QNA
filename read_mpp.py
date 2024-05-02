@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-read .mpp file
+Read .mpp file.
+
+This module contains a function to read data from a .mpp file.
 
 @author: rlewandkow
 """
@@ -12,6 +14,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 def read_mpp_file(file_name):
+    """
+    Read data from a .mpp file.
+
+    Args:
+        file_name (str): The path to the .mpp file.
+
+    Returns:
+        dict: A dictionary containing the file name, header information, data array, and header length.
+    """
     if not isinstance(file_name, str):
         msg = "read_mpp_file: Invalid input. filename must be strings."
         logger.error(msg)
@@ -68,18 +79,15 @@ def read_mpp_file(file_name):
             "header_length": header_length
         }
     
-    except FileNotFoundError:
-        error_msg = f"read_mpp_file: File '{file_name}' not found."
-        logger.error(error_msg)
-        print(error_msg)
+    except FileNotFoundError as e:
+        logger.error(f"File '{file_name}' not found: {e}")
+        raise FileNotFoundError(f"File '{file_name}' not found.")
     except ValueError as ve:
-        error_msg = f"read_mpp_file: Error reading file '{file_name}': {ve}"
-        logger.error(error_msg)
-        print(error_msg)
+        logger.error(f"Error reading file '{file_name}': {ve}")
+        raise ValueError(f"Error reading file '{file_name}': {ve}")
     except Exception as e:
-        error_msg = f"read_mpp_file: An unexpected error occurred: {e}"
-        logger.error(error_msg)
-        print(error_msg)
+        logger.error(f"An unexpected error occurred: {e}")
+        raise Exception(f"An unexpected error occurred: {e}")
 
 def main():
     file_name = "test_files/cut3_upper_part_of_stm_movie.mpp"

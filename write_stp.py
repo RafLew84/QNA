@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-write .stp file
+Write .stp file.
+
+This module contains a function to write data to a .stp file.
 
 @author: rlewandkow
 """
@@ -24,6 +26,27 @@ def write_STP_file(
         y_offset, 
         z_gain, 
         data):
+    
+    """
+    Write data to a .stp file.
+
+    Args:
+        output_dir_name (str): The name of the output directory.
+        file_name (str): The name of the file.
+        x_points (int): Number of columns.
+        y_points (int): Number of rows.
+        z_amplitude (float): Z amplitude.
+        image_mode (int): Image mode (0 for Topo, 1 for Current).
+        x_size (float): X size.
+        y_size (float): Y size.
+        x_offset (float): X offset.
+        y_offset (float): Y offset.
+        z_gain (float): Z gain.
+        data (list or tuple): List or tuple of data points.
+
+    Raises:
+        ValueError: If any input parameter is invalid.
+    """
     
     # Input validation
     if not all(isinstance(arg, (int, float)) for arg in [x_points, y_points, z_amplitude, x_size, y_size, x_offset, y_offset, z_gain]) \

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-read .stp file
+Read .stp file.
+
+This module contains a function to read data from a .stp file.
 
 @author: rlewandkow
 """
@@ -12,6 +14,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 def read_stp_file(file_name):
+    """
+    Read data from a .stp file.
+
+    Args:
+        file_name (str): The path to the .stp file.
+
+    Returns:
+        dict: A dictionary containing the file name, header information, and data array.
+    """
+    
     if not isinstance(file_name, str):
         msg = "read_stp_file: Invalid input. filename must be strings."
         logger.error(msg)

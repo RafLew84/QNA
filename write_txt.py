@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-write .txt file
+Write .txt file.
+
+This module contains a function to write data to a .txt file.
 
 @author: rlewandkow
 """
@@ -10,6 +12,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 def write_txt_file(filename, l0, frame_name = None):
+    """
+    Write data to a .txt file.
+
+    Args:
+        filename (str): The name of the file.
+        l0 (float): The value to write to the file.
+        frame_name (str, optional): The number of the frame. Defaults to None.
+
+    Raises:
+        ValueError: If any input parameter is invalid.
+    """
     if not isinstance(filename, str) or (frame_name and not isinstance(frame_name, str)):
         msg = "write_txt_file: Invalid input. filename, and frame_name (if provided) must be strings."
         logger.error(msg)
