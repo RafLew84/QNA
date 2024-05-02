@@ -16,7 +16,7 @@ import numpy as np
 
 from data_proccess import create_greyscale_image
 
-from img_proccess import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection
+from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection
 
 import logging
 
