@@ -94,7 +94,7 @@ def calculate_z_amplitude_from_S94_file(z_gain, data):
     max_z, min_z = max(map(max, height_array)), min(map(min, height_array))
     return max_z - min_z
 
-def proccess_stp_files_I_ISET_map(data, ISET):
+def process_stp_files_I_ISET_map(data, ISET):
     if not isinstance(data, list):
         error_msg = "proccess_stp_files_I_ISET_map: Input data must be provided as a list."
         logger.error(error_msg)
@@ -156,7 +156,7 @@ def convert_s94_files_to_stp(file):
         data= [i for row in file['data'] for i in row]
     )
 
-def proccess_s94_files_I_ISET_map(data, ISET):
+def process_s94_files_I_ISET_map(data, ISET):
     if not isinstance(data, list):
         error_msg = "proccess_s94_files_I_ISET_map: Input data must be provided as a list."
         logger.error(error_msg)
@@ -204,7 +204,7 @@ def proccess_s94_files_I_ISET_map(data, ISET):
             logger.error(error_msg)
             print(error_msg)
 
-def proccess_mpp_files_I_ISET_map(data, ISET):
+def process_mpp_files_I_ISET_map(data, ISET):
     if not isinstance(data, list):
         error_msg = "proccess_mpp_files_I_ISET_map: Input data must be provided as a list."
         logger.error(error_msg)
@@ -255,7 +255,7 @@ def proccess_mpp_files_I_ISET_map(data, ISET):
             logger.error(error_msg)
             print(error_msg)
 
-def proccess_stp_and_s94_files_l0(data, ISET):
+def process_stp_and_s94_files_l0(data, ISET):
     if not isinstance(data, list):
         error_msg = "proccess_stp_and_s94_files_l0: Input data must be provided as a list."
         logger.error(error_msg)
@@ -283,7 +283,7 @@ def proccess_stp_and_s94_files_l0(data, ISET):
             logger.error(error_msg)
             print(error_msg)
 
-def proccess_mpp_files_l0(data, ISET):
+def process_mpp_files_l0(data, ISET):
     if not isinstance(data, list):
         error_msg = "proccess_mpp_files_l0: Input data must be provided as a list."
         logger.error(error_msg)
@@ -317,7 +317,7 @@ def proccess_mpp_files_l0(data, ISET):
             logger.error(error_msg)
             print(error_msg)
 
-def proccess_stp_and_s94_files_l0_from_I_ISET_map(data):
+def process_stp_and_s94_files_l0_from_I_ISET_map(data):
     # Input validation
     if not isinstance(data, list):
         error_msg = "proccess_stp_and_s94_files_l0_from_I_ISET_map: Input data must be provided as a list."
@@ -341,7 +341,7 @@ def proccess_stp_and_s94_files_l0_from_I_ISET_map(data):
             logger.error(error_msg)
             print(error_msg)
 
-def proccess_mpp_files_l0_from_I_ISET_map(data):
+def process_mpp_files_l0_from_I_ISET_map(data):
     if not isinstance(data, list):
         error_msg = "proccess_mpp_files_l0_from_I_ISET_map: Input data must be provided as a list."
         logger.error(error_msg)
