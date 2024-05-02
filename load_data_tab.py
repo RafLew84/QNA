@@ -141,6 +141,7 @@ class LoadDataTab:
             self.file_listbox.insert(tk.END, file)
 
     def convert_s94_stp(self):
+        """Converts s94 to stp files"""
         try:
             folder_path = self.path_entry.get()
             if not os.path.isdir(folder_path):
