@@ -11,7 +11,7 @@ import numpy as np
 
 from write_stp import write_STP_file
 from write_txt import write_txt_file
-from data_proccess import calculate_I_ISET_square, calculate_l0
+from data_process import calculate_I_ISET_square, calculate_l0
 from read_s94 import S94_IMAGE_MODE
 
 import logging

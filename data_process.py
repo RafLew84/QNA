@@ -112,8 +112,8 @@ def create_greyscale_image(points):
     """
     try:
         # Input validation
-        if not isinstance(points, list) or not all(isinstance(row, list) for row in points):
-            raise ValueError("Input points must be a list of lists.")
+        # if not isinstance(points, list) or not all(isinstance(row, list) for row in points):
+        #     raise ValueError("Input points must be a list of lists.")
 
         # Create a new grayscale image
         img = Image.new('L', (len(points[0]), len(points)))

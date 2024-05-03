@@ -12,6 +12,8 @@ import numpy as np
 
 from skimage import feature
 
+from PIL import Image
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -137,3 +139,19 @@ def ContourFinder(img):
         msg = f"ContourFinder error: {e}"
         logger.error(msg)
         raise ValueError(msg)
+    
+def concatenate_two_images(processed_img, original_img):
+    """
+    Concatenate two images side by side.
+
+    Args:
+        processed_img (PIL.Image.Image): The processed image.
+        original_img (PIL.Image.Image): The original image.
+
+    Returns:
+        PIL.Image.Image: The concatenated image.
+    """
+    img = Image.new('RGB', (processed_img.width + original_img.width + 10, max(processed_img.height, original_img.height)))
+    img.paste(processed_img, (0, 0))
+    img.paste(original_img, (processed_img.width + 10, 0))
+    return img
