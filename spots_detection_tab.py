@@ -14,7 +14,7 @@ from PIL import Image, ImageTk
 
 import numpy as np
 
-from data_proccess import create_greyscale_image
+from data_process import create_greyscale_image
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection
 

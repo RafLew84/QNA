@@ -12,7 +12,7 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from PIL import ImageTk
-from data_proccess import create_greyscale_image
+from data_process import create_greyscale_image
 
 import logging
 
