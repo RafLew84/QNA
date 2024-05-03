@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-
+Module for data analisys in the application.
 
 @author
+rlewandkow
 """
 
 import os
