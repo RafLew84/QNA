@@ -11,14 +11,25 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
-from PIL import Image, ImageTk
+from PIL import ImageTk
+from data_proccess import create_greyscale_image
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 class NoiseAnalysisTab:
+    """Class representing the Noise Analysis tab in the application."""
+
     def __init__(self, notebook, app):
+        """
+        Initialize the NoiseAnalysisTab.
+
+        Args:
+            notebook (ttk.Notebook): The parent notebook where the tab will be added.
+            app: The parent application instance.
+        """
+
         self.noise_analisys_tab = ttk.Frame(notebook)
         notebook.add(self.noise_analisys_tab, text="Noise Analysis")
         self.app = app
@@ -29,6 +40,11 @@ class NoiseAnalysisTab:
 
 
     def create_noise_analisys_tab(self):
+        """
+        Create the layout of the Noise Analysis tab.
+
+        This method creates and organizes the widgets for the Noise Analysis tab.
+        """
 
         # Button to load data
         self.load_data_button = tk.Button(self.noise_analisys_tab, text="Load Data", command=self.load_data_onClick)
@@ -68,78 +84,208 @@ class NoiseAnalysisTab:
         self.noise_analisys_tab.bind("<Configure>", self.resize_canvas_scrollregion)
 
     def load_data_onClick(self):
-        self.data = self.app.get_data()
-        self.insert_data_to_analisys()
+        """
+        Handle the click event for the Load Data button.
+
+        This method retrieves data from the parent application and inserts it into the analysis.
+        """
+        try:
+            self.data = self.app.get_data()
+            self.insert_data_to_analisys()
+        except Exception as e:
+            error_msg = f"Error loading data: {e}"
+            logger.error(error_msg)
+            messagebox.showerror("Error", error_msg)
 
     def resize_canvas_scrollregion(self, event):
+        """
+        Resize the scroll region of the canvas to cover the entire canvas area.
+
+        This method is called when the size of the canvas changes to ensure that the scroll region
+        is adjusted accordingly.
+        
+        :param event: The event object associated with the resizing event.
+        """
+            
+        try:
         # Update the scroll region to cover the entire canvas
-        self.data_canvas.config(scrollregion=self.data_canvas.bbox("all"))
+            self.data_canvas.config(scrollregion=self.data_canvas.bbox("all"))
+        except Exception as e:
+            error_msg = f"Error resizing canvas scroll region: {e}"
+            logger.error(error_msg)
+            messagebox.showerror("Error", error_msg)
     
     def insert_data_to_analisys(self):
-        self.data_listbox_analisys.delete(0, tk.END)
+        """
+        Insert loaded data into the listbox for analysis.
 
-        file_ext = self.data[0]['file_name'][-3:]
-        for item in self.data:
-            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-                filename_only = os.path.basename(item['file_name'])
-                self.data_listbox_analisys.insert(tk.END, filename_only)
-            elif file_ext.lower() == "mpp":
-                filename_only = os.path.basename(item['file_name'])
-                for i, frame in enumerate(item['data'], start=1):
-                    frame_name = f"{filename_only}: frame {i}"
-                    self.data_listbox_analisys.insert(tk.END, frame_name)
+        This method clears the existing items in the listbox and inserts filenames or frame names,
+        depending on the file type, into the listbox for further analysis.
+        """
+        try:
+            self.data_listbox_analisys.delete(0, tk.END)
+
+            file_ext = self.data[0]['file_name'][-3:]
+            for item in self.data:
+                if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                    filename_only = os.path.basename(item['file_name'])
+                    self.data_listbox_analisys.insert(tk.END, filename_only)
+                elif file_ext.lower() == "mpp":
+                    filename_only = os.path.basename(item['file_name'])
+                    for i, frame in enumerate(item['data'], start=1):
+                        frame_name = f"{filename_only}: frame {i}"
+                        self.data_listbox_analisys.insert(tk.END, frame_name)
+        except Exception as e:
+            error_msg = f"Error inserting data into analysis listbox: {e}"
+            logger.error(error_msg)
+            messagebox.showerror("Error", error_msg)
 
     def show_data_for_analisys(self, event):
-        file_ext = self.data[0]['file_name'][-3:]
-        # Get the index of the selected filename
-        selected_index = self.data_listbox_analisys.curselection()
-        if selected_index:
-            index = int(selected_index[0])
-            # Get the corresponding data
-            if file_ext.lower() == "stp" or file_ext.lower() == "s94":
-                selected_data = self.data[index]
-                self.display_analisys_image(selected_data)
-            elif file_ext.lower() == "mpp":
-                selected_name = self.data_listbox_analisys.get(index)
-                parts = selected_name.split(':')
-                mpp_file_name = parts[0].strip()
-                frame_number = int(parts[1].strip().split()[1])
-                mpp_data = None
-                for item in self.data:
-                    filename_only = os.path.basename(item['file_name'])
-                    if filename_only == mpp_file_name:
-                        mpp_data = item
-                        break
-                selected_data = mpp_data['data'][frame_number - 1]
-                self.display_analisys_image(selected_data, True)
+        """
+        Display selected data for analysis.
+
+        This method retrieves the selected data from the listbox and displays it for analysis.
+        """
+
+        try:
+            file_ext = self.data[0]['file_name'][-3:]
+            # Get the index of the selected filename
+            selected_index = self.data_listbox_analisys.curselection()
+            if selected_index:
+                index = int(selected_index[0])
+                # Get the corresponding data
+                if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+                    selected_data = self.data[index]
+                    self.display_analisys_image(selected_data)
+                # Extract data from mpp file
+                elif file_ext.lower() == "mpp":
+                    selected_name = self.data_listbox_analisys.get(index)
+                    mpp_file_name, frame_number = self.extract_names_from_mpp_file(selected_name)
+                    selected_data = self.get_data_from_frame(mpp_file_name, frame_number)
+                    self.display_analisys_image(selected_data, True)
+        except Exception as e:
+            error_msg = f"Error displaying selected data for analysis: {e}"
+            logger.error(error_msg)
+            messagebox.showerror("Error", error_msg)
+
+    def get_data_from_frame(self, mpp_file_name, frame_number):
+        """
+        Retrieve data from a specific frame of an MPP file.
+
+        Parameters:
+            mpp_file_name (str): The name of the MPP file.
+            frame_number (int): The number of the frame to retrieve.
+
+        Returns:
+            numpy.ndarray: The data from the specified frame.
+
+        Raises:
+            ValueError: If the frame number is invalid.
+            FileNotFoundError: If the MPP file is not found.
+        """
+        mpp_data = None
+        for item in self.data:
+            filename_only = os.path.basename(item['file_name'])
+            if filename_only == mpp_file_name:
+                mpp_data = item
+                break
+        if mpp_data is None:
+            raise FileNotFoundError(f"MPP file '{mpp_file_name}' not found.")
+        
+        if frame_number < 1 or frame_number > len(mpp_data['data']):
+            raise ValueError(f"Invalid frame number: {frame_number}")
+
+        selected_data = mpp_data['data'][frame_number - 1]
+        return selected_data
+
+    def extract_names_from_mpp_file(self, selected_name):
+        """
+        Extract MPP file name and frame number from the selected name.
+
+        Parameters:
+            selected_name (str): The selected name from the listbox.
+
+        Returns:
+            tuple: A tuple containing the MPP file name and the frame number.
+
+        Raises:
+            ValueError: If the selected name format is invalid.
+        """
+        parts = selected_name.split(':')
+        if len(parts) != 2:
+            raise ValueError("Invalid selected name format.")
+        mpp_file_name = parts[0].strip()
+        frame_number = int(parts[1].strip().split()[1])
+        return mpp_file_name, frame_number
 
     def display_analisys_image(self, data, mpp=False):
-        # Clear previous data
-        self.data_canvas.delete("all")
-        points = []
-        if mpp:
-            points = data
-        else:
-            points = data['data']
-        
-        # Create a new grayscale image
-        img = Image.new('L', (len(points[0]), len(points)))
+        """
+        Display the analysis image on the canvas.
 
-        # Normalize the values in data to the range [0, 255]
-        max_z = max(map(max, points))
-        min_z = min(map(min, points))
-        if max_z == min_z:
-            max_z += 1
-        for i in range(len(points)):
-            for j in range(len(points[i])):
-                val = int(255 * (points[i][j] - min_z) / (max_z - min_z))
-                img.putpixel((j, i), val)
+        Parameters:
+            data (dict): The data to display.
+            mpp (bool): Whether the data is from an MPP file.
 
-        # Convert the PIL image to a Tkinter PhotoImage
-        photo = ImageTk.PhotoImage(img)
+        Raises:
+            ValueError: If the data format is invalid.
+            FileNotFoundError: If the image file is not found.
+            Exception: For any other unexpected errors.
+        """
 
-        # Display the image on the canvas
-        self.data_canvas.create_image(0, 0, anchor="nw", image=photo)
+        try:
+            # Clear previous data
+            self.data_canvas.delete("all")
+            points = self.extract_data_from_file_dic(data, mpp)
 
-        # Save a reference to the PhotoImage to prevent garbage collection
-        self.data_canvas.image = photo
+            img = create_greyscale_image(points)
+
+            # Convert the PIL image to a Tkinter PhotoImage
+            photo = ImageTk.PhotoImage(img)
+
+            # Display the image on the canvas
+            self.data_canvas.create_image(0, 0, anchor="nw", image=photo)
+
+            # Save a reference to the PhotoImage to prevent garbage collection
+            self.data_canvas.image = photo
+        except ValueError as ve:
+            msg = f"ValueError encountered while displaying analysis image: {ve}"
+            logger.error(msg)
+            raise ValueError(msg)
+        except FileNotFoundError as fe:
+            msg = f"FileNotFoundError encountered while displaying analysis image: {fe}"
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+        except Exception as e:
+            msg = f"Error encountered while displaying analysis image: {e}"
+            logger.error(msg)
+            raise
+
+    def extract_data_from_file_dic(self, data, mpp):
+        """
+        Extract data from the file dictionary depend on the filetype.
+
+        Parameters:
+            data (dict): The dictionary containing the data.
+            mpp (bool): Whether the data is from an MPP file.
+
+        Returns:
+            list: The extracted data points.
+
+        Raises:
+            ValueError: If the data format is invalid.
+            Exception: For any other unexpected errors.
+        """
+        try:
+            if mpp:
+                points = data
+            else:
+                points = data['data']
+            return points
+        except KeyError as ke:
+            error_msg = f"KeyError encountered while extracting data from file dictionary: {ke}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        except Exception as e:
+            error_msg = f"Error encountered while extracting data from file dictionary: {e}"
+            logger.error(error_msg)
+            raise
