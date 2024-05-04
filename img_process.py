@@ -140,6 +140,40 @@ def ContourFinder(img):
         logger.error(msg)
         raise ValueError(msg)
     
+def AreaOfContour(contour):
+    area = cv2.contourArea(contour)
+    return area
+
+def PerimieterOfContour(contour):
+    perimeter = cv2.arcLength(contour, True)
+    return perimeter
+
+def FindCircularityOfContour(area, perimeter):
+    circularity = 4 * np.pi * area / (perimeter * perimeter)
+    return circularity
+
+def AreaFinder(contours, nm):
+    areas = []
+    for contour in contours:
+        area = AreaOfContour(contour)
+        areas.append({
+          "contour": contour,
+          "area": area * nm  
+        })
+    return areas
+    
+def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0):
+    filtered_contours = []
+    for contour in contours:
+        area = AreaOfContour(contour)
+        perimeter = PerimieterOfContour(contour)
+        circularity = FindCircularityOfContour(area, perimeter)
+
+        if circularity_low < circularity < circularity_high and area > min_area:
+            filtered_contours.append(contour)
+    
+    return filtered_contours
+    
 def concatenate_two_images(processed_img, original_img):
     """
     Concatenate two images side by side.

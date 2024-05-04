@@ -9,7 +9,7 @@ rlewandkow
 import os
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from PIL import Image, ImageTk
 
@@ -18,6 +18,7 @@ import numpy as np
 from data_process import create_greyscale_image
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
+from img_process import ContourFinder, AreaFinder
 
 import logging
 
@@ -61,6 +62,11 @@ class SpotsDetectionTab:
 
         self.detection_params = {
             "Canny": {"sigma": 1., "low_threshold": None, "high_threshold": None}
+        }
+
+        self.filter_params = {
+            "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
+            "Area": {"min_area": 0.0}
         }
 
         self.selected_option = None
@@ -188,7 +194,7 @@ class SpotsDetectionTab:
             self.header_section_name_label = tk.Label(self.header_section_frame, text="Header Info:")
             self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
 
-            # Display Preproccess Options
+            # Display Proccess Options
             self.detection_section_menu = ttk.Frame(self.spots_detection_tab, padding="3")
             self.detection_section_menu.grid(row=0, column=4,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
@@ -281,6 +287,8 @@ class SpotsDetectionTab:
             self.parameter_detection_labels = {}
             self.parameter_detection_sliders = {}
             self.parameter_detection_buttons = []
+            self.parameter_filter_sliders = {}
+            self.parameter_filter_labels = {}
 
         except Exception as e:
             error_msg = f"Error occurred while creating the detection dropdown menu: {e}"
@@ -318,7 +326,7 @@ class SpotsDetectionTab:
 
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.detection_section_menu)
-            self.operations_listbox.grid(row=0, column=1,rowspan=20, padx=5, pady=5, sticky="nsew")
+            self.operations_listbox.grid(row=0, column=1,rowspan=10, padx=5, pady=5, sticky="nsew")
 
             self.operations_listbox.bind("<<ListboxSelect>>", self.show_operations_image_listboxOnSelect)
 
@@ -377,12 +385,15 @@ class SpotsDetectionTab:
             self.selected_detection_option = selected_option
             # Destroy existing parameter labels and entries
             for widget in [*self.parameter_detection_entries.values(), *self.parameter_detection_labels.values(),
-                        *self.parameter_detection_sliders.values(), *self.parameter_detection_buttons]:
+                        *self.parameter_detection_sliders.values(), *self.parameter_detection_buttons,
+                        *self.parameter_filter_labels.values(), *self.parameter_filter_sliders.values()]:
                 widget.destroy()
             self.parameter_detection_entries.clear()
             self.parameter_detection_labels.clear()
             self.parameter_detection_sliders.clear()
             self.parameter_detection_buttons.clear()
+            self.parameter_filter_labels.clear()
+            self.parameter_filter_sliders.clear()
 
             row = 3
             # # Update labels with function parameters based on selected option
@@ -393,10 +404,73 @@ class SpotsDetectionTab:
             find_edges_button = tk.Button(self.detection_section_menu, text="Save Edges", command=self.save_detected_edges_onClick)
             find_edges_button.grid(row=row, column=0, padx=5, pady=5)
             self.parameter_detection_buttons.append(find_edges_button)
+
+            row += 1
+
+            self.create_filter_menu_items(row)
+
+            # Find Contours button
+            filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
+            filter_contours_button.grid(row=row + 8, column=0, padx=5, pady=5)
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
             raise KeyError(error_msg)
+        
+    def create_filter_menu_items(self, row):
+        for filter_type, params in self.filter_params.items():
+            filter_frame = ttk.Label(self.detection_section_menu, text=filter_type + ":")
+            filter_frame.grid(row=row, column=0, padx=10, pady=5, sticky="nsew")
+
+            for param_name, param_value in params.items():
+                label_text = f"{param_name.replace('_', ' ').capitalize()}: {param_value:.1f}"
+                label = tk.Label(self.detection_section_menu, text=label_text)
+                label.grid(row=row + 1, column=0, padx=5, pady=5)
+                self.parameter_filter_labels[param_name] = label
+
+                slider = ttk.Scale(
+                    self.detection_section_menu,
+                    from_=0.0,
+                    to=1.0 if param_name.startswith("circularity") else 40.0,
+                    orient="horizontal",
+                    command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                )
+                slider.set(param_value)
+                slider.grid(row=row + 1, column=1, padx=5, pady=5)
+                self.parameter_filter_sliders[param_name] = slider
+
+                row += 1
+            row += 1
+
+        return row
+    
+    def filter_slider_on_change(self, param_name, value):
+        if param_name in self.parameter_filter_labels:
+            label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
+            self.parameter_filter_labels[param_name].config(text=label_text)
+            if param_name == "circularity_low":
+                high_value = self.parameter_filter_sliders["circularity_high"].get()
+                if float(value) > high_value:
+                    self.parameter_filter_sliders["circularity_high"].set(float(value))
+                    self.parameter_filter_labels["circularity_high"].config(text=f"Circularity high: {float(value):.1f}")
+            elif param_name == "circularity_high":
+                low_value = self.parameter_filter_sliders["circularity_low"].get()
+                if float(value) < low_value:
+                    self.parameter_filter_sliders["circularity_low"].set(float(value))
+                    self.parameter_filter_labels["circularity_low"].config(text=f"Circularity low: {float(value):.1f}")
+        
+    def filter_contours_onClick(self):
+        operations_selected_index = self.operations_listbox.curselection()
+        operations_index = int(operations_selected_index[0])
+        key = "contours"
+        data = self.data_for_detection[self.original_data_index]['operations'][operations_index]
+        contours = []
+        if key in data:
+            contours = data[key]
+        else:
+            messagebox.showwarning("No data", "Select operation with detected edges")
+        
+        
 
     def create_detection_menu_items(self, row, param_name, param_value):
         """
@@ -472,11 +546,14 @@ class SpotsDetectionTab:
                 high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
                 )
             
+            contours = ContourFinder(result_image)
+            
         operation = {
             "processed_image": result_image,
             "process_name": process_name,
             "params": params,
-            "contours": None,
+            "contours": contours,
+            "labels": [],
             "labeled_image": None
         }
 
@@ -603,7 +680,6 @@ class SpotsDetectionTab:
 
         operations = [item["process_name"] for item in self.data_for_detection[selected_index]['operations']]
         self.operations_listbox.insert(tk.END, *operations)
-
 
     def choose_image_display_option_dropdownOnChange(self, selected_option):
         """
