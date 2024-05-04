@@ -149,7 +149,10 @@ def PerimieterOfContour(contour):
     return perimeter
 
 def FindCircularityOfContour(area, perimeter):
-    circularity = 4 * np.pi * area / (perimeter * perimeter)
+    if perimeter > 0:
+        circularity = 4 * np.pi * area / (perimeter * perimeter)
+    else:
+        circularity = 0
     return circularity
 
 def AreaFinder(contours, nm):
@@ -162,7 +165,7 @@ def AreaFinder(contours, nm):
         })
     return areas
     
-def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0):
+def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0.0):
     filtered_contours = []
     for contour in contours:
         area = AreaOfContour(contour)
@@ -173,6 +176,23 @@ def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=
             filtered_contours.append(contour)
     
     return filtered_contours
+
+def DrawContours(image, contours, color=(255, 255, 255), thickness=1):
+    """
+    Draw contours on the input image.
+
+    Args:
+        image (numpy.ndarray): Input image.
+        contours (list): List of contours.
+        color (tuple, optional): Contour color. Defaults to (255, 255, 255).
+        thickness (int, optional): Contour thickness. Defaults to 1.
+
+    Returns:
+        numpy.ndarray: Image with contours drawn.
+    """
+    img_with_contours = np.zeros_like(image)
+    cv2.drawContours(img_with_contours, contours, -1, color, thickness)
+    return img_with_contours
     
 def concatenate_two_images(processed_img, original_img):
     """
@@ -188,4 +208,24 @@ def concatenate_two_images(processed_img, original_img):
     img = Image.new('RGB', (processed_img.width + original_img.width + 10, max(processed_img.height, original_img.height)))
     img.paste(processed_img, (0, 0))
     img.paste(original_img, (processed_img.width + 10, 0))
+    return img
+
+def concatenate_four_images(processed_img, original_img, edged_image, filtered_contoures_image):
+    # Calculate the widths and heights of the images
+    widths = sorted([processed_img.width, original_img.width, edged_image.width, filtered_contoures_image.width], reverse=True)[:2]
+    heights = sorted([processed_img.height, original_img.height, edged_image.height, filtered_contoures_image.height], reverse=True)[:2]
+
+    # Calculate the width and height of the concatenated image
+    width = sum(widths)
+    height = sum(heights)
+
+    # Create a new blank image with the calculated dimensions
+    img = Image.new('RGB', (width, height))
+
+    # Paste the images onto the blank image
+    img.paste(processed_img, (0, 0))
+    img.paste(original_img, (0, processed_img.height + 10))
+    img.paste(edged_image, (processed_img.width + 10, 0))
+    img.paste(filtered_contoures_image, (processed_img.width + 10, processed_img.height + 10))
+
     return img

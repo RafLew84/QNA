@@ -18,7 +18,7 @@ import numpy as np
 from data_process import create_greyscale_image
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
-from img_process import ContourFinder, AreaFinder
+from img_process import ContourFinder, AreaFinder, ContourFilter, DrawContours, concatenate_four_images
 
 import logging
 
@@ -67,6 +67,18 @@ class SpotsDetectionTab:
         self.filter_params = {
             "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
             "Area": {"min_area": 0.0}
+        }
+
+        self.current_operation = {
+            "processed_image": None,
+            "edge_image": None,
+            "filtered_contours_img": None,
+            "process_name": "",
+            "params": [],
+            "contours": [],
+            "filter_params": {},
+            "labels": [],
+            "labeled_image": None
         }
 
         self.selected_option = None
@@ -400,12 +412,6 @@ class SpotsDetectionTab:
             for param_name, param_value in self.detection_params[selected_option].items():
                 self.create_detection_menu_items(row, param_name, param_value)
                 row += 2
-            # Apply button for detection
-            find_edges_button = tk.Button(self.detection_section_menu, text="Save Edges", command=self.save_detected_edges_onClick)
-            find_edges_button.grid(row=row, column=0, padx=5, pady=5)
-            self.parameter_detection_buttons.append(find_edges_button)
-
-            row += 1
 
             self.create_filter_menu_items(row)
 
@@ -448,16 +454,7 @@ class SpotsDetectionTab:
         if param_name in self.parameter_filter_labels:
             label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
             self.parameter_filter_labels[param_name].config(text=label_text)
-            if param_name == "circularity_low":
-                high_value = self.parameter_filter_sliders["circularity_high"].get()
-                if float(value) > high_value:
-                    self.parameter_filter_sliders["circularity_high"].set(float(value))
-                    self.parameter_filter_labels["circularity_high"].config(text=f"Circularity high: {float(value):.1f}")
-            elif param_name == "circularity_high":
-                low_value = self.parameter_filter_sliders["circularity_low"].get()
-                if float(value) < low_value:
-                    self.parameter_filter_sliders["circularity_low"].set(float(value))
-                    self.parameter_filter_labels["circularity_low"].config(text=f"Circularity low: {float(value):.1f}")
+            self.refresh_image_after_filtering()
         
     def filter_contours_onClick(self):
         operations_selected_index = self.operations_listbox.curselection()
@@ -469,8 +466,63 @@ class SpotsDetectionTab:
             contours = data[key]
         else:
             messagebox.showwarning("No data", "Select operation with detected edges")
+
+    def refresh_image_after_filtering(self):
+        params = {}
+        if self.current_operation['edge_image'] is not None:
+            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+            previous_processed_img = self.current_operation['processed_image']
+            edge_img = self.current_operation['edge_image']
+            contours = self.current_operation['contours']
+            result_image = None
+            self.get_values_from_filter_menu_items(params)
+            filtered_contours = ContourFilter(
+                contours= contours,
+                circularity_low= params['circularity_low'],
+                circularity_high= params['circularity_high'],
+                min_area= params['min_area']
+            )
+            result_image = DrawContours(
+                image= edge_img,
+                contours= filtered_contours
+            )
+
+            self.current_operation = {
+            "processed_image": previous_processed_img,
+            "edge_image": edge_img,
+            "filtered_contours_img": Image.fromarray(result_image),
+            "process_name": "",
+            "params": [],
+            "contours": contours,
+            "filter_params": {},
+            "labels": [],
+            "labeled_image": None
+        }
+
+            img = concatenate_four_images(previous_processed_img, original_img, edge_img, Image.fromarray(result_image))
+            self.handle_displaying_image_on_canvas(img)
+
         
+
         
+
+        
+        # Apply detection process based on selected option and parameters
+
+        # result_image = []
+        # processed_img = Image.fromarray(result_image)
+        # original_img = img
+
+        # img = concatenate_two_images(processed_img, original_img)
+
+        # self.handle_displaying_image_on_canvas(img)
+        
+    def get_values_from_filter_menu_items(self, params):
+        for param_name, slider in self.parameter_filter_sliders.items():
+            try:
+                params[param_name] = float(slider.get())
+            except ValueError:
+                params[param_name] = slider.get()
 
     def create_detection_menu_items(self, row, param_name, param_value):
         """
@@ -512,56 +564,6 @@ class SpotsDetectionTab:
             entry.insert(0, str(param_value))
             self.parameter_detection_entries[param_name] = entry
             self.parameter_detection_labels[param_name] = label
-    
-    def save_detected_edges_onClick(self):
-        """
-        Apply edge detection and save the result to the data in operations.
-
-        This method retrieves the image data based on the selected file in the listbox,
-        applies the selected edge detection process with the specified parameters,
-        and saves the result to the data in operations list.
-
-        Returns:
-            None
-        """
-        if self.selected_detection_option is None:
-            return  # No option selected
-        params = {}
-        index = self.original_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        result_image = None
-        process_name = None
-
-        self.get_values_from_detection_menu_items(params)
-
-        # Apply detection process based on selected option and parameters
-        if self.selected_detection_option == "Canny":
-            process_name = "Canny"
-            result_image = EdgeDetection(
-                img=np.asanyarray(img), 
-                sigma=params['sigma'],
-                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
-                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
-                )
-            
-            contours = ContourFinder(result_image)
-            
-        operation = {
-            "processed_image": result_image,
-            "process_name": process_name,
-            "params": params,
-            "contours": contours,
-            "labels": [],
-            "labeled_image": None
-        }
-
-        self.data_for_detection[index]['operations'].append(operation)
-        self.refresh_data_in_operations_listbox()
-
-        self.operations_listbox.focus()
-        self.operations_listbox.selection_set(tk.END)
 
     def get_values_from_detection_menu_items(self, params):
         """
@@ -609,6 +611,7 @@ class SpotsDetectionTab:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
             img = Image.fromarray(self.data_for_detection[self.original_data_index]['operations'][operations_index]['processed_image'])
+            print(type(img))
         return img
 
     def refresh_image_on_sigma_slider_change(self, sigma_value):
@@ -621,6 +624,7 @@ class SpotsDetectionTab:
             sigma_value (float): The new value of the sigma slider.
         """
         params = {}
+        filter_params = {}
         index = self.original_data_index
         focuse_widget = self.root.focus_get()
         img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
@@ -628,6 +632,7 @@ class SpotsDetectionTab:
         result_image = None
 
         self.get_values_from_detection_menu_items(params)
+        self.get_values_from_filter_menu_items(filter_params)
         # Apply detection process based on selected option and parameters
         if self.selected_detection_option == "Canny":
             result_image = EdgeDetection(
@@ -636,10 +641,45 @@ class SpotsDetectionTab:
                 low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
                 high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
                 )
-        processed_img = Image.fromarray(result_image)
-        original_img = img
+        contours = ContourFinder(result_image)
+        filtered_contours = ContourFilter(
+            contours= contours,
+            circularity_low= filter_params['circularity_low'],
+            circularity_high= filter_params['circularity_high'],
+            min_area= filter_params['min_area']
+        )
+        edge_img = Image.fromarray(result_image)
+        result_filtered_image = DrawContours(
+            image= edge_img,
+            contours= filtered_contours
+        )
+        filtered_img = Image.fromarray(result_filtered_image)
+        original_img = None
+        preprocessed_img = None
+        if focuse_widget == self.data_listbox_detection:
+            original_img = img
+            preprocessed_img = Image.fromarray(np.zeros_like(original_img))
+        elif focuse_widget == self.operations_listbox:
+            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+            preprocessed_img = img
+        img = concatenate_four_images(
+            processed_img= preprocessed_img,
+            original_img= original_img,
+            edged_image= edge_img,
+            filtered_contoures_image= filtered_img
+        )
 
-        img = concatenate_two_images(processed_img, original_img)
+        self.current_operation = {
+            "processed_image": preprocessed_img,
+            "edge_image": edge_img,
+            "filtered_contours_img": filtered_img,
+            "process_name": "",
+            "params": [],
+            "contours": contours,
+            "filter_params": {},
+            "labels": [],
+            "labeled_image": None
+        }
 
         self.handle_displaying_image_on_canvas(img)
 
@@ -1021,6 +1061,7 @@ class SpotsDetectionTab:
                 self.parameter_detection_labels[param_name].config(text=label_text)
                 self.data_canvas_detection.delete("all")
                 self.refresh_image_on_sigma_slider_change(value)
+                self.resize_canvas_detection_scrollregion()
         except ValueError as e:
             # Handle the case where the value cannot be converted to a float
             error_msg = f"Invalid value for sigma slider: {e}"
@@ -1082,7 +1123,7 @@ class SpotsDetectionTab:
 
             self.original_data_index = index - 1
             self.refresh_data_in_operations_listbox()
-        self.resize_canvas_detection_scrollregion(event)
+        self.resize_canvas_detection_scrollregion()
 
     def update_navigation_slider_range(self):
         """
@@ -1098,16 +1139,24 @@ class SpotsDetectionTab:
         Args:
             event: The event triggered by the slider change.
         """
-        selected_index = self.data_listbox_detection.curselection()
-        if selected_index:
-            index = int(selected_index[0])
-            self.display_image(index)
-        selected_index = self.operations_listbox.curselection()
-        if selected_index:
-            opertation_index = int(selected_index[0])
-            selected_option = self.choose_display_image_option_dropdown_var.get()
-            self.display_processed_image(opertation_index, "Preprocess", selected_option)
-        self.resize_canvas_detection_scrollregion(event)
+        if self.current_operation['edge_image'] is None:
+            selected_index = self.data_listbox_detection.curselection()
+            if selected_index:
+                index = int(selected_index[0])
+                self.display_image(index)
+            selected_index = self.operations_listbox.curselection()
+            if selected_index:
+                opertation_index = int(selected_index[0])
+                selected_option = self.choose_display_image_option_dropdown_var.get()
+                self.display_processed_image(opertation_index, "Preprocess", selected_option)
+        else:
+            preprocess_img = self.current_operation['processed_image']
+            edge_img = self.current_operation['edge_image']
+            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+            filtered_img = self.current_operation['filtered_contours_img']
+            img = concatenate_four_images(preprocess_img, original_img, edge_img, filtered_img)
+            self.handle_displaying_image_on_canvas(img)
+        self.resize_canvas_detection_scrollregion()
 
     def display_image(self, index):
         """
@@ -1127,7 +1176,7 @@ class SpotsDetectionTab:
 
         self.handle_displaying_image_on_canvas(img)
 
-    def resize_canvas_detection_scrollregion(self, event):
+    def resize_canvas_detection_scrollregion(self, *args):
         """
         Resize the scroll region of the canvas to cover the entire canvas area.
 
