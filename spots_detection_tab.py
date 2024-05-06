@@ -74,9 +74,7 @@ class SpotsDetectionTab:
             "edge_image": None,
             "filtered_contours_img": None,
             "process_name": "",
-            "params": [],
             "contours": [],
-            "filter_params": {},
             "labels": [],
             "labeled_image": None
         }
@@ -449,12 +447,6 @@ class SpotsDetectionTab:
             row += 1
 
         return row
-    
-    def filter_slider_on_change(self, param_name, value):
-        if param_name in self.parameter_filter_labels:
-            label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
-            self.parameter_filter_labels[param_name].config(text=label_text)
-            self.refresh_image_after_filtering()
         
     def filter_contours_onClick(self):
         operations_selected_index = self.operations_listbox.curselection()
@@ -466,56 +458,6 @@ class SpotsDetectionTab:
             contours = data[key]
         else:
             messagebox.showwarning("No data", "Select operation with detected edges")
-
-    def refresh_image_after_filtering(self):
-        params = {}
-        if self.current_operation['edge_image'] is not None:
-            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
-            previous_processed_img = self.current_operation['processed_image']
-            edge_img = self.current_operation['edge_image']
-            contours = self.current_operation['contours']
-            result_image = None
-            self.get_values_from_filter_menu_items(params)
-            filtered_contours = ContourFilter(
-                contours= contours,
-                circularity_low= params['circularity_low'],
-                circularity_high= params['circularity_high'],
-                min_area= params['min_area']
-            )
-            result_image = DrawContours(
-                image= edge_img,
-                contours= filtered_contours
-            )
-
-            self.current_operation = {
-            "processed_image": previous_processed_img,
-            "edge_image": edge_img,
-            "filtered_contours_img": Image.fromarray(result_image),
-            "process_name": "",
-            "params": [],
-            "contours": contours,
-            "filter_params": {},
-            "labels": [],
-            "labeled_image": None
-        }
-
-            img = concatenate_four_images(previous_processed_img, original_img, edge_img, Image.fromarray(result_image))
-            self.handle_displaying_image_on_canvas(img)
-
-        
-
-        
-
-        
-        # Apply detection process based on selected option and parameters
-
-        # result_image = []
-        # processed_img = Image.fromarray(result_image)
-        # original_img = img
-
-        # img = concatenate_two_images(processed_img, original_img)
-
-        # self.handle_displaying_image_on_canvas(img)
         
     def get_values_from_filter_menu_items(self, params):
         for param_name, slider in self.parameter_filter_sliders.items():
@@ -612,75 +554,6 @@ class SpotsDetectionTab:
             operations_index = int(operations_selected_index[0])
             img = Image.fromarray(self.data_for_detection[self.original_data_index]['operations'][operations_index]['processed_image'])
         return img
-
-    def refresh_image_on_sigma_slider_change(self, sigma_value):
-        """
-        Refresh the image when the sigma slider value changes.
-
-        This method updates the image displayed on the canvas when the sigma slider value changes.
-
-        Args:
-            sigma_value (float): The new value of the sigma slider.
-        """
-        params = {}
-        filter_params = {}
-        index = self.original_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        result_image = None
-
-        self.get_values_from_detection_menu_items(params)
-        self.get_values_from_filter_menu_items(filter_params)
-        # Apply detection process based on selected option and parameters
-        if self.selected_detection_option == "Canny":
-            result_image = EdgeDetection(
-                img=np.asanyarray(img), 
-                sigma=sigma_value,
-                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
-                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
-                )
-        contours = ContourFinder(result_image)
-        filtered_contours = ContourFilter(
-            contours= contours,
-            circularity_low= filter_params['circularity_low'],
-            circularity_high= filter_params['circularity_high'],
-            min_area= filter_params['min_area']
-        )
-        edge_img = Image.fromarray(result_image)
-        result_filtered_image = DrawContours(
-            image= edge_img,
-            contours= filtered_contours
-        )
-        filtered_img = Image.fromarray(result_filtered_image)
-        original_img = None
-        preprocessed_img = None
-        if focuse_widget == self.data_listbox_detection:
-            original_img = img
-            preprocessed_img = Image.fromarray(np.zeros_like(original_img))
-        elif focuse_widget == self.operations_listbox:
-            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
-            preprocessed_img = img
-        img = concatenate_four_images(
-            processed_img= preprocessed_img,
-            original_img= original_img,
-            edged_image= edge_img,
-            filtered_contoures_image= filtered_img
-        )
-
-        self.current_operation = {
-            "processed_image": preprocessed_img,
-            "edge_image": edge_img,
-            "filtered_contours_img": filtered_img,
-            "process_name": "",
-            "params": [],
-            "contours": contours,
-            "filter_params": {},
-            "labels": [],
-            "labeled_image": None
-        }
-
-        self.handle_displaying_image_on_canvas(img)
 
     def handle_displaying_image_on_canvas(self, img):
         """
@@ -1066,6 +939,136 @@ class SpotsDetectionTab:
             error_msg = f"Invalid value for sigma slider: {e}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+        
+    def filter_slider_on_change(self, param_name, value):
+        if param_name in self.parameter_filter_labels:
+            label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
+            self.parameter_filter_labels[param_name].config(text=label_text)
+            self.refresh_image_after_filtering()
+
+    def refresh_image_after_filtering(self):
+        filter_params = {}
+        if self.current_operation['edge_image'] is not None:
+            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+            previous_processed_img = self.current_operation['processed_image']
+            edge_img = self.current_operation['edge_image']
+            contours = self.current_operation['contours']
+            result_image = None
+            self.get_values_from_filter_menu_items(filter_params)
+            filtered_contours = ContourFilter(
+                contours= contours,
+                circularity_low= filter_params['circularity_low'],
+                circularity_high= filter_params['circularity_high'],
+                min_area= filter_params['min_area']
+            )
+            result_image = DrawContours(
+                image= edge_img,
+                contours= filtered_contours
+            )
+
+            self.update_current_operation(
+                previous_processed_img= previous_processed_img, 
+                edge_img= edge_img, 
+                contours= contours,
+                contour_image= Image.fromarray(result_image)
+                )
+
+            img = concatenate_four_images(previous_processed_img, original_img, edge_img, Image.fromarray(result_image))
+            self.handle_displaying_image_on_canvas(img)
+
+    def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
+                                process_name="", labeled_image=None):
+        current_operation = self.current_operation.copy()  # Make a copy to avoid modifying the original dictionary
+        # Update specific attributes if provided
+        if previous_processed_img is not None:
+            current_operation["processed_image"] = previous_processed_img
+        if edge_img is not None:
+            current_operation["edge_image"] = edge_img
+        if contours is not None:
+            current_operation["contours"] = contours
+        if contour_image is not None:
+            current_operation["filtered_contours_img"] = contour_image
+        if process_name:
+            current_operation["process_name"] = process_name
+        if labeled_image is not None:
+            current_operation["labeled_image"] = labeled_image
+
+        self.current_operation = current_operation
+        
+    def refresh_image_on_sigma_slider_change(self, sigma_value):
+        """
+        Refresh the image when the sigma slider value changes.
+
+        This method updates the image displayed on the canvas when the sigma slider value changes.
+
+        Args:
+            sigma_value (float): The new value of the sigma slider.
+        """
+        params = {}
+        filter_params = {}
+        index = self.original_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        result_image = None
+
+        self.get_values_from_detection_menu_items(params)
+        self.get_values_from_filter_menu_items(filter_params)
+        # Apply detection process based on selected option and parameters
+        if self.selected_detection_option == "Canny":
+            result_image = EdgeDetection(
+                img=np.asanyarray(img), 
+                sigma=sigma_value,
+                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
+                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
+                )
+        contours = ContourFinder(result_image)
+        filtered_contours = ContourFilter(
+            contours= contours,
+            circularity_low= filter_params['circularity_low'],
+            circularity_high= filter_params['circularity_high'],
+            min_area= filter_params['min_area']
+        )
+        edge_img = Image.fromarray(result_image)
+        result_filtered_image = DrawContours(
+            image= edge_img,
+            contours= filtered_contours
+        )
+        filtered_img = Image.fromarray(result_filtered_image)
+        original_img = None
+        preprocessed_img = None
+        if focuse_widget == self.data_listbox_detection:
+            original_img = img
+            preprocessed_img = Image.fromarray(np.zeros_like(original_img))
+        elif focuse_widget == self.operations_listbox:
+            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+            preprocessed_img = img
+        img = concatenate_four_images(
+            processed_img= preprocessed_img,
+            original_img= original_img,
+            edged_image= edge_img,
+            filtered_contoures_image= filtered_img
+        )
+
+        self.update_current_operation(
+            previous_processed_img= preprocessed_img,
+            edge_img= edge_img,
+            contour_image= filtered_img,
+            contours= contours
+        )
+        # self.current_operation = {
+        #     "processed_image": preprocessed_img,
+        #     "edge_image": edge_img,
+        #     "filtered_contours_img": filtered_img,
+        #     "process_name": "",
+        #     "params": [],
+        #     "contours": contours,
+        #     "filter_params": {},
+        #     "labels": [],
+        #     "labeled_image": None
+        # }
+
+        self.handle_displaying_image_on_canvas(img)
 
     def navigate_prev_onClick(self):
         """
