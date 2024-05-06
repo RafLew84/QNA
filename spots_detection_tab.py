@@ -611,7 +611,6 @@ class SpotsDetectionTab:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
             img = Image.fromarray(self.data_for_detection[self.original_data_index]['operations'][operations_index]['processed_image'])
-            print(type(img))
         return img
 
     def refresh_image_on_sigma_slider_change(self, sigma_value):
