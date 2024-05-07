@@ -185,7 +185,7 @@ def DrawLabels(img, contours_data):
     for item in contours_data:
         M = item['moments']
         name = item['name']
-        img = np.asanyarray(img)
+        img = np.array(img).astype(np.uint8)
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
