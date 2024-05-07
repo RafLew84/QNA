@@ -164,6 +164,37 @@ def AreaFinder(contours, nm):
           "area": area * nm  
         })
     return areas
+
+def GetContourData(self, filtered_contours):
+    contour_data = []
+    for i, contour in enumerate(filtered_contours):
+        name = f"P{i:03}"
+        area = cv2.contourArea(contour)
+        M = cv2.moments(contour)
+
+        contour_data.append({
+            "name": name,
+            "contour": contour,
+            "area": area,
+            "moments": M
+        })
+
+    return contour_data
+
+def DrawLabels(img, contours_data):
+    for item in contours_data:
+        M = item['moments']
+        name = item['name']
+        img = np.asanyarray(img)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            # Draw contour
+            # Put text
+            labeled_img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 255), 1)
+        labeled_img = cv2.drawContours(img, [item['contour']], 0, (0, 255, 255), 1)
+    
+    return labeled_img
     
 def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0.0):
     filtered_contours = []

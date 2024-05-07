@@ -19,6 +19,7 @@ from data_process import create_greyscale_image
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
 from img_process import ContourFinder, AreaFinder, ContourFilter, DrawContours, concatenate_four_images
+from img_process import GetContourData, DrawLabels
 
 import logging
 
@@ -75,6 +76,7 @@ class SpotsDetectionTab:
             "filtered_contours_img": None,
             "process_name": "",
             "contours": [],
+            "contours_data": [],
             "labels": [],
             "labeled_image": None
         }
@@ -955,31 +957,45 @@ class SpotsDetectionTab:
             contours = self.current_operation['contours']
             result_image = None
             self.get_values_from_filter_menu_items(filter_params)
-            filtered_contours = ContourFilter(
-                contours= contours,
-                circularity_low= filter_params['circularity_low'],
-                circularity_high= filter_params['circularity_high'],
-                min_area= filter_params['min_area']
-            )
-            result_image = DrawContours(
-                image= edge_img,
-                contours= filtered_contours
-            )
+            result_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
+
+            contours_data = GetContourData(self, filtered_contours)
+            labeled_image = DrawLabels(original_img, contours_data)
 
             self.update_current_operation(
                 previous_processed_img= previous_processed_img, 
                 edge_img= edge_img, 
                 contours= contours,
-                contour_image= Image.fromarray(result_image)
+                contours_data= contours_data,
+                contour_image= Image.fromarray(result_image),
+                labeled_image=labeled_image
                 )
-
-            img = concatenate_four_images(previous_processed_img, original_img, edge_img, Image.fromarray(result_image))
+            
+            
+            img = concatenate_four_images(previous_processed_img, Image.fromarray(labeled_image), edge_img, Image.fromarray(result_image))
             self.handle_displaying_image_on_canvas(img)
 
+
+    def process_contours(self, filter_params, edge_img, contours):
+        filtered_contours = ContourFilter(
+                contours= contours,
+                circularity_low= filter_params['circularity_low'],
+                circularity_high= filter_params['circularity_high'],
+                min_area= filter_params['min_area']
+            )
+        result_image = DrawContours(
+                image= edge_img,
+                contours= filtered_contours
+            )
+        
+        return result_image,filtered_contours
+
     def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
-                                process_name="", labeled_image=None):
+                                process_name="", labeled_image=None, contours_data=None):
         current_operation = self.current_operation.copy()  # Make a copy to avoid modifying the original dictionary
         # Update specific attributes if provided
+        if contours_data is not None:
+            current_operation["contours_data"] = contours_data
         if previous_processed_img is not None:
             current_operation["processed_image"] = previous_processed_img
         if edge_img is not None:
@@ -1023,17 +1039,8 @@ class SpotsDetectionTab:
                 high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
                 )
         contours = ContourFinder(result_image)
-        filtered_contours = ContourFilter(
-            contours= contours,
-            circularity_low= filter_params['circularity_low'],
-            circularity_high= filter_params['circularity_high'],
-            min_area= filter_params['min_area']
-        )
         edge_img = Image.fromarray(result_image)
-        result_filtered_image = DrawContours(
-            image= edge_img,
-            contours= filtered_contours
-        )
+        result_filtered_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
         filtered_img = Image.fromarray(result_filtered_image)
         original_img = None
         preprocessed_img = None
@@ -1056,17 +1063,6 @@ class SpotsDetectionTab:
             contour_image= filtered_img,
             contours= contours
         )
-        # self.current_operation = {
-        #     "processed_image": preprocessed_img,
-        #     "edge_image": edge_img,
-        #     "filtered_contours_img": filtered_img,
-        #     "process_name": "",
-        #     "params": [],
-        #     "contours": contours,
-        #     "filter_params": {},
-        #     "labels": [],
-        #     "labeled_image": None
-        # }
 
         self.handle_displaying_image_on_canvas(img)
 
