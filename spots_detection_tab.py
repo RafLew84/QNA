@@ -417,7 +417,7 @@ class SpotsDetectionTab:
 
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
-            filter_contours_button.grid(row=row + 8, column=0, padx=5, pady=5)
+            filter_contours_button.grid(row=row + 10, column=0, padx=5, pady=5)
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
@@ -447,8 +447,38 @@ class SpotsDetectionTab:
 
                 row += 1
             row += 1
+        
+        # Add checkboxes for draw contours and write labels
+        draw_contours_var = tk.IntVar()
+        draw_contours_checkbox = tk.Checkbutton(self.detection_section_menu, text="Draw Contours", variable=draw_contours_var, command=self.checkbox_status_changed)
+        draw_contours_checkbox.grid(row=row, column=0, padx=5, pady=5, sticky="w")
+        self.draw_contours_var = draw_contours_var
+
+        write_labels_var = tk.IntVar()
+        write_labels_checkbox = tk.Checkbutton(self.detection_section_menu, text="Write Labels", variable=write_labels_var, command=self.checkbox_status_changed)
+        write_labels_checkbox.grid(row=row, column=1, padx=5, pady=5, sticky="w")
+        self.write_labels_var = write_labels_var
+
+        row += 1
 
         return row
+    
+    def checkbox_status_changed(self):
+        # Check if the "Draw Contours" checkbox status changed
+        if self.draw_contours_var.get() == 1:
+            print("Draw Contours checked")
+            # Call a method or perform actions when the checkbox is checked
+        else:
+            print("Draw Contours unchecked")
+            # Call a method or perform actions when the checkbox is unchecked
+
+        # Check if the "Write Labels" checkbox status changed
+        if self.write_labels_var.get() == 1:
+            print("Write Labels checked")
+            # Call a method or perform actions when the checkbox is checked
+        else:
+            print("Write Labels unchecked")
+            # Call a method or perform actions when the checkbox is unchecked
         
     def filter_contours_onClick(self):
         operations_selected_index = self.operations_listbox.curselection()
@@ -960,7 +990,12 @@ class SpotsDetectionTab:
             result_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
 
             contours_data = GetContourData(self, filtered_contours)
-            labeled_image = DrawLabels(original_img, contours_data)
+            labeled_image = DrawLabels(
+                original_img, 
+                contours_data, 
+                self.draw_contours_var.get(), 
+                self.write_labels_var.get()
+                )
 
             self.update_current_operation(
                 previous_processed_img= previous_processed_img, 
@@ -1050,6 +1085,7 @@ class SpotsDetectionTab:
         elif focuse_widget == self.operations_listbox:
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             preprocessed_img = img
+
         img = concatenate_four_images(
             processed_img= preprocessed_img,
             original_img= original_img,

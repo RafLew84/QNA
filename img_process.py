@@ -181,7 +181,7 @@ def GetContourData(self, filtered_contours):
 
     return contour_data
 
-def DrawLabels(img, contours_data):
+def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False):
     for item in contours_data:
         M = item['moments']
         name = item['name']
@@ -189,12 +189,12 @@ def DrawLabels(img, contours_data):
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
-            # Draw contour
-            # Put text
-            labeled_img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 255), 1)
-        labeled_img = cv2.drawContours(img, [item['contour']], 0, (0, 255, 255), 1)
+            if draw_labels:
+                img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 255), 1)
+        if draw_contours:
+            img = cv2.drawContours(img, [item['contour']], 0, (0, 255, 255), 1)
     
-    return labeled_img
+    return img
     
 def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0.0):
     filtered_contours = []
