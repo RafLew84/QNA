@@ -466,19 +466,6 @@ class SpotsDetectionTab:
     
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
-        # Check if the "Draw Contours" checkbox status changed
-        # if self.draw_contours_var.get() == 1:
-        #     self.refresh_image_after_filtering()
-        # else:
-            # Call a method or perform actions when the checkbox is unchecked
-
-        # # Check if the "Write Labels" checkbox status changed
-        # if self.write_labels_var.get() == 1:
-        #     print("Write Labels checked")
-        #     # Call a method or perform actions when the checkbox is checked
-        # else:
-        #     print("Write Labels unchecked")
-        #     # Call a method or perform actions when the checkbox is unchecked
         
     def filter_contours_onClick(self):
         operations_selected_index = self.operations_listbox.curselection()
@@ -1085,7 +1072,7 @@ class SpotsDetectionTab:
         elif focuse_widget == self.operations_listbox:
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             preprocessed_img = img
-
+    
         img = concatenate_four_images(
             processed_img= preprocessed_img,
             original_img= original_img,
