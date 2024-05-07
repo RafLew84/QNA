@@ -55,6 +55,7 @@ class SpotsDetectionTab:
         self.data_for_detection = []
 
         self.header_info = {}
+
         self.preprocess_params = {
             "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
             "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
@@ -464,21 +465,20 @@ class SpotsDetectionTab:
         return row
     
     def checkbox_status_changed(self):
+        self.refresh_image_after_filtering()
         # Check if the "Draw Contours" checkbox status changed
-        if self.draw_contours_var.get() == 1:
-            print("Draw Contours checked")
-            # Call a method or perform actions when the checkbox is checked
-        else:
-            print("Draw Contours unchecked")
+        # if self.draw_contours_var.get() == 1:
+        #     self.refresh_image_after_filtering()
+        # else:
             # Call a method or perform actions when the checkbox is unchecked
 
-        # Check if the "Write Labels" checkbox status changed
-        if self.write_labels_var.get() == 1:
-            print("Write Labels checked")
-            # Call a method or perform actions when the checkbox is checked
-        else:
-            print("Write Labels unchecked")
-            # Call a method or perform actions when the checkbox is unchecked
+        # # Check if the "Write Labels" checkbox status changed
+        # if self.write_labels_var.get() == 1:
+        #     print("Write Labels checked")
+        #     # Call a method or perform actions when the checkbox is checked
+        # else:
+        #     print("Write Labels unchecked")
+        #     # Call a method or perform actions when the checkbox is unchecked
         
     def filter_contours_onClick(self):
         operations_selected_index = self.operations_listbox.curselection()
