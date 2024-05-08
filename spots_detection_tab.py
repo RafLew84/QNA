@@ -993,8 +993,9 @@ class SpotsDetectionTab:
                 labeled_image=labeled_image
                 )
             
-            
-            img = concatenate_four_images(previous_processed_img, Image.fromarray(labeled_image), edge_img, Image.fromarray(result_image))
+            if isinstance(labeled_image, np.ndarray):
+                labeled_image = Image.fromarray(labeled_image)
+            img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
             self.handle_displaying_image_on_canvas(img)
 
 
