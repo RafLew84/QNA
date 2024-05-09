@@ -21,6 +21,8 @@ from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetecti
 from img_process import ContourFinder, AreaFinder, ContourFilter, DrawContours, concatenate_four_images
 from img_process import GetContourData, DrawLabels
 
+from file_process import calculate_avg_nm_per_px, calculate_pixel_to_nm_coefficients
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,6 +63,10 @@ class SpotsDetectionTab:
             "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
             "GaussianFilter": {"sigma": 4}
         }
+
+        self.current_size_x_coefficient = 0
+        self.current_size_y_coefficient = 0
+        self.current_area_coefficient = 0
 
         self.detection_params = {
             "Canny": {"sigma": 1., "low_threshold": None, "high_threshold": None}
@@ -140,6 +146,7 @@ class SpotsDetectionTab:
             self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
             # Add a canvas to display the data
+            # Add Motions and add action on hover
             self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
             self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
             self.vertical_scrollbar_detection = tk.Scrollbar(
@@ -976,7 +983,14 @@ class SpotsDetectionTab:
             self.get_values_from_filter_menu_items(filter_params)
             result_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
 
-            contours_data = GetContourData(self, filtered_contours)
+            contours_data = GetContourData(
+                self, 
+                filtered_contours= filtered_contours,
+                x_size_coefficient= self.current_size_x_coefficient,
+                y_size_coefficient= self.current_size_y_coefficient,
+                avg_coefficient= self.current_area_coefficient
+                )
+            
             labeled_image = DrawLabels(
                 original_img, 
                 contours_data, 
@@ -1271,6 +1285,17 @@ class SpotsDetectionTab:
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(selected_index[0])
+            header_info = self.data_for_detection[index]['header_info']
+            self.current_size_x_coefficient, self.current_size_y_coefficient = calculate_pixel_to_nm_coefficients(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
+            self.current_area_coefficient = calculate_avg_nm_per_px(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
             # Update navigation slider
             self.navigation_slider.set(index + 1)
             self.display_image(index)

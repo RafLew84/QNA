@@ -165,18 +165,63 @@ def AreaFinder(contours, nm):
         })
     return areas
 
-def GetContourData(self, filtered_contours):
+def distance_between_points_in_nm(point1, point2, x_coeff, y_coeff):
+    """
+    Calculate Euclidean distance between two points in nanometers (nm).
+    Assumes point coordinates are given in pixels and converts them to nanometers using the provided coefficients.
+    """
+    
+    # Convert pixel coordinates to nanometers using the provided coefficients
+    point1_nm = np.array([point1[0] * x_coeff, point1[1] * y_coeff])
+    point2_nm = np.array([point2[0] * x_coeff, point2[1] * y_coeff])
+    
+    # Calculate Euclidean distance in nanometers
+    distance_nm = np.linalg.norm(point1_nm - point2_nm)
+    
+    return distance_nm
+
+def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficient, avg_coefficient):
     contour_data = []
+    centroids = []
+    area_coefficient = avg_coefficient * avg_coefficient
     for i, contour in enumerate(filtered_contours):
-        name = f"P{i:03}"
         area = cv2.contourArea(contour)
         M = cv2.moments(contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            centroids.append((cX, cY))
 
+    for i, contour in enumerate(filtered_contours):
+        name = f"{i:03}"
+        # calculate nearest neighbour for filtered_contour
+        distances_to_other_contours = []
+        min_distance = None
+        nearest_neighbour = None
+        M = cv2.moments(contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        if centroids:
+            for j in range(len(filtered_contours)):
+                if i != j:
+                    distance = distance_between_points_in_nm(centroids[i], centroids[j], x_size_coefficient, y_size_coefficient)
+                    distances_to_other_contours.append(distance)
+            if len(distances_to_other_contours) > 1:
+                min_distance = min(distances_to_other_contours)
+                min_index = distances_to_other_contours.index(min_distance)
+                nearest_neighbour = filtered_contours[min_index]
+        else:
+            min_distance = None
+            nearest_neighbour = None
+        # add distance and nearest_neighbour to dic
         contour_data.append({
             "name": name,
             "contour": contour,
-            "area": area,
-            "moments": M
+            "area": area * area_coefficient,
+            "moments": M,
+            "distance_to_nearest_neighbour": min_distance,
+            "nearest_neighbour": nearest_neighbour
         })
 
     return contour_data
