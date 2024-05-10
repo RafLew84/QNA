@@ -185,7 +185,7 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
     centroids = []
     area_coefficient = avg_coefficient * avg_coefficient
     for i, contour in enumerate(filtered_contours):
-        area = cv2.contourArea(contour)
+        # area = cv2.contourArea(contour)
         M = cv2.moments(contour)
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
@@ -197,7 +197,7 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
         # calculate nearest neighbour for filtered_contour
         distances_to_other_contours = []
         min_distance = None
-        nearest_neighbour = None
+        area = cv2.contourArea(contour)
         M = cv2.moments(contour)
         if M["m00"] != 0:
             cX = int(M["m10"] / M["m00"])
@@ -209,19 +209,19 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
                     distances_to_other_contours.append(distance)
             if len(distances_to_other_contours) > 1:
                 min_distance = min(distances_to_other_contours)
-                min_index = distances_to_other_contours.index(min_distance)
-                nearest_neighbour = filtered_contours[min_index]
+                # min_index = distances_to_other_contours.index(min_distance)
+                # nearest_neighbour = f"{min_index:03}"
         else:
             min_distance = None
-            nearest_neighbour = None
+            # nearest_neighbour = None
         # add distance and nearest_neighbour to dic
         contour_data.append({
             "name": name,
             "contour": contour,
             "area": area * area_coefficient,
             "moments": M,
-            "distance_to_nearest_neighbour": min_distance,
-            "nearest_neighbour": nearest_neighbour
+            "distance_to_nearest_neighbour": min_distance
+            # "nearest_neighbour": nearest_neighbour
         })
 
     return contour_data
@@ -299,9 +299,9 @@ def concatenate_four_images(processed_img, original_img, edged_image, filtered_c
     img = Image.new('RGB', (width, height))
 
     # Paste the images onto the blank image
-    img.paste(processed_img, (0, 0))
-    img.paste(original_img, (0, processed_img.height + 10))
-    img.paste(edged_image, (processed_img.width + 10, 0))
-    img.paste(filtered_contoures_image, (processed_img.width + 10, processed_img.height + 10))
+    img.paste(original_img, (0, 0))
+    img.paste(edged_image, (0, processed_img.height + 10))
+    img.paste(filtered_contoures_image, (processed_img.width + 10, 0))
+    img.paste(processed_img, (processed_img.width + 10, processed_img.height + 10))
 
     return img

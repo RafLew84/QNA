@@ -7,6 +7,7 @@ rlewandkow
 """
 
 import os
+import cv2
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -149,6 +150,7 @@ class SpotsDetectionTab:
             # Add Motions and add action on hover
             self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
             self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
+            self.data_canvas_detection.bind("<Motion>", self.on_canvas_hover)
             self.vertical_scrollbar_detection = tk.Scrollbar(
                 self.spots_detection_tab, 
                 orient=tk.VERTICAL, 
@@ -224,6 +226,50 @@ class SpotsDetectionTab:
             error_msg = f"Error creating spots detection tab: {e}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+        
+    def on_canvas_hover(self, event):
+        x, y = event.x, event.y
+        scale_factor = self.scale_factor_var.get()
+
+    # Recalculate the mouse coordinates relative to the resized canvas
+        x = event.x / scale_factor
+        y = event.y / scale_factor
+
+        x_canvas = self.data_canvas_detection.canvasx(event.x)
+        y_canvas = self.data_canvas_detection.canvasy(event.y)
+
+        x = x_canvas / scale_factor
+        y = y_canvas / scale_factor
+
+        # Check if the mouse is over a contour
+        item = self.get_contour_info_at_position(x, y)
+        if item:
+            # contour_name = item['name']
+            self.update_contour_labels(
+                name= item['name'],
+                area= item['area'],
+                distance= item['distance_to_nearest_neighbour']
+            )
+        else:
+            pass
+
+    def get_contour_info_at_position(self, x, y):
+        # Iterate through contours and check if the mouse position is within any contour
+        contours_data = self.current_operation['contours_data']
+        for item in contours_data:
+            if self.is_point_inside_contour((x, y), item['contour']):
+                return item
+        return None
+
+    def is_point_inside_contour(self, point, contour):
+        # Convert contour to numpy array of shape (n, 1, 2)
+        contour_np = np.array(contour).reshape((-1, 1, 2))
+        # Convert point to tuple
+        point_tuple = tuple(point)
+        # Use cv2.pointPolygonTest to determine if the point is inside the contour
+        distance = cv2.pointPolygonTest(contour_np, point_tuple, False)
+        # If distance is positive, point is inside the contour
+        return distance >= 0
 
     def display_preprocess_options_menu(self):
         """
@@ -416,20 +462,37 @@ class SpotsDetectionTab:
             self.parameter_filter_sliders.clear()
 
             row = 3
-            # # Update labels with function parameters based on selected option
+            # Update labels with function parameters based on selected option
             for param_name, param_value in self.detection_params[selected_option].items():
                 self.create_detection_menu_items(row, param_name, param_value)
                 row += 2
 
             self.create_filter_menu_items(row)
 
+            # Create a Text widget for multiline display
+            self.label1 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.label1.grid(row=row + 10, column=0, columnspan=2, sticky="w")
+            self.label2 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.label2.grid(row=row + 11, column=0, columnspan=2, sticky="w")
+            self.label3 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.label3.grid(row=row + 12, column=0, columnspan=2, sticky="w")
+            # self.label4 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            # self.label4.grid(row=row + 13, column=0, columnspan=2, sticky="w")
+
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
-            filter_contours_button.grid(row=row + 10, column=0, padx=5, pady=5)
+            filter_contours_button.grid(row=row + 14, column=0, padx=5, pady=5)
+
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
             raise KeyError(error_msg)
+
+    def update_contour_labels(self, name, area, distance):
+        # Update the text of each label
+        self.label1.config(text=f"name: {name}")
+        self.label2.config(text=f"area: {area:.3} nm")
+        self.label3.config(text=f"shortest distance: {distance:.3} nm")
         
     def create_filter_menu_items(self, row):
         for filter_type, params in self.filter_params.items():
@@ -475,15 +538,16 @@ class SpotsDetectionTab:
         self.refresh_image_after_filtering()
         
     def filter_contours_onClick(self):
-        operations_selected_index = self.operations_listbox.curselection()
-        operations_index = int(operations_selected_index[0])
-        key = "contours"
-        data = self.data_for_detection[self.original_data_index]['operations'][operations_index]
-        contours = []
-        if key in data:
-            contours = data[key]
-        else:
-            messagebox.showwarning("No data", "Select operation with detected edges")
+        pass
+        # operations_selected_index = self.operations_listbox.curselection()
+        # operations_index = int(operations_selected_index[0])
+        # key = "contours"
+        # data = self.data_for_detection[self.original_data_index]['operations'][operations_index]
+        # contours = []
+        # if key in data:
+        #     contours = data[key]
+        # else:
+        #     messagebox.showwarning("No data", "Select operation with detected edges")
         
     def get_values_from_filter_menu_items(self, params):
         for param_name, slider in self.parameter_filter_sliders.items():
