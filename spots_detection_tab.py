@@ -250,6 +250,9 @@ class SpotsDetectionTab:
                 area= item['area'],
                 distance= item['distance_to_nearest_neighbour']
             )
+
+            self.update_nearest_neighbour_labe(item['nearest_neighbour'])
+            
         else:
             pass
 
@@ -476,22 +479,27 @@ class SpotsDetectionTab:
             self.contour_area_label.grid(row=row + 11, column=0, columnspan=2, sticky="w")
             self.contour_shortest_distance_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
             self.contour_shortest_distance_label.grid(row=row + 12, column=0, columnspan=2, sticky="w")
-            self.label4 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.label4.grid(row=row + 13, column=0, columnspan=2, sticky="w")
+            self.nearest_neighbour_name_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.nearest_neighbour_name_label.grid(row=row + 13, column=0, columnspan=2, sticky="w")
+            self.avg_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.avg_area_label.grid(row=row + 14, column=0, columnspan=2, sticky="w")
 
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
-            filter_contours_button.grid(row=row + 14, column=0, padx=5, pady=5)
+            filter_contours_button.grid(row=row + 15, column=0, padx=5, pady=5)
 
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
             raise KeyError(error_msg)
         
+    def update_nearest_neighbour_labe(self, text):
+        self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
+        
     def update_avg_area_label(self, contour_data):
         total_area = sum(contour['area'] for contour in contour_data)
         avg_area = total_area / len(contour_data)
-        self.label4.config(text=f"Average Area: {avg_area:.3f} nm2")
+        self.avg_area_label.config(text=f"Average Area: {avg_area:.3f} nm2")
 
     def update_contour_labels(self, name, area, distance):
         # Update the text of each label

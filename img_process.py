@@ -197,6 +197,7 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
         # calculate nearest neighbour for filtered_contour
         distances_to_other_contours = []
         min_distance = None
+        min_index = None
         area = cv2.contourArea(contour)
         M = cv2.moments(contour)
         if M["m00"] != 0:
@@ -206,11 +207,9 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
             for j in range(len(filtered_contours)):
                 if i != j:
                     distance = distance_between_points_in_nm(centroids[i], centroids[j], x_size_coefficient, y_size_coefficient)
-                    distances_to_other_contours.append(distance)
+                    distances_to_other_contours.append((distance, j))
             if len(distances_to_other_contours) > 1:
-                min_distance = min(distances_to_other_contours)
-                # min_index = distances_to_other_contours.index(min_distance)
-                # nearest_neighbour = f"{min_index:03}"
+                min_distance, min_index = min(distances_to_other_contours)
         else:
             min_distance = None
             # nearest_neighbour = None
@@ -220,8 +219,8 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
             "contour": contour,
             "area": area * area_coefficient,
             "moments": M,
-            "distance_to_nearest_neighbour": min_distance
-            # "nearest_neighbour": nearest_neighbour
+            "distance_to_nearest_neighbour": min_distance,
+            "nearest_neighbour": f"{min_index:03}"
         })
 
     return contour_data
