@@ -470,14 +470,14 @@ class SpotsDetectionTab:
             self.create_filter_menu_items(row)
 
             # Create a Text widget for multiline display
-            self.label1 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.label1.grid(row=row + 10, column=0, columnspan=2, sticky="w")
-            self.label2 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.label2.grid(row=row + 11, column=0, columnspan=2, sticky="w")
-            self.label3 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.label3.grid(row=row + 12, column=0, columnspan=2, sticky="w")
-            # self.label4 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            # self.label4.grid(row=row + 13, column=0, columnspan=2, sticky="w")
+            self.contour_name_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.contour_name_label.grid(row=row + 10, column=0, columnspan=2, sticky="w")
+            self.contour_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.contour_area_label.grid(row=row + 11, column=0, columnspan=2, sticky="w")
+            self.contour_shortest_distance_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.contour_shortest_distance_label.grid(row=row + 12, column=0, columnspan=2, sticky="w")
+            self.label4 = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
+            self.label4.grid(row=row + 13, column=0, columnspan=2, sticky="w")
 
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
@@ -487,12 +487,17 @@ class SpotsDetectionTab:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
             raise KeyError(error_msg)
+        
+    def update_avg_area_label(self, contour_data):
+        total_area = sum(contour['area'] for contour in contour_data)
+        avg_area = total_area / len(contour_data)
+        self.label4.config(text=f"Average Area: {avg_area:.3f} nm2")
 
     def update_contour_labels(self, name, area, distance):
         # Update the text of each label
-        self.label1.config(text=f"name: {name}")
-        self.label2.config(text=f"area: {area:.3} nm")
-        self.label3.config(text=f"shortest distance: {distance:.3} nm")
+        self.contour_name_label.config(text=f"name: {name}")
+        self.contour_area_label.config(text=f"area: {area:.3} nm2")
+        self.contour_shortest_distance_label.config(text=f"shortest distance: {distance:.3} nm")
         
     def create_filter_menu_items(self, row):
         for filter_type, params in self.filter_params.items():
@@ -1097,6 +1102,7 @@ class SpotsDetectionTab:
         # Update specific attributes if provided
         if contours_data is not None:
             current_operation["contours_data"] = contours_data
+            self.update_avg_area_label(contour_data= contours_data)
         if previous_processed_img is not None:
             current_operation["processed_image"] = previous_processed_img
         if edge_img is not None:
