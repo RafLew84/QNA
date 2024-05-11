@@ -71,12 +71,12 @@ class SpotsDetectionTab:
         self.current_area_coefficient = 0
 
         self.detection_params = {
-            "Canny": {"sigma": 1., "low_threshold": None, "high_threshold": None}
+            "Canny": {"sigma": 1.}
         }
 
         self.filter_params = {
             "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
-            "Area": {"min_area": 0.0}
+            "Area": {"min_area": 0.0, "max_area": 200}
         }
 
         self.current_operation = {
@@ -376,13 +376,13 @@ class SpotsDetectionTab:
 
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.detection_section_menu)
-            self.operations_listbox.grid(row=0, column=1,rowspan=10, padx=5, pady=5, sticky="nsew")
+            self.operations_listbox.grid(row=0, column=1,rowspan=5, padx=5, pady=5, sticky="nsew")
 
             self.operations_listbox.bind("<<ListboxSelect>>", self.show_operations_image_listboxOnSelect)
 
             # Add scrollbar to the listbox
             self.operations_scrollbar = tk.Scrollbar(self.detection_section_menu, orient="vertical", command=self.operations_listbox.yview)
-            self.operations_scrollbar.grid(row=0, column=2, rowspan=20, padx=5, pady=5, sticky="ns")
+            self.operations_scrollbar.grid(row=0, column=2, rowspan=5, padx=5, pady=5, sticky="ns")
             self.operations_listbox.config(yscrollcommand=self.operations_scrollbar.set)
         except Exception as e:
             error_msg = f"Error occurred while creating the detection section menu: {e}"
@@ -455,15 +455,15 @@ class SpotsDetectionTab:
 
             # Create a Text widget for multiline display
             self.contour_name_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.contour_name_label.grid(row=row + 10, column=0, columnspan=2, sticky="w")
+            self.contour_name_label.grid(row=row + 10, column=0, sticky="w")
             self.contour_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.contour_area_label.grid(row=row + 11, column=0, columnspan=2, sticky="w")
+            self.contour_area_label.grid(row=row + 11, column=0, sticky="w")
             self.contour_shortest_distance_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
             self.contour_shortest_distance_label.grid(row=row + 12, column=0, columnspan=2, sticky="w")
             self.nearest_neighbour_name_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.nearest_neighbour_name_label.grid(row=row + 13, column=0, columnspan=2, sticky="w")
+            self.nearest_neighbour_name_label.grid(row=row + 13, column=0, sticky="w")
             self.avg_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.avg_area_label.grid(row=row + 14, column=0, columnspan=2, sticky="w")
+            self.avg_area_label.grid(row=row + 14, column=0, sticky="w")
 
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
@@ -501,13 +501,30 @@ class SpotsDetectionTab:
                 label.grid(row=row + 1, column=0, padx=5, pady=5)
                 self.parameter_filter_labels[param_name] = label
 
-                slider = ttk.Scale(
-                    self.detection_section_menu,
-                    from_=0.0,
-                    to=1.0 if param_name.startswith("circularity") else 40.0,
-                    orient="horizontal",
-                    command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
-                )
+                if param_name.startswith("min"):
+                    slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=0.0,
+                        to=100,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
+                elif param_name.startswith("max"):
+                    slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=50,
+                        to=200,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
+                else:
+                    slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=0.0,
+                        to=1.0,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
                 slider.set(param_value)
                 slider.grid(row=row + 1, column=1, padx=5, pady=5)
                 self.parameter_filter_sliders[param_name] = slider
@@ -582,15 +599,6 @@ class SpotsDetectionTab:
             slider.set(param_value)  # Set default value
             slider.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
             self.parameter_detection_sliders[param_name] = slider
-            self.parameter_detection_labels[param_name] = label
-        else:
-            # Create entry for other parameters
-            label = tk.Label(self.detection_section_menu, text=param_name, width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            entry = tk.Entry(self.detection_section_menu)
-            entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-            entry.insert(0, str(param_value))
-            self.parameter_detection_entries[param_name] = entry
             self.parameter_detection_labels[param_name] = label
 
     def get_values_from_detection_menu_items(self, params):
@@ -1078,7 +1086,8 @@ class SpotsDetectionTab:
                 contours= contours,
                 circularity_low= filter_params['circularity_low'],
                 circularity_high= filter_params['circularity_high'],
-                min_area= filter_params['min_area']
+                min_area= filter_params['min_area'],
+                max_area= filter_params['max_area']
             )
         result_image = DrawContours(
                 image= edge_img,
@@ -1137,10 +1146,7 @@ class SpotsDetectionTab:
         if self.selected_detection_option == "Canny":
             result_image = EdgeDetection(
                 img=np.asanyarray(img), 
-                sigma=sigma_value,
-                low_threshold=None if params['low_threshold'] == 'None' else params['low_threshold'],
-                high_threshold=None if params['high_threshold'] == 'None' else params['high_threshold']
-                )
+                sigma=sigma_value                )
         contours = ContourFinder(result_image)
         edge_img = Image.fromarray(result_image)
         result_filtered_image, _ = self.process_contours(filter_params, edge_img, contours)

@@ -95,25 +95,20 @@ def GaussianFilter(img, sigma=4):
         logger.error(msg)
         raise ValueError(msg)
 
-def EdgeDetection(img, sigma=1.0, low_threshold=None, high_threshold=None):
+def EdgeDetection(img, sigma=1.0):
     """
     Perform edge detection on the input image using Canny edge detector.
 
     Args:
         img (numpy.ndarray): Input image.
         sigma (float, optional): Standard deviation for Gaussian smoothing. Defaults to 1.0.
-        low_threshold (float, optional): Lower bound for hysteresis thresholding. If None, low_threshold is set to 0.1 * np.max(image_grad). Defaults to None.
-        high_threshold (float, optional): Upper bound for hysteresis thresholding. If None, high_threshold is set to 0.2 * np.max(image_grad). Defaults to None.
-
     Returns:
         numpy.ndarray: Edge-detected image.
     """
     try:
         edges = feature.canny(
             image=img,
-            sigma=np.float64(sigma),
-            low_threshold=low_threshold,
-            high_threshold=high_threshold
+            sigma=np.float64(sigma)
         )
         img = edges.astype('uint8') * 255
         return img
@@ -243,14 +238,14 @@ def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False):
     
     return img
     
-def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0.0):
+def ContourFilter(contours, circularity_low=0.1, circularity_high=0.9, min_area=0.0, max_area=200):
     filtered_contours = []
     for contour in contours:
         area = AreaOfContour(contour)
         perimeter = PerimieterOfContour(contour)
         circularity = FindCircularityOfContour(area, perimeter)
 
-        if circularity_low < circularity < circularity_high and area > min_area:
+        if circularity_low < circularity < circularity_high and max_area > area > min_area:
             filtered_contours.append(contour)
     
     return filtered_contours
