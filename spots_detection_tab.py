@@ -459,11 +459,11 @@ class SpotsDetectionTab:
             self.contour_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
             self.contour_area_label.grid(row=row + 11, column=0, sticky="w")
             self.contour_shortest_distance_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.contour_shortest_distance_label.grid(row=row + 12, column=0, columnspan=2, sticky="w")
+            self.contour_shortest_distance_label.grid(row=row + 10, column=1, sticky="w")
             self.nearest_neighbour_name_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.nearest_neighbour_name_label.grid(row=row + 13, column=0, sticky="w")
+            self.nearest_neighbour_name_label.grid(row=row + 11, column=1, sticky="w")
             self.avg_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
-            self.avg_area_label.grid(row=row + 14, column=0, sticky="w")
+            self.avg_area_label.grid(row=row + 12, column=0, columnspan=2)
 
             # Find Contours button
             filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
@@ -486,9 +486,9 @@ class SpotsDetectionTab:
 
     def update_contour_labels(self, name, area, distance):
         # Update the text of each label
-        self.contour_name_label.config(text=f"name: {name}")
-        self.contour_area_label.config(text=f"area: {area:.3} nm2")
-        self.contour_shortest_distance_label.config(text=f"shortest distance: {distance:.3} nm")
+        self.contour_name_label.config(text=f"Name: {name}")
+        self.contour_area_label.config(text=f"Area: {area:.3} nm2")
+        self.contour_shortest_distance_label.config(text=f"Shortest distance: {distance:.3} nm")
         
     def create_filter_menu_items(self, row):
         for filter_type, params in self.filter_params.items():
