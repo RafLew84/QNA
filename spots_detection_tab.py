@@ -203,6 +203,11 @@ class SpotsDetectionTab:
             self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next_onClick)
             self.next_button.grid(row=4, column=4, padx=5, pady=5)
 
+            self.contours_listbox = tk.Listbox(self.spots_detection_tab)
+            self.contours_listbox.grid(row=1, column=4, rowspan=2, padx=5, pady=5, sticky="nsew")
+
+            self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
+
             # Bind event for canvas resizing
             self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
 
@@ -219,7 +224,7 @@ class SpotsDetectionTab:
 
             # Display Proccess Options
             self.detection_section_menu = ttk.Frame(self.spots_detection_tab, padding="3")
-            self.detection_section_menu.grid(row=0, column=4,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
+            self.detection_section_menu.grid(row=0, column=5,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
             self.display_header_info_labels()
             self.display_detection_section_menu()
@@ -466,13 +471,16 @@ class SpotsDetectionTab:
             self.avg_area_label.grid(row=row + 12, column=0, columnspan=2)
 
             # Find Contours button
-            filter_contours_button = tk.Button(self.detection_section_menu, text="Filter Contours", command=self.filter_contours_onClick)
-            filter_contours_button.grid(row=row + 15, column=0, padx=5, pady=5)
+            save_contours_button = tk.Button(self.detection_section_menu, text="Save contours", command=self.save_contours_onClick)
+            save_contours_button.grid(row=row + 13, column=0, padx=5, pady=5)
 
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
             logger.error(error_msg)
             raise KeyError(error_msg)
+        
+    def show_contours_listboxOnSelect(self):
+        pass
         
     def update_nearest_neighbour_labe(self, text):
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
@@ -550,7 +558,7 @@ class SpotsDetectionTab:
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
         
-    def filter_contours_onClick(self):
+    def save_contours_onClick(self):
         pass
         # operations_selected_index = self.operations_listbox.curselection()
         # operations_index = int(operations_selected_index[0])
