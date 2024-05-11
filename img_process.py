@@ -211,9 +211,12 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
             if len(distances_to_other_contours) > 1:
                 min_distance, min_index = min(distances_to_other_contours)
         else:
-            min_distance = None
-            # nearest_neighbour = None
+            min_distance = 0.0
         # add distance and nearest_neighbour to dic
+        if not min_distance:
+            min_distance = 0.0
+        if not min_index:
+            min_index = -1
         contour_data.append({
             "name": name,
             "contour": contour,
@@ -304,3 +307,32 @@ def concatenate_four_images(processed_img, original_img, edged_image, filtered_c
     img.paste(processed_img, (processed_img.width + 10, processed_img.height + 10))
 
     return img
+
+def get_mouse_position_in_canvas(scale_factor, x_canvas, y_canvas, event):
+    x, y = event.x, event.y
+
+    # Recalculate the mouse coordinates relative to the resized canvas
+    x = event.x / scale_factor
+    y = event.y / scale_factor
+
+    x = x_canvas / scale_factor
+    y = y_canvas / scale_factor
+    return x,y
+
+def get_contour_info_at_position(current_operation, x, y):
+    # Iterate through contours and check if the mouse position is within any contour
+    contours_data = current_operation['contours_data']
+    for item in contours_data:
+        if is_point_inside_contour((x, y), item['contour']):
+            return item
+    return None
+
+def is_point_inside_contour(point, contour):
+    # Convert contour to numpy array of shape (n, 1, 2)
+    contour_np = np.array(contour).reshape((-1, 1, 2))
+    # Convert point to tuple
+    point_tuple = tuple(point)
+    # Use cv2.pointPolygonTest to determine if the point is inside the contour
+    distance = cv2.pointPolygonTest(contour_np, point_tuple, False)
+    # If distance is positive, point is inside the contour
+    return distance >= 0

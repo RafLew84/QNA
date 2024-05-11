@@ -19,8 +19,9 @@ import numpy as np
 from data_process import create_greyscale_image
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
-from img_process import ContourFinder, AreaFinder, ContourFilter, DrawContours, concatenate_four_images
-from img_process import GetContourData, DrawLabels
+from img_process import ContourFinder, ContourFilter, DrawContours, concatenate_four_images
+from img_process import GetContourData, DrawLabels, get_mouse_position_in_canvas
+from img_process import get_contour_info_at_position
 
 from file_process import calculate_avg_nm_per_px, calculate_pixel_to_nm_coefficients
 
@@ -228,21 +229,19 @@ class SpotsDetectionTab:
             raise ValueError(error_msg)
         
     def on_canvas_hover(self, event):
-        x, y = event.x, event.y
-        scale_factor = self.scale_factor_var.get()
-
-    # Recalculate the mouse coordinates relative to the resized canvas
-        x = event.x / scale_factor
-        y = event.y / scale_factor
-
-        x_canvas = self.data_canvas_detection.canvasx(event.x)
-        y_canvas = self.data_canvas_detection.canvasy(event.y)
-
-        x = x_canvas / scale_factor
-        y = y_canvas / scale_factor
+        x, y = get_mouse_position_in_canvas(
+            scale_factor= self.scale_factor_var.get(),
+            x_canvas= self.data_canvas_detection.canvasx(event.x),
+            y_canvas= self.data_canvas_detection.canvasy(event.y),
+            event= event
+        )
 
         # Check if the mouse is over a contour
-        item = self.get_contour_info_at_position(x, y)
+        item = get_contour_info_at_position(
+            current_operation= self.current_operation,
+            x= x, 
+            y= y
+            )
         if item:
             # contour_name = item['name']
             self.update_contour_labels(
@@ -255,24 +254,6 @@ class SpotsDetectionTab:
             
         else:
             pass
-
-    def get_contour_info_at_position(self, x, y):
-        # Iterate through contours and check if the mouse position is within any contour
-        contours_data = self.current_operation['contours_data']
-        for item in contours_data:
-            if self.is_point_inside_contour((x, y), item['contour']):
-                return item
-        return None
-
-    def is_point_inside_contour(self, point, contour):
-        # Convert contour to numpy array of shape (n, 1, 2)
-        contour_np = np.array(contour).reshape((-1, 1, 2))
-        # Convert point to tuple
-        point_tuple = tuple(point)
-        # Use cv2.pointPolygonTest to determine if the point is inside the contour
-        distance = cv2.pointPolygonTest(contour_np, point_tuple, False)
-        # If distance is positive, point is inside the contour
-        return distance >= 0
 
     def display_preprocess_options_menu(self):
         """
@@ -498,7 +479,9 @@ class SpotsDetectionTab:
         
     def update_avg_area_label(self, contour_data):
         total_area = sum(contour['area'] for contour in contour_data)
-        avg_area = total_area / len(contour_data)
+        avg_area = 0
+        if len(contour_data) > 0:
+            avg_area = total_area / len(contour_data)
         self.avg_area_label.config(text=f"Average Area: {avg_area:.3f} nm2")
 
     def update_contour_labels(self, name, area, distance):
@@ -1135,6 +1118,11 @@ class SpotsDetectionTab:
         Args:
             sigma_value (float): The new value of the sigma slider.
         """
+        self.handle_sigma_data_creation(sigma_value)
+
+        self.refresh_image_after_filtering()
+
+    def handle_sigma_data_creation(self, sigma_value):
         params = {}
         filter_params = {}
         index = self.original_data_index
@@ -1155,7 +1143,7 @@ class SpotsDetectionTab:
                 )
         contours = ContourFinder(result_image)
         edge_img = Image.fromarray(result_image)
-        result_filtered_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
+        result_filtered_image, _ = self.process_contours(filter_params, edge_img, contours)
         filtered_img = Image.fromarray(result_filtered_image)
         original_img = None
         preprocessed_img = None
@@ -1163,24 +1151,14 @@ class SpotsDetectionTab:
             original_img = img
             preprocessed_img = Image.fromarray(np.zeros_like(original_img))
         elif focuse_widget == self.operations_listbox:
-            original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             preprocessed_img = img
-    
-        img = concatenate_four_images(
-            processed_img= preprocessed_img,
-            original_img= original_img,
-            edged_image= edge_img,
-            filtered_contoures_image= filtered_img
-        )
-
+        
         self.update_current_operation(
             previous_processed_img= preprocessed_img,
             edge_img= edge_img,
             contour_image= filtered_img,
             contours= contours
         )
-
-        self.handle_displaying_image_on_canvas(img)
 
     def navigate_prev_onClick(self):
         """
@@ -1266,9 +1244,16 @@ class SpotsDetectionTab:
         else:
             preprocess_img = self.current_operation['processed_image']
             edge_img = self.current_operation['edge_image']
+            labeled_image = self.current_operation['labeled_image']
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             filtered_img = self.current_operation['filtered_contours_img']
-            img = concatenate_four_images(preprocess_img, original_img, edge_img, filtered_img)
+            img = None
+            if isinstance(labeled_image, np.ndarray):
+                labeled_image = Image.fromarray(labeled_image)
+            if labeled_image:
+                img = concatenate_four_images(preprocess_img, labeled_image, edge_img, filtered_img)
+            else:
+                img = concatenate_four_images(preprocess_img, original_img, edge_img, filtered_img)
             self.handle_displaying_image_on_canvas(img)
         self.resize_canvas_detection_scrollregion()
 
