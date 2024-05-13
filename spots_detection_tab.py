@@ -77,7 +77,7 @@ class SpotsDetectionTab:
 
         self.filter_params = {
             "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
-            "Area": {"min_area": 0.0, "max_area": 200}
+            "Area": {"min_area": 0.0, "max_area": 400}
         }
 
         self.current_operation = {
@@ -522,7 +522,7 @@ class SpotsDetectionTab:
                     slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=50,
-                        to=200,
+                        to=400,
                         orient="horizontal",
                         command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
                     )
