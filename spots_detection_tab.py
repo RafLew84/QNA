@@ -557,6 +557,9 @@ class SpotsDetectionTab:
     
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
+
+    def save_to_files(self):
+        labeled_image = self.current_operation['labeled_image']
         
     def save_contours_onClick(self):
         pass
@@ -989,19 +992,43 @@ class SpotsDetectionTab:
         try:
             if file_ext.lower() == "s94":
                 header_info = self.data_for_detection[index]['header_info']
+                path = self.data_for_detection[index]['file_name']
+                filename = os.path.basename(path)
                 header_labels = [
-                        f"X Points: {header_info['x_points']}", f"Y Points: {header_info['y_points']}", f"X Size: {header_info['x_size']}", f"Y Size: {header_info['y_size']}",
-                        f"X Offset: {header_info['x_offset']}", f"Y Offset: {header_info['y_offset']}", f"Z Gain: {header_info['z_gain']}", f"Scan Angle: {header_info['Scan_Angle']}", f"Kp: {header_info['Kp']}", f"Tn: {header_info['Tn']}", f"Tv: {header_info['Tv']}", f"It: {header_info['It']}"
+                        f"Filename: {filename}",
+                        f"X Points: {header_info['x_points']}", 
+                        f"Y Points: {header_info['y_points']}", 
+                        f"X Size: {header_info['x_size']}", 
+                        f"Y Size: {header_info['y_size']}",
+                        f"X Offset: {header_info['x_offset']}", 
+                        f"Y Offset: {header_info['y_offset']}", 
+                        f"Z Gain: {header_info['z_gain']}", 
+                        f"Scan Angle: {header_info['Scan_Angle']}", 
+                        # f"Kp: {header_info['Kp']}", f"Tn: {header_info['Tn']}", f"Tv: {header_info['Tv']}", f"It: {header_info['It']}"
                     ]
             elif file_ext.lower() == "stp":
                 header_info = self.data_for_detection[index]['header_info']
+                path = self.data_for_detection[index]['file_name']
+                filename = os.path.basename(path)
                 header_labels = [
-                        f"X Amplitude: {header_info['X Amplitude']}", f"Y Amplitude: {header_info['Y Amplitude']}", f"Z Amplitude: {header_info['Z Amplitude']}", f"Number of cols: {header_info['Number of columns']}",
-                        f"Number of rows: {header_info['Number of rows']}", f"X Offset: {header_info['X-Offset']}", f"Y Offset: {header_info['Y-Offset']}", f"Z Gain: {header_info['Z Gain']}"
+                        f"Filename: {filename}",
+                        f"X Amplitude: {header_info['X Amplitude']}", 
+                        f"Y Amplitude: {header_info['Y Amplitude']}", 
+                        f"Z Amplitude: {header_info['Z Amplitude']}", 
+                        f"Number of cols: {header_info['Number of columns']}",
+                        f"Number of rows: {header_info['Number of rows']}", 
+                        f"X Offset: {header_info['X-Offset']}", 
+                        f"Y Offset: {header_info['Y-Offset']}", 
+                        f"Z Gain: {header_info['Z Gain']}"
                     ]
             elif file_ext.lower() == "mpp":
                 header_info = self.data_for_detection[index]['header_info']
+                path = self.data_for_detection[index]['file_name']
+                filename = os.path.basename(path)
+                framenumber = self.data_for_detection[index]['frame_number']
                 header_labels = [
+                        f"Filename: {filename}",
+                        f"Frame: {framenumber}",
                         f"X Amplitude: {header_info.get('Control', {}).get('X Amplitude', '')}", 
                         f"Y Amplitude: {header_info.get('Control', {}).get('Y Amplitude', '')}", 
                         f"Z Amplitude: {header_info.get('General Info', {}).get('Z Amplitude', '')}", 
