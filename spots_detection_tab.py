@@ -8,6 +8,7 @@ rlewandkow
 
 import os
 import cv2
+import csv
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -560,9 +561,67 @@ class SpotsDetectionTab:
 
     def save_to_files(self):
         labeled_image = self.current_operation['labeled_image']
+        if isinstance(labeled_image, np.ndarray):
+            labeled_image = Image.fromarray(labeled_image)
+        index = self.original_data_index
+        path = self.data_for_detection[index]['file_name']
+        filename = os.path.basename(path)
+        framenumber = ""
+        if 'frame_number' in self.data_for_detection[index]:
+            framenumber = str(self.data_for_detection[index]['frame_number'])
+
+        output_dir = os.path.join(os.path.dirname(path), "saved_data")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        if framenumber == "":
+            name = filename[:-4]
+        else:
+            name = filename[:-4] + "_frame" + framenumber
+
+        output_path = os.path.join(output_dir, name + ".png")
+        labeled_image.save(output_path)
+
+        contours_data = self.current_operation['contours_data']
+
+        fieldnames = ["name", "area [nm2]", "distance_to_nearest_neighbour [nm]", "nearest_neighbour"]
+
+        # Define the CSV filename
+        csv_filename = name + ".csv"  # Use the same 'name' as the PNG file
+
+        # Create a dictionary for the header of the CSV file
+        header_dict = {field: field for field in fieldnames}
+
+        # Write the data to the CSV file
+        with open(os.path.join(output_dir, csv_filename), mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            
+            # Write the header
+            writer.writerow(header_dict)
+            
+            # Write each row
+            for item in contours_data:
+                writer.writerow({
+                    "name": item["name"],
+                    "area [nm2]": item["area"],
+                    "distance_to_nearest_neighbour [nm]": item["distance_to_nearest_neighbour"],
+                    "nearest_neighbour": item["nearest_neighbour"]
+                })
+
+            total_area = sum(contour['area'] for contour in contours_data)
+            avg_area = total_area / len(contours_data)
+
+        with open(os.path.join(output_dir, csv_filename), mode='a', newline='') as file:
+            writer = csv.writer(file)
+            
+            # Write the average area as a header for the new column
+            writer.writerow(["Average Area [nm2]"])
+            
+            # Write the average area value in the next row
+            writer.writerow([avg_area])
         
     def save_contours_onClick(self):
-        pass
+        self.save_to_files()
         # operations_selected_index = self.operations_listbox.curselection()
         # operations_index = int(operations_selected_index[0])
         # key = "contours"
