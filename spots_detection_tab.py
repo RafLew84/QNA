@@ -7,25 +7,38 @@ rlewandkow
 """
 
 import os
-import csv
-
 import tkinter as tk
-from tkinter import ttk, messagebox
-
+from tkinter import ttk
 from PIL import Image, ImageTk
-
 import numpy as np
 
-from data_process import create_greyscale_image, save_labeled_image, save_avg_area_to_csv
-from data_process import save_data_to_csv
+from data_process import (
+    create_greyscale_image, 
+    save_labeled_image, 
+    save_avg_area_to_csv,
+    save_data_to_csv
+)
 
-from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
-from img_process import ContourFinder, concatenate_four_images
-from img_process import GetContourData, DrawLabels, get_mouse_position_in_canvas
-from img_process import get_contour_info_at_position, calculate_contour_avg_area
-from img_process import process_contours_filters
+from img_process import (
+    NlMeansDenois, 
+    GaussianBlur, 
+    GaussianFilter, 
+    EdgeDetection, 
+    concatenate_two_images,
+    ContourFinder, 
+    concatenate_four_images,
+    GetContourData, 
+    DrawLabels, 
+    get_mouse_position_in_canvas,
+    get_contour_info_at_position, 
+    calculate_contour_avg_area,
+    process_contours_filters
+)
 
-from file_process import calculate_avg_nm_per_px, calculate_pixel_to_nm_coefficients
+from file_process import (
+    calculate_avg_nm_per_px, 
+    calculate_pixel_to_nm_coefficients
+)
 
 import logging
 
