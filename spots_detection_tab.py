@@ -1128,22 +1128,6 @@ class SpotsDetectionTab:
             img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
             self.handle_displaying_image_on_canvas(img)
 
-
-    # def process_contours(self, filter_params, edge_img, contours):
-    #     filtered_contours = ContourFilter(
-    #             contours= contours,
-    #             circularity_low= filter_params['circularity_low'],
-    #             circularity_high= filter_params['circularity_high'],
-    #             min_area= filter_params['min_area'],
-    #             max_area= filter_params['max_area']
-    #         )
-    #     result_image = DrawContours(
-    #             image= edge_img,
-    #             contours= filtered_contours
-    #         )
-        
-    #     return result_image,filtered_contours
-
     def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
                                 process_name="", labeled_image=None, contours_data=None):
         current_operation = self.current_operation.copy()  # Make a copy to avoid modifying the original dictionary
