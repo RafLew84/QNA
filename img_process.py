@@ -331,3 +331,25 @@ def is_point_inside_contour(point, contour):
     distance = cv2.pointPolygonTest(contour_np, point_tuple, False)
     # If distance is positive, point is inside the contour
     return distance >= 0
+
+def calculate_contour_avg_area(contour_data):
+    total_area = sum(contour['area'] for contour in contour_data)
+    avg_area = 0
+    if len(contour_data) > 0:
+        avg_area = total_area / len(contour_data)
+    return avg_area
+
+def process_contours_filters(filter_params, edge_img, contours):
+    filtered_contours = ContourFilter(
+            contours= contours,
+            circularity_low= filter_params['circularity_low'],
+            circularity_high= filter_params['circularity_high'],
+            min_area= filter_params['min_area'],
+            max_area= filter_params['max_area']
+        )
+    result_image = DrawContours(
+            image= edge_img,
+            contours= filtered_contours
+        )
+    
+    return result_image,filtered_contours

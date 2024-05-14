@@ -7,7 +7,6 @@ rlewandkow
 """
 
 import os
-import cv2
 import csv
 
 import tkinter as tk
@@ -17,12 +16,14 @@ from PIL import Image, ImageTk
 
 import numpy as np
 
-from data_process import create_greyscale_image
+from data_process import create_greyscale_image, save_labeled_image, save_avg_area_to_csv
+from data_process import save_data_to_csv
 
 from img_process import NlMeansDenois, GaussianBlur, GaussianFilter, EdgeDetection, concatenate_two_images
-from img_process import ContourFinder, ContourFilter, DrawContours, concatenate_four_images
+from img_process import ContourFinder, concatenate_four_images
 from img_process import GetContourData, DrawLabels, get_mouse_position_in_canvas
-from img_process import get_contour_info_at_position
+from img_process import get_contour_info_at_position, calculate_contour_avg_area
+from img_process import process_contours_filters
 
 from file_process import calculate_avg_nm_per_px, calculate_pixel_to_nm_coefficients
 
@@ -123,97 +124,13 @@ class SpotsDetectionTab:
             # Data for analisys
             self.original_data_index = None
 
-            # Button to load data
-            self.load_data_button = tk.Button(
-                self.spots_detection_tab, 
-                text="Load Data", 
-                command=self.load_data_onClick
-                )
-            self.load_data_button.grid(row=0, column=0, padx=5, pady=5)
-            
-            # Create listbox to display filenames
-            self.data_listbox_detection = tk.Listbox(
-                self.spots_detection_tab, 
-                width=20, 
-                height=10, 
-                selectmode=tk.SINGLE
-                )
-            self.data_listbox_detection.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
-            self.listbox_scrollbar_detection = tk.Scrollbar(
-                self.spots_detection_tab, 
-                orient=tk.VERTICAL, 
-                command=self.data_listbox_detection.yview
-                )
-            self.listbox_scrollbar_detection.grid(row=1, column=1, rowspan=2, sticky="ns")
-            self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
-            self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+            self.configure_tab()
 
-            # Add a canvas to display the data
-            # Add Motions and add action on hover
-            self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
-            self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
-            self.data_canvas_detection.bind("<Motion>", self.on_canvas_hover)
-            self.vertical_scrollbar_detection = tk.Scrollbar(
-                self.spots_detection_tab, 
-                orient=tk.VERTICAL, 
-                command=self.data_canvas_detection.yview
-                )
-            self.vertical_scrollbar_detection.grid(row=1, column=3, sticky="ns")
-            self.data_canvas_detection.configure(yscrollcommand=self.vertical_scrollbar_detection.set)
-            self.horizontal_scrollbar_detection = tk.Scrollbar(
-                self.spots_detection_tab, 
-                orient=tk.HORIZONTAL, 
-                command=self.data_canvas_detection.xview
-                )
-            self.horizontal_scrollbar_detection.grid(row=2, column=2, sticky="ew")
-            self.data_canvas_detection.configure(xscrollcommand=self.horizontal_scrollbar_detection.set)
-
-            # Set row and column weights
-            self.spots_detection_tab.grid_rowconfigure(1, weight=1)
-            self.spots_detection_tab.grid_columnconfigure(2, weight=1)
-
-            # Scale factor label and slider
-            self.scale_factor_label = tk.Label(self.spots_detection_tab, text="Scale Factor:")
-            self.scale_factor_label.grid(row=3, column=1, padx=5, pady=5, sticky="e")
-            self.scale_factor_var = tk.DoubleVar()
-            self.scale_factor_var.set(1.0)  # Default scale factor
-            self.scale_factor_slider = tk.Scale(
-                self.spots_detection_tab, 
-                from_=0.1, 
-                to=10.0, 
-                resolution=0.1, 
-                orient=tk.HORIZONTAL, 
-                variable=self.scale_factor_var, 
-                length=200
-                )
-            self.scale_factor_slider.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
-
-            # Slider for navigation
-            self.navigation_slider = tk.Scale(
-                self.spots_detection_tab, 
-                from_=1, 
-                to=1, 
-                orient=tk.HORIZONTAL, 
-                command=self.update_image_from_navigation_slider_onChange
-                )
-            self.navigation_slider.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
-
-            # Navigation buttons
-            self.prev_button = tk.Button(self.spots_detection_tab, text="Prev", command=self.navigate_prev_onClick)
-            self.prev_button.grid(row=4, column=0, padx=5, pady=5)
-            self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next_onClick)
-            self.next_button.grid(row=4, column=4, padx=5, pady=5)
-
-            self.contours_listbox = tk.Listbox(self.spots_detection_tab)
-            self.contours_listbox.grid(row=1, column=4, rowspan=2, padx=5, pady=5, sticky="nsew")
-
-            self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
-
-            # Bind event for canvas resizing
-            self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
-
-            # Bind event for slider changes
-            self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
+            self.create_data_ui()
+            self.create_canvas_ui()
+            self.create_scaling_ui()
+            self.create_navigation_ui()
+            self.create_contours_edit_ui()
 
             # Display header information labels
             self.header_section_frame = ttk.Frame(self.spots_detection_tab, padding="5")
@@ -233,6 +150,105 @@ class SpotsDetectionTab:
             error_msg = f"Error creating spots detection tab: {e}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+        
+    def create_contours_edit_ui(self):
+            self.contours_listbox = tk.Listbox(self.spots_detection_tab)
+            self.contours_listbox.grid(row=1, column=4, rowspan=2, padx=5, pady=5, sticky="nsew")
+
+            self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
+        
+    def create_navigation_ui(self):
+        # Slider for navigation
+        self.navigation_slider = tk.Scale(
+            self.spots_detection_tab, 
+            from_=1, 
+            to=1, 
+            orient=tk.HORIZONTAL, 
+            command=self.update_image_from_navigation_slider_onChange
+            )
+        self.navigation_slider.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
+
+        # Navigation buttons
+        self.prev_button = tk.Button(self.spots_detection_tab, text="Prev", command=self.navigate_prev_onClick)
+        self.prev_button.grid(row=4, column=0, padx=5, pady=5)
+        self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next_onClick)
+        self.next_button.grid(row=4, column=4, padx=5, pady=5)
+        
+    def configure_tab(self):
+        # Set row and column weights
+        self.spots_detection_tab.grid_rowconfigure(1, weight=1)
+        self.spots_detection_tab.grid_columnconfigure(2, weight=1)
+        
+    def create_scaling_ui(self):
+        # Scale factor label and slider
+        self.scale_factor_label = tk.Label(self.spots_detection_tab, text="Scale Factor:")
+        self.scale_factor_label.grid(row=3, column=1, padx=5, pady=5, sticky="e")
+        self.scale_factor_var = tk.DoubleVar()
+        self.scale_factor_var.set(1.0)  # Default scale factor
+        self.scale_factor_slider = tk.Scale(
+            self.spots_detection_tab, 
+            from_=0.1, 
+            to=10.0, 
+            resolution=0.1, 
+            orient=tk.HORIZONTAL, 
+            variable=self.scale_factor_var, 
+            length=200
+            )
+        self.scale_factor_slider.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
+        
+        # Bind event for slider changes
+        self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
+        
+    def create_canvas_ui(self):
+        # Add a canvas to display the data
+        # Add Motions and add action on hover
+        self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
+        self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
+        self.data_canvas_detection.bind("<Motion>", self.on_canvas_hover)
+        self.vertical_scrollbar_detection = tk.Scrollbar(
+            self.spots_detection_tab, 
+            orient=tk.VERTICAL, 
+            command=self.data_canvas_detection.yview
+            )
+        self.vertical_scrollbar_detection.grid(row=1, column=3, sticky="ns")
+        self.data_canvas_detection.configure(yscrollcommand=self.vertical_scrollbar_detection.set)
+        self.horizontal_scrollbar_detection = tk.Scrollbar(
+            self.spots_detection_tab, 
+            orient=tk.HORIZONTAL, 
+            command=self.data_canvas_detection.xview
+            )
+        self.horizontal_scrollbar_detection.grid(row=2, column=2, sticky="ew")
+        self.data_canvas_detection.configure(xscrollcommand=self.horizontal_scrollbar_detection.set)
+        
+        # Bind event for canvas resizing
+        self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
+
+        
+    def create_data_ui(self):
+        # Button to load data
+        self.load_data_button = tk.Button(
+            self.spots_detection_tab, 
+            text="Load Data", 
+            command=self.load_data_onClick
+            )
+        self.load_data_button.grid(row=0, column=0, padx=5, pady=5)
+        
+        # Create listbox to display filenames
+        self.data_listbox_detection = tk.Listbox(
+            self.spots_detection_tab, 
+            width=20, 
+            height=10, 
+            selectmode=tk.SINGLE
+            )
+        self.data_listbox_detection.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_scrollbar_detection = tk.Scrollbar(
+            self.spots_detection_tab, 
+            orient=tk.VERTICAL, 
+            command=self.data_listbox_detection.yview
+            )
+        self.listbox_scrollbar_detection.grid(row=1, column=1, rowspan=2, sticky="ns")
+        self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
+        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
         
     def on_canvas_hover(self, event):
         x, y = get_mouse_position_in_canvas(
@@ -256,7 +272,7 @@ class SpotsDetectionTab:
                 distance= item['distance_to_nearest_neighbour']
             )
 
-            self.update_nearest_neighbour_labe(item['nearest_neighbour'])
+            self.update_nearest_neighbour_label(item['nearest_neighbour'])
             
         else:
             pass
@@ -483,14 +499,11 @@ class SpotsDetectionTab:
     def show_contours_listboxOnSelect(self):
         pass
         
-    def update_nearest_neighbour_labe(self, text):
+    def update_nearest_neighbour_label(self, text):
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
         
     def update_avg_area_label(self, contour_data):
-        total_area = sum(contour['area'] for contour in contour_data)
-        avg_area = 0
-        if len(contour_data) > 0:
-            avg_area = total_area / len(contour_data)
+        avg_area = calculate_contour_avg_area(contour_data)
         self.avg_area_label.config(text=f"Average Area: {avg_area:.3f} nm2")
 
     def update_contour_labels(self, name, area, distance):
@@ -510,38 +523,19 @@ class SpotsDetectionTab:
                 label.grid(row=row + 1, column=0, padx=5, pady=5)
                 self.parameter_filter_labels[param_name] = label
 
-                if param_name.startswith("min"):
-                    slider = ttk.Scale(
-                        self.detection_section_menu,
-                        from_=0.0,
-                        to=100,
-                        orient="horizontal",
-                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
-                    )
-                elif param_name.startswith("max"):
-                    slider = ttk.Scale(
-                        self.detection_section_menu,
-                        from_=50,
-                        to=1000,
-                        orient="horizontal",
-                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
-                    )
-                else:
-                    slider = ttk.Scale(
-                        self.detection_section_menu,
-                        from_=0.0,
-                        to=1.0,
-                        orient="horizontal",
-                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
-                    )
-                slider.set(param_value)
-                slider.grid(row=row + 1, column=1, padx=5, pady=5)
-                self.parameter_filter_sliders[param_name] = slider
+                self.add_slider_to_menu(row, param_name, param_value)
 
                 row += 1
             row += 1
         
         # Add checkboxes for draw contours and write labels
+        self.add_chackboxes_to_menu(row)
+
+        row += 1
+
+        return row
+
+    def add_chackboxes_to_menu(self, row):
         draw_contours_var = tk.IntVar()
         draw_contours_checkbox = tk.Checkbutton(self.detection_section_menu, text="Draw Contours", variable=draw_contours_var, command=self.checkbox_status_changed)
         draw_contours_checkbox.grid(row=row, column=0, padx=5, pady=5, sticky="w")
@@ -552,9 +546,34 @@ class SpotsDetectionTab:
         write_labels_checkbox.grid(row=row, column=1, padx=5, pady=5, sticky="w")
         self.write_labels_var = write_labels_var
 
-        row += 1
-
-        return row
+    def add_slider_to_menu(self, row, param_name, param_value):
+        if param_name.startswith("min"):
+            slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=0.0,
+                        to=100,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
+        elif param_name.startswith("max"):
+            slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=50,
+                        to=1000,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
+        else:
+            slider = ttk.Scale(
+                        self.detection_section_menu,
+                        from_=0.0,
+                        to=1.0,
+                        orient="horizontal",
+                        command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
+                    )
+        slider.set(param_value)
+        slider.grid(row=row + 1, column=1, padx=5, pady=5)
+        self.parameter_filter_sliders[param_name] = slider
     
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
@@ -563,6 +582,20 @@ class SpotsDetectionTab:
         labeled_image = self.current_operation['labeled_image']
         if isinstance(labeled_image, np.ndarray):
             labeled_image = Image.fromarray(labeled_image)
+        output_dir, name = self.save_img(labeled_image)
+
+        contours_data = self.current_operation['contours_data']
+
+        # Define the CSV filename
+        csv_filename = name + ".csv"  # Use the same 'name' as the PNG file
+        
+        save_data_to_csv(output_dir, contours_data, csv_filename)
+
+        avg_area = calculate_contour_avg_area(contours_data)
+
+        save_avg_area_to_csv(output_dir, csv_filename, avg_area)
+
+    def save_img(self, labeled_image):
         index = self.original_data_index
         path = self.data_for_detection[index]['file_name']
         filename = os.path.basename(path)
@@ -570,67 +603,10 @@ class SpotsDetectionTab:
         if 'frame_number' in self.data_for_detection[index]:
             framenumber = str(self.data_for_detection[index]['frame_number'])
 
-        output_dir = os.path.join(os.path.dirname(path), "saved_data")
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        if framenumber == "":
-            name = filename[:-4]
-        else:
-            name = filename[:-4] + "_frame" + framenumber
-
-        output_path = os.path.join(output_dir, name + ".png")
-        labeled_image.save(output_path)
-
-        contours_data = self.current_operation['contours_data']
-
-        fieldnames = ["name", "area [nm2]", "distance_to_nearest_neighbour [nm]", "nearest_neighbour"]
-
-        # Define the CSV filename
-        csv_filename = name + ".csv"  # Use the same 'name' as the PNG file
-
-        # Create a dictionary for the header of the CSV file
-        header_dict = {field: field for field in fieldnames}
-
-        # Write the data to the CSV file
-        with open(os.path.join(output_dir, csv_filename), mode='w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            
-            # Write the header
-            writer.writerow(header_dict)
-            
-            # Write each row
-            for item in contours_data:
-                writer.writerow({
-                    "name": item["name"],
-                    "area [nm2]": item["area"],
-                    "distance_to_nearest_neighbour [nm]": item["distance_to_nearest_neighbour"],
-                    "nearest_neighbour": item["nearest_neighbour"]
-                })
-
-            total_area = sum(contour['area'] for contour in contours_data)
-            avg_area = total_area / len(contours_data)
-
-        with open(os.path.join(output_dir, csv_filename), mode='a', newline='') as file:
-            writer = csv.writer(file)
-            
-            # Write the average area as a header for the new column
-            writer.writerow(["Average Area [nm2]"])
-            
-            # Write the average area value in the next row
-            writer.writerow([avg_area])
+        return save_labeled_image(labeled_image, path, filename, framenumber)
         
     def save_contours_onClick(self):
         self.save_to_files()
-        # operations_selected_index = self.operations_listbox.curselection()
-        # operations_index = int(operations_selected_index[0])
-        # key = "contours"
-        # data = self.data_for_detection[self.original_data_index]['operations'][operations_index]
-        # contours = []
-        # if key in data:
-        #     contours = data[key]
-        # else:
-        #     messagebox.showwarning("No data", "Select operation with detected edges")
         
     def get_values_from_filter_menu_items(self, params):
         for param_name, slider in self.parameter_filter_sliders.items():
@@ -1035,74 +1011,52 @@ class SpotsDetectionTab:
             logger.error(error_msg)
 
     def create_data_for_header_labels_based_on_file_ext(self, index, file_ext):
-        """
-        Create header labels based on the file extension and data index.
-
-        Args:
-            index (int): Index of the data.
-            file_ext (str): File extension indicating the type of data.
-
-        Returns:
-            list: List of header labels.
-
-        Raises:
-            KeyError: If the header information for the given file extension is missing.
-        """
         try:
-            if file_ext.lower() == "s94":
-                header_info = self.data_for_detection[index]['header_info']
-                path = self.data_for_detection[index]['file_name']
-                filename = os.path.basename(path)
-                header_labels = [
-                        f"Filename: {filename}",
-                        f"X Points: {header_info['x_points']}", 
-                        f"Y Points: {header_info['y_points']}", 
-                        f"X Size: {header_info['x_size']}", 
-                        f"Y Size: {header_info['y_size']}",
-                        f"X Offset: {header_info['x_offset']}", 
-                        f"Y Offset: {header_info['y_offset']}", 
-                        f"Z Gain: {header_info['z_gain']}", 
-                        f"Scan Angle: {header_info['Scan_Angle']}", 
-                        # f"Kp: {header_info['Kp']}", f"Tn: {header_info['Tn']}", f"Tv: {header_info['Tv']}", f"It: {header_info['It']}"
-                    ]
-            elif file_ext.lower() == "stp":
-                header_info = self.data_for_detection[index]['header_info']
-                path = self.data_for_detection[index]['file_name']
-                filename = os.path.basename(path)
-                header_labels = [
-                        f"Filename: {filename}",
-                        f"X Amplitude: {header_info['X Amplitude']}", 
-                        f"Y Amplitude: {header_info['Y Amplitude']}", 
-                        f"Z Amplitude: {header_info['Z Amplitude']}", 
-                        f"Number of cols: {header_info['Number of columns']}",
-                        f"Number of rows: {header_info['Number of rows']}", 
-                        f"X Offset: {header_info['X-Offset']}", 
-                        f"Y Offset: {header_info['Y-Offset']}", 
-                        f"Z Gain: {header_info['Z Gain']}"
-                    ]
-            elif file_ext.lower() == "mpp":
-                header_info = self.data_for_detection[index]['header_info']
-                path = self.data_for_detection[index]['file_name']
-                filename = os.path.basename(path)
-                framenumber = self.data_for_detection[index]['frame_number']
-                header_labels = [
-                        f"Filename: {filename}",
-                        f"Frame: {framenumber}",
-                        f"X Amplitude: {header_info.get('Control', {}).get('X Amplitude', '')}", 
-                        f"Y Amplitude: {header_info.get('Control', {}).get('Y Amplitude', '')}", 
-                        f"Z Amplitude: {header_info.get('General Info', {}).get('Z Amplitude', '')}", 
-                        f"Number of cols: {header_info.get('General Info', {}).get('Number of columns', '')}",
-                        f"Number of rows: {header_info.get('General Info', {}).get('Number of rows', '')}", 
-                        f"X Offset: {header_info.get('Control', {}).get('X Offset', '')}", 
-                        f"Y Offset: {header_info.get('Control', {}).get('Y Offset', '')}", 
-                        f"Z Gain: {header_info.get('Control', {}).get('Z Gain', '')}"
-                    ]
-                
-            return header_labels
+            header_labels_generator = {
+                "s94": self.get_header_labels_from_s94_or_stp_file,
+                "stp": self.get_header_labels_from_s94_or_stp_file,
+                "mpp": self.get_header_labels_from_mpp_file
+            }
+
+            header_labels_func = header_labels_generator.get(file_ext.lower())
+            if header_labels_func:
+                return header_labels_func(index)
+            else:
+                raise KeyError(f"Header information for file extension '{file_ext}' is missing.")
         except KeyError as e:
-            error_msg = f"Header information for file extension '{file_ext}' is missing: {e}"
+            error_msg = f"Error occurred: {e}"
             logger.error(error_msg)
-            raise e
+            raise
+
+    def get_header_labels(self, index, filename, header_info, custom_labels=None):
+        default_labels = [
+            f"Filename: {filename}",
+            f"X Amplitude: {header_info.get('X Amplitude', '')}",
+            f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
+            f"Z Amplitude: {header_info.get('Z Amplitude', '')}",
+            f"Number of cols: {header_info.get('Number of columns', '')}",
+            f"Number of rows: {header_info.get('Number of rows', '')}",
+            f"X Offset: {header_info.get('X Offset', '')}",
+            f"Y Offset: {header_info.get('Y Offset', '')}",
+            f"Z Gain: {header_info.get('Z Gain', '')}"
+        ]
+        if custom_labels:
+            default_labels.extend(custom_labels)
+        return default_labels
+
+    def get_header_labels_from_s94_or_stp_file(self, index):
+        header_info = self.data_for_detection[index]['header_info']
+        path = self.data_for_detection[index]['file_name']
+        filename = os.path.basename(path)
+        return self.get_header_labels(index, filename, header_info)
+
+    def get_header_labels_from_mpp_file(self, index):
+        header_info = self.data_for_detection[index]['header_info']
+        path = self.data_for_detection[index]['file_name']
+        filename = os.path.basename(path)
+        framenumber = self.data_for_detection[index]['frame_number']
+        custom_labels = [f"Frame: {framenumber}"]
+        return self.get_header_labels(index, filename, header_info, custom_labels)
 
     def sigma_slider_onChange(self, value, param_name):
         """
@@ -1143,7 +1097,7 @@ class SpotsDetectionTab:
             contours = self.current_operation['contours']
             result_image = None
             self.get_values_from_filter_menu_items(filter_params)
-            result_image, filtered_contours = self.process_contours(filter_params, edge_img, contours)
+            result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours)
 
             contours_data = GetContourData(
                 self, 
@@ -1175,20 +1129,20 @@ class SpotsDetectionTab:
             self.handle_displaying_image_on_canvas(img)
 
 
-    def process_contours(self, filter_params, edge_img, contours):
-        filtered_contours = ContourFilter(
-                contours= contours,
-                circularity_low= filter_params['circularity_low'],
-                circularity_high= filter_params['circularity_high'],
-                min_area= filter_params['min_area'],
-                max_area= filter_params['max_area']
-            )
-        result_image = DrawContours(
-                image= edge_img,
-                contours= filtered_contours
-            )
+    # def process_contours(self, filter_params, edge_img, contours):
+    #     filtered_contours = ContourFilter(
+    #             contours= contours,
+    #             circularity_low= filter_params['circularity_low'],
+    #             circularity_high= filter_params['circularity_high'],
+    #             min_area= filter_params['min_area'],
+    #             max_area= filter_params['max_area']
+    #         )
+    #     result_image = DrawContours(
+    #             image= edge_img,
+    #             contours= filtered_contours
+    #         )
         
-        return result_image,filtered_contours
+    #     return result_image,filtered_contours
 
     def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
                                 process_name="", labeled_image=None, contours_data=None):
@@ -1243,7 +1197,7 @@ class SpotsDetectionTab:
                 sigma=sigma_value                )
         contours = ContourFinder(result_image)
         edge_img = Image.fromarray(result_image)
-        result_filtered_image, _ = self.process_contours(filter_params, edge_img, contours)
+        result_filtered_image, _ = process_contours_filters(filter_params, edge_img, contours)
         filtered_img = Image.fromarray(result_filtered_image)
         original_img = None
         preprocessed_img = None
