@@ -340,6 +340,8 @@ def calculate_contour_avg_area(contour_data):
     return avg_area
 
 def process_contours_filters(filter_params, edge_img, contours):
+    # TODO
+    # get min_area and max_area, and convert to pixels
     filtered_contours = ContourFilter(
             contours= contours,
             circularity_low= filter_params['circularity_low'],

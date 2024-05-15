@@ -561,6 +561,8 @@ class SpotsDetectionTab:
 
     def add_slider_to_menu(self, row, param_name, param_value):
         if param_name.startswith("min"):
+            # TODO
+            # calculate max value for min slider
             slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=0.0,
@@ -569,6 +571,7 @@ class SpotsDetectionTab:
                         command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
                     )
         elif param_name.startswith("max"):
+            # calculate min and max values for max slider
             slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=50,
@@ -1409,6 +1412,9 @@ class SpotsDetectionTab:
                 header_info= header_info,
                 file_ext= file_ext
             )
+
+            # TODO
+            # calculate scales for min and max areas
 
             # Update navigation slider
             self.navigation_slider.set(index + 1)
