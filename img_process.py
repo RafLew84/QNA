@@ -152,15 +152,15 @@ def FindCircularityOfContour(area, perimeter):
         circularity = 0
     return circularity
 
-def AreaFinder(contours, nm):
-    areas = []
-    for contour in contours:
-        area = AreaOfContour(contour)
-        areas.append({
-          "contour": contour,
-          "area": area * nm  
-        })
-    return areas
+# def AreaFinder(contours, nm):
+#     areas = []
+#     for contour in contours:
+#         area = AreaOfContour(contour)
+#         areas.append({
+#           "contour": contour,
+#           "area": area * nm  
+#         })
+#     return areas
 
 def distance_between_points_in_nm(point1, point2, x_coeff, y_coeff):
     """
@@ -177,10 +177,10 @@ def distance_between_points_in_nm(point1, point2, x_coeff, y_coeff):
     
     return distance_nm
 
-def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficient, avg_coefficient):
+def GetContourData(filtered_contours, x_size_coefficient, y_size_coefficient, avg_coefficient):
     contour_data = []
     centroids = []
-    area_coefficient = avg_coefficient * avg_coefficient
+    area_coefficient = avg_coefficient
     for i, contour in enumerate(filtered_contours):
         # area = cv2.contourArea(contour)
         M = cv2.moments(contour)
@@ -225,7 +225,11 @@ def GetContourData(self, filtered_contours, x_size_coefficient, y_size_coefficie
 
     return contour_data
 
-def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False):
+def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False, color=False):
+    if color:
+        text_color = (255,255,255)
+    else:
+        text_color = (0,0,0)
     for item in contours_data:
         M = item['moments']
         name = item['name']
@@ -234,9 +238,9 @@ def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False):
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
             if draw_labels:
-                img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 255), 1)
+                img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
         if draw_contours:
-            img = cv2.drawContours(img, [item['contour']], 0, (0, 255, 255), 1)
+            img = cv2.drawContours(img, [item['contour']], 0, text_color, 1)
     
     return img
     
@@ -342,8 +346,6 @@ def calculate_contour_avg_area(contour_data):
     return avg_area
 
 def process_contours_filters(filter_params, edge_img, contours, coeff):
-    # TODO
-    # get min_area and max_area, and convert to pixels
     min_area_nm = filter_params['min_area_[nm2]']
     max_area_nm = filter_params['max_area_[nm2]']
 

@@ -549,20 +549,39 @@ class SpotsDetectionTab:
         # Add checkboxes for draw contours and write labels
         self.add_chackboxes_to_menu(row)
 
-        row += 1
+        row += 2
 
         return row
 
     def add_chackboxes_to_menu(self, row):
         draw_contours_var = tk.IntVar()
-        draw_contours_checkbox = tk.Checkbutton(self.detection_section_menu, text="Draw Contours", variable=draw_contours_var, command=self.checkbox_status_changed)
+        draw_contours_checkbox = tk.Checkbutton(
+            self.detection_section_menu, text="Draw Contours", 
+            variable=draw_contours_var, 
+            command=self.checkbox_status_changed
+            )
         draw_contours_checkbox.grid(row=row, column=0, padx=5, pady=5, sticky="w")
         self.draw_contours_var = draw_contours_var
 
         write_labels_var = tk.IntVar()
-        write_labels_checkbox = tk.Checkbutton(self.detection_section_menu, text="Write Labels", variable=write_labels_var, command=self.checkbox_status_changed)
+        write_labels_checkbox = tk.Checkbutton(
+            self.detection_section_menu, 
+            text="Write Labels", 
+            variable=write_labels_var, 
+            command=self.checkbox_status_changed
+            )
         write_labels_checkbox.grid(row=row, column=1, padx=5, pady=5, sticky="w")
         self.write_labels_var = write_labels_var
+
+        label_contour_color_var = tk.IntVar()
+        label_contour_color_checkbox = tk.Checkbutton(
+            self.detection_section_menu, 
+            text="Labels Color", 
+            variable=label_contour_color_var, 
+            command=self.checkbox_status_changed
+            )
+        label_contour_color_checkbox.grid(row=row + 1, column=0, padx=5, pady=5, sticky="w")
+        self.label_contour_color_var = label_contour_color_var
 
     def add_slider_to_menu(self, row, param_name, param_value):
         if param_name.startswith("min"):
@@ -1117,8 +1136,7 @@ class SpotsDetectionTab:
             self.get_values_from_filter_menu_items(filter_params)
             result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
 
-            contours_data = GetContourData(
-                self, 
+            contours_data = GetContourData( 
                 filtered_contours= filtered_contours,
                 x_size_coefficient= self.current_size_x_coefficient,
                 y_size_coefficient= self.current_size_y_coefficient,
@@ -1129,7 +1147,8 @@ class SpotsDetectionTab:
                 original_img, 
                 contours_data, 
                 self.draw_contours_var.get(), 
-                self.write_labels_var.get()
+                self.write_labels_var.get(),
+                self.label_contour_color_var.get()
                 )
 
             self.update_current_operation(

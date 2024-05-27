@@ -107,8 +107,9 @@ def get_image_sizes(header_info, file_ext):
     return x_nm,y_nm,x_px,y_px
     
 def calculate_avg_nm_per_px(header_info, file_ext):
-    x_nm, y_nm, x_px, y_px = get_image_sizes(header_info, file_ext)
-    avg_nm_per_pixel = ((x_nm / x_px) + (y_nm / y_px)) / 2
+    #x_nm, y_nm, x_px, y_px = get_image_sizes(header_info, file_ext)
+    x_coeff, y_coeff = calculate_pixel_to_nm_coefficients(header_info, file_ext)
+    avg_nm_per_pixel = x_coeff * y_coeff
 
     return avg_nm_per_pixel
 
