@@ -1050,8 +1050,8 @@ class SpotsDetectionTab:
     def create_data_for_header_labels_based_on_file_ext(self, index, file_ext):
         try:
             header_labels_generator = {
-                "s94": self.get_header_labels_from_s94_or_stp_file,
-                "stp": self.get_header_labels_from_s94_or_stp_file,
+                "s94": self.get_header_labels_from_s94_file,
+                "stp": self.get_header_labels_from_stp_file,
                 "mpp": self.get_header_labels_from_mpp_file
             }
 
@@ -1065,8 +1065,27 @@ class SpotsDetectionTab:
             logger.error(error_msg)
             raise
 
-    def get_header_labels(self, index, filename, header_info, custom_labels=None):
-        default_labels = [
+    # def get_header_labels(self, filename, header_info, custom_labels=None):
+    #     default_labels = [
+    #         f"Filename: {filename}",
+    #         f"X Amplitude: {header_info.get('X Amplitude', '')}",
+    #         f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
+    #         f"Z Amplitude: {header_info.get('Z Amplitude', '')}",
+    #         f"Number of cols: {header_info.get('Number of columns', '')}",
+    #         f"Number of rows: {header_info.get('Number of rows', '')}",
+    #         f"X Offset: {header_info.get('X Offset', '')}",
+    #         f"Y Offset: {header_info.get('Y Offset', '')}",
+    #         f"Z Gain: {header_info.get('Z Gain', '')}"
+    #     ]
+    #     if custom_labels:
+    #         default_labels.extend(custom_labels)
+    #     return default_labels
+
+    def get_header_labels_from_stp_file(self, index):
+        header_info = self.data_for_detection[index]['header_info']
+        path = self.data_for_detection[index]['file_name']
+        filename = os.path.basename(path)
+        stp_labels = [
             f"Filename: {filename}",
             f"X Amplitude: {header_info.get('X Amplitude', '')}",
             f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
@@ -1077,23 +1096,42 @@ class SpotsDetectionTab:
             f"Y Offset: {header_info.get('Y Offset', '')}",
             f"Z Gain: {header_info.get('Z Gain', '')}"
         ]
-        if custom_labels:
-            default_labels.extend(custom_labels)
-        return default_labels
-
-    def get_header_labels_from_s94_or_stp_file(self, index):
+        return stp_labels
+    
+    def get_header_labels_from_s94_file(self, index):
         header_info = self.data_for_detection[index]['header_info']
         path = self.data_for_detection[index]['file_name']
         filename = os.path.basename(path)
-        return self.get_header_labels(index, filename, header_info)
+        s94_labels = [
+            f"Filename: {filename}",
+            f"X Amplitude: {header_info.get('x_size', '')}",
+            f"Y Amplitude: {header_info.get('y_size', '')}",
+            f"Number of cols: {header_info.get('x_points', '')}",
+            f"Number of rows: {header_info.get('y_points', '')}",
+            f"X Offset: {header_info.get('x_offset', '')}",
+            f"Y Offset: {header_info.get('y_offset', '')}",
+            f"Z Gain: {header_info.get('z_gain', '')}"
+        ]
+        return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
         header_info = self.data_for_detection[index]['header_info']
+        print(header_info)
         path = self.data_for_detection[index]['file_name']
         filename = os.path.basename(path)
         framenumber = self.data_for_detection[index]['frame_number']
-        custom_labels = [f"Frame: {framenumber}"]
-        return self.get_header_labels(index, filename, header_info, custom_labels)
+        mpp_labels = [
+            f"Filename: {filename}",
+            f"Frame: {framenumber}",
+            f'X Amplitude: {header_info.get("Control", {}).get("X Amplitude", "")}',
+            f'Y Amplitude: {header_info.get("Control", {}).get("Y Amplitude", "")}',
+            f'Number of cols: {header_info.get("General Info", {}).get("Number of columns", "")}',
+            f'Number of rows: {header_info.get("General Info", {}).get("Number of rows", "")}',
+            f'X Offset: {header_info.get("Control", {}).get("X Offset", "")}',
+            f'Y Offset: {header_info.get("Control", {}).get("Y Offset", "")}',
+            f'Z Gain: {header_info.get("Control", {}).get("Z Gain", "")}'
+        ]
+        return mpp_labels
 
     def sigma_slider_onChange(self, value, param_name):
         """
