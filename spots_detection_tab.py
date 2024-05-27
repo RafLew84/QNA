@@ -567,8 +567,6 @@ class SpotsDetectionTab:
 
     def add_slider_to_menu(self, row, param_name, param_value):
         if param_name.startswith("min"):
-            # TODO
-            # calculate max value for min slider
             slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=0.0,
@@ -577,7 +575,6 @@ class SpotsDetectionTab:
                         command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
                     )
         elif param_name.startswith("max"):
-            # calculate min and max values for max slider
             slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=self.max_size_min_scale,
@@ -1419,20 +1416,22 @@ class SpotsDetectionTab:
                 file_ext= file_ext
             )
 
-            # TODO
             # calculate scales for min and max areas
             _, _, x, y = get_image_sizes(header_info, file_ext)
-            pixels = (x * 0.02) * ( 0.02 * y)
-            
-            self.min_size_scale = pixels * self.current_area_coefficient
-
-            self.max_size_min_scale = self.min_size_scale
-
-            max_pixels = (x * 0.1) * ( 0.1 * y)
-
-            self.max_size_max_scale = max_pixels * self.current_area_coefficient
+            self.calculate_scales_for_minmax_area_filters(x, y)
 
             # Update navigation slider
             self.navigation_slider.set(index + 1)
             self.display_image(index)
             self.refresh_data_in_operations_listbox()
+
+    def calculate_scales_for_minmax_area_filters(self, x, y):
+        pixels = (x * 0.02) * ( 0.02 * y)
+            
+        self.min_size_scale = pixels * self.current_area_coefficient
+
+        self.max_size_min_scale = self.min_size_scale
+
+        max_pixels = (x * 0.1) * ( 0.1 * y)
+
+        self.max_size_max_scale = max_pixels * self.current_area_coefficient
