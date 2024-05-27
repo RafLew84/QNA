@@ -1065,22 +1065,6 @@ class SpotsDetectionTab:
             logger.error(error_msg)
             raise
 
-    # def get_header_labels(self, filename, header_info, custom_labels=None):
-    #     default_labels = [
-    #         f"Filename: {filename}",
-    #         f"X Amplitude: {header_info.get('X Amplitude', '')}",
-    #         f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
-    #         f"Z Amplitude: {header_info.get('Z Amplitude', '')}",
-    #         f"Number of cols: {header_info.get('Number of columns', '')}",
-    #         f"Number of rows: {header_info.get('Number of rows', '')}",
-    #         f"X Offset: {header_info.get('X Offset', '')}",
-    #         f"Y Offset: {header_info.get('Y Offset', '')}",
-    #         f"Z Gain: {header_info.get('Z Gain', '')}"
-    #     ]
-    #     if custom_labels:
-    #         default_labels.extend(custom_labels)
-    #     return default_labels
-
     def get_header_labels_from_stp_file(self, index):
         header_info = self.data_for_detection[index]['header_info']
         path = self.data_for_detection[index]['file_name']
@@ -1482,12 +1466,10 @@ class SpotsDetectionTab:
             self.refresh_data_in_operations_listbox()
 
     def calculate_scales_for_minmax_area_filters(self, x, y):
-        pixels = (x * 0.02) * ( 0.02 * y)
-            
+        min_size_coeff = 0.02
+        max_size_coeff = 0.1
+        pixels = (x * min_size_coeff) * ( min_size_coeff * y)
         self.min_size_scale = pixels * self.current_area_coefficient
-
         self.max_size_min_scale = self.min_size_scale
-
-        max_pixels = (x * 0.1) * ( 0.1 * y)
-
+        max_pixels = (x * max_size_coeff) * ( max_size_coeff * y)
         self.max_size_max_scale = max_pixels * self.current_area_coefficient
