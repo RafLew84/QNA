@@ -38,7 +38,6 @@ from img_process import (
 from file_process import (
     calculate_avg_nm_per_px, 
     calculate_pixel_to_nm_coefficients,
-    calculate_pixels_from_nm,
     get_image_sizes
 )
 
