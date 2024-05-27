@@ -37,7 +37,9 @@ from img_process import (
 
 from file_process import (
     calculate_avg_nm_per_px, 
-    calculate_pixel_to_nm_coefficients
+    calculate_pixel_to_nm_coefficients,
+    calculate_pixels_from_nm,
+    get_image_sizes
 )
 
 import logging
@@ -85,13 +87,17 @@ class SpotsDetectionTab:
         self.current_size_y_coefficient = 0
         self.current_area_coefficient = 0
 
+        self.min_size_scale = 0
+        self.max_size_min_scale = 0
+        self.max_size_max_scale = 0
+
         self.detection_params = {
             "Canny": {"sigma": 1.}
         }
 
         self.filter_params = {
             "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
-            "Area": {"min_area": 0.0, "max_area": 1000}
+            "Area": {"min_area_[nm2]": 0.0, "max_area_[nm2]": 1000}
         }
 
         self.current_operation = {
@@ -566,7 +572,7 @@ class SpotsDetectionTab:
             slider = ttk.Scale(
                         self.detection_section_menu,
                         from_=0.0,
-                        to=100,
+                        to=self.min_size_scale,
                         orient="horizontal",
                         command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
                     )
@@ -574,8 +580,8 @@ class SpotsDetectionTab:
             # calculate min and max values for max slider
             slider = ttk.Scale(
                         self.detection_section_menu,
-                        from_=50,
-                        to=1000,
+                        from_=self.max_size_min_scale,
+                        to=self.max_size_max_scale,
                         orient="horizontal",
                         command=lambda value=param_value, param=param_name: self.filter_slider_on_change(param, value)
                     )
@@ -1113,7 +1119,7 @@ class SpotsDetectionTab:
             contours = self.current_operation['contours']
             result_image = None
             self.get_values_from_filter_menu_items(filter_params)
-            result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours)
+            result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
 
             contours_data = GetContourData(
                 self, 
@@ -1197,7 +1203,7 @@ class SpotsDetectionTab:
                 sigma=sigma_value                )
         contours = ContourFinder(result_image)
         edge_img = Image.fromarray(result_image)
-        result_filtered_image, _ = process_contours_filters(filter_params, edge_img, contours)
+        result_filtered_image, _ = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
         filtered_img = Image.fromarray(result_filtered_image)
         original_img = None
         preprocessed_img = None
@@ -1415,6 +1421,16 @@ class SpotsDetectionTab:
 
             # TODO
             # calculate scales for min and max areas
+            _, _, x, y = get_image_sizes(header_info, file_ext)
+            pixels = (x * 0.02) * ( 0.02 * y)
+            
+            self.min_size_scale = pixels * self.current_area_coefficient
+
+            self.max_size_min_scale = self.min_size_scale
+
+            max_pixels = (x * 0.1) * ( 0.1 * y)
+
+            self.max_size_max_scale = max_pixels * self.current_area_coefficient
 
             # Update navigation slider
             self.navigation_slider.set(index + 1)

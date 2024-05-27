@@ -77,6 +77,11 @@ def calculate_pixel_to_nm_coefficients(header_info, file_ext):
         error_msg = f"Header information for file extension '{file_ext}' is missing: {e}"
         logger.error(error_msg)
         raise e
+    
+def calculate_pixels_from_nm(nm, coeff):
+    pixels = nm / coeff
+    return int(pixels)
+
 
 def get_image_sizes(header_info, file_ext):
     if file_ext.lower() == "s94":

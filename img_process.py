@@ -16,6 +16,8 @@ from PIL import Image
 
 import logging
 
+from file_process import calculate_pixels_from_nm
+
 logger = logging.getLogger(__name__)
 
 def NlMeansDenois(img, h=3, searchWinwowSize=21, templateWindowSize=7):
@@ -339,15 +341,21 @@ def calculate_contour_avg_area(contour_data):
         avg_area = total_area / len(contour_data)
     return avg_area
 
-def process_contours_filters(filter_params, edge_img, contours):
+def process_contours_filters(filter_params, edge_img, contours, coeff):
     # TODO
     # get min_area and max_area, and convert to pixels
+    min_area_nm = filter_params['min_area_[nm2]']
+    max_area_nm = filter_params['max_area_[nm2]']
+
+    min_area_px = calculate_pixels_from_nm(min_area_nm, coeff)
+    max_area_px = calculate_pixels_from_nm(max_area_nm, coeff)
+    
     filtered_contours = ContourFilter(
             contours= contours,
             circularity_low= filter_params['circularity_low'],
             circularity_high= filter_params['circularity_high'],
-            min_area= filter_params['min_area'],
-            max_area= filter_params['max_area']
+            min_area= min_area_px,
+            max_area= max_area_px
         )
     result_image = DrawContours(
             image= edge_img,
