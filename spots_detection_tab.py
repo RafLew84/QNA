@@ -170,11 +170,20 @@ class SpotsDetectionTab:
             raise ValueError(error_msg)
         
     def create_contours_edit_ui(self):
-            self.contours_listbox = tk.Listbox(self.spots_detection_tab)
-            self.contours_listbox.grid(row=1, column=4, rowspan=2, padx=5, pady=5, sticky="nsew")
-
-            self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
+        self.contours_section = ttk.Frame(self.spots_detection_tab, padding="3")
+        self.contours_section.grid(row=1, column=4,rowspan=2, padx=5, pady=2, sticky="nsew")
         
+        self.contours_listbox = tk.Listbox(self.contours_section)
+        self.contours_listbox.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
+
+        self.contour_data_listbox = tk.Listbox(self.contours_section)
+        self.contour_data_listbox.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_data_listboxOnSelect)
+
+    
     def create_navigation_ui(self):
         # Slider for navigation
         self.navigation_slider = tk.Scale(
@@ -515,9 +524,12 @@ class SpotsDetectionTab:
             self.avg_area_label = tk.Label(self.detection_section_menu, wraplength=200, justify=tk.LEFT)
             self.avg_area_label.grid(row=row + 12, column=0, columnspan=2)
 
-            # Find Contours button
-            save_contours_button = tk.Button(self.detection_section_menu, text="Save contours", command=self.save_contours_onClick)
+            # Save Contours buttons
+            save_contours_button = tk.Button(self.detection_section_menu, text="Save to files", command=self.save_contours_onClick)
             save_contours_button.grid(row=row + 13, column=0, padx=5, pady=5)
+
+            save_contours_to_operations_button = tk.Button(self.detection_section_menu, text="Save to operations", command=self.save_contours_to_operations_onClick)
+            save_contours_to_operations_button.grid(row=row + 13, column=1, padx=5, pady=5)
 
         except KeyError:
             error_msg = f"Selected option '{selected_option}' not found in detection parameters."
@@ -525,6 +537,9 @@ class SpotsDetectionTab:
             raise KeyError(error_msg)
         
     def show_contours_listboxOnSelect(self):
+        pass
+
+    def show_contours_data_listboxOnSelect(self):
         pass
         
     def update_nearest_neighbour_label(self, text):
@@ -624,6 +639,9 @@ class SpotsDetectionTab:
     
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
+
+    def save_contours_to_operations_onClick(self):
+        pass
 
     def save_to_files(self):
         labeled_image = self.current_operation['labeled_image']
