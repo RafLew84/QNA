@@ -268,6 +268,16 @@ class SpotsDetectionTab:
         self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
         self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
         
+    def refresh_edit_contours_listbox_data(self):
+        self.contours_listbox.delete(0, tk.END)
+        if self.current_operation:
+            for contour_data in self.current_operation['contours_data']:
+                name = contour_data['name']
+                area = contour_data['area']
+                nearest = contour_data['nearest_neighbour']
+                distance = contour_data['distance_to_nearest_neighbour']
+                self.contours_listbox.insert(tk.END, f"{name} | {area:.3f} | {nearest} | {distance:.2f}")
+
     def on_canvas_hover(self, event):
         x, y = get_mouse_position_in_canvas(
             scale_factor= self.scale_factor_var.get(),
@@ -1146,6 +1156,7 @@ class SpotsDetectionTab:
             label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
             self.parameter_filter_labels[param_name].config(text=label_text)
             self.refresh_image_after_filtering()
+            self.refresh_edit_contours_listbox_data()
 
     def refresh_image_after_filtering(self):
         filter_params = {}
@@ -1221,6 +1232,8 @@ class SpotsDetectionTab:
         self.handle_sigma_data_creation(sigma_value)
 
         self.refresh_image_after_filtering()
+
+        self.refresh_edit_contours_listbox_data()
 
     def handle_sigma_data_creation(self, sigma_value):
         params = {}
