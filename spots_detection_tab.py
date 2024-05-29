@@ -110,6 +110,8 @@ class SpotsDetectionTab:
             "labeled_image": None
         }
 
+        self.saved_conoturs = []
+
         self.selected_option = None
 
         self.create_spots_detection_tab()
@@ -528,7 +530,7 @@ class SpotsDetectionTab:
             save_contours_button = tk.Button(self.detection_section_menu, text="Save to files", command=self.save_contours_onClick)
             save_contours_button.grid(row=row + 13, column=0, padx=5, pady=5)
 
-            save_contours_to_operations_button = tk.Button(self.detection_section_menu, text="Save to operations", command=self.save_contours_to_operations_onClick)
+            save_contours_to_operations_button = tk.Button(self.detection_section_menu, text="Save to operations", command=self.save_contours_to_memory_onClick)
             save_contours_to_operations_button.grid(row=row + 13, column=1, padx=5, pady=5)
 
         except KeyError:
@@ -640,8 +642,26 @@ class SpotsDetectionTab:
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
 
-    def save_contours_to_operations_onClick(self):
-        pass
+    def save_contours_to_memory_onClick(self):
+        index = self.original_data_index
+        path = self.data_for_detection[index]['file_name']
+        filename = os.path.basename(path)
+        framenumber = ""
+        if 'frame_number' in self.data_for_detection[index]:
+            framenumber = str(self.data_for_detection[index]['frame_number'])
+        
+        data_to_save = {
+            "filename": filename,
+            "frame": framenumber,
+            "operation": self.current_operation,
+            "original_data_index": self.original_data_index,
+            "x_coeff": self.current_size_x_coefficient,
+            "y_coeff": self.current_size_y_coefficient,
+            "area_coeff": self.current_area_coefficient
+        }
+
+        self.saved_conoturs.append(data_to_save)
+
 
     def save_to_files(self):
         labeled_image = self.current_operation['labeled_image']
