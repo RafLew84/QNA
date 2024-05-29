@@ -225,12 +225,14 @@ def GetContourData(filtered_contours, x_size_coefficient, y_size_coefficient, av
 
     return contour_data
 
-def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False, color=False):
-    if color:
-        text_color = (255,255,255)
-    else:
-        text_color = (0,0,0)
-    for item in contours_data:
+def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False, color=False, highlight_index=None):
+    for i, item in enumerate(contours_data):
+        if color:
+            text_color = (255,255,255)
+        elif highlight_index == i:
+            text_color = (169, 169, 169)
+        else:
+            text_color = (0,0,0)
         M = item['moments']
         name = item['name']
         img = np.array(img).astype(np.uint8)

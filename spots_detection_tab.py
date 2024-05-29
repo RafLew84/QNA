@@ -28,7 +28,7 @@ from img_process import (
     ContourFinder, 
     concatenate_four_images,
     GetContourData, 
-    DrawLabels, 
+    DrawLabels,
     get_mouse_position_in_canvas,
     get_contour_info_at_position, 
     calculate_contour_avg_area,
@@ -111,6 +111,7 @@ class SpotsDetectionTab:
         }
 
         self.saved_conoturs = []
+        self.originally_processed_image = None
 
         self.selected_option = None
 
@@ -183,7 +184,7 @@ class SpotsDetectionTab:
         self.contour_data_listbox = tk.Listbox(self.contours_section)
         self.contour_data_listbox.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
-        self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_data_listboxOnSelect)
+        self.contour_data_listbox.bind("<<ListboxSelect>>", self.show_contours_data_listboxOnSelect)
 
     
     def create_navigation_ui(self):
@@ -538,11 +539,13 @@ class SpotsDetectionTab:
             logger.error(error_msg)
             raise KeyError(error_msg)
         
-    def show_contours_listboxOnSelect(self):
-        pass
+    def show_contours_listboxOnSelect(self, event):
+        contour_index = self.contours_listbox.curselection()
+        index = int(contour_index[0])
+        self.refresh_image_after_filtering(index)
 
-    def show_contours_data_listboxOnSelect(self):
-        pass
+    def show_contours_data_listboxOnSelect(self, event):
+        print("@@")
         
     def update_nearest_neighbour_label(self, text):
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
@@ -654,6 +657,7 @@ class SpotsDetectionTab:
             "filename": filename,
             "frame": framenumber,
             "operation": self.current_operation,
+            "originally_processed_image": self.originally_processed_image,
             "original_data_index": self.original_data_index,
             "x_coeff": self.current_size_x_coefficient,
             "y_coeff": self.current_size_y_coefficient,
@@ -787,10 +791,14 @@ class SpotsDetectionTab:
         """
         if focuse_widget == self.data_listbox_detection:
             img = self.data_for_detection[index]['greyscale_image']
+            self.originally_processed_image = img
         elif focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
             img = Image.fromarray(self.data_for_detection[self.original_data_index]['operations'][operations_index]['processed_image'])
+            self.originally_processed_image = img
+        elif focuse_widget == self.contours_listbox:
+            img = self.originally_processed_image
         return img
 
     def handle_displaying_image_on_canvas(self, img):
@@ -1209,7 +1217,7 @@ class SpotsDetectionTab:
             self.refresh_image_after_filtering()
             self.refresh_edit_contours_listbox_data()
 
-    def refresh_image_after_filtering(self):
+    def refresh_image_after_filtering(self, hilghlight_index=None):
         filter_params = {}
         if self.current_operation['edge_image'] is not None:
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
@@ -1227,13 +1235,23 @@ class SpotsDetectionTab:
                 avg_coefficient= self.current_area_coefficient
                 )
             
-            labeled_image = DrawLabels(
-                original_img, 
-                contours_data, 
-                self.draw_contours_var.get(), 
-                self.write_labels_var.get(),
-                self.label_contour_color_var.get()
-                )
+            if hilghlight_index:
+                labeled_image = DrawLabels(
+                    original_img, 
+                    contours_data,
+                    self.draw_contours_var.get(), 
+                    self.write_labels_var.get(),
+                    self.label_contour_color_var.get(),
+                    hilghlight_index
+                    )
+            else:
+                labeled_image = DrawLabels(
+                    original_img, 
+                    contours_data, 
+                    self.draw_contours_var.get(), 
+                    self.write_labels_var.get(),
+                    self.label_contour_color_var.get()
+                    )
 
             self.update_current_operation(
                 previous_processed_img= previous_processed_img, 
