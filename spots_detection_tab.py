@@ -661,6 +661,19 @@ class SpotsDetectionTab:
         }
 
         self.saved_conoturs.append(data_to_save)
+        self.refresh_saved_contours_listbox_data()
+
+    def refresh_saved_contours_listbox_data(self):
+        self.contour_data_listbox.delete(0, tk.END)
+        if self.saved_conoturs:
+            for contour_data in self.saved_conoturs:
+                name = contour_data['filename']
+                frame = contour_data['frame']
+                number_of_contours = len(contour_data['operation']['contours_data'])
+                if frame == "":
+                    self.contour_data_listbox.insert(tk.END, f"{name} | {number_of_contours}")
+                else:
+                    self.contour_data_listbox.insert(tk.END, f"{name} | {frame} | {number_of_contours}")
 
 
     def save_to_files(self):
