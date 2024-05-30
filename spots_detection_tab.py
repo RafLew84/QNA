@@ -181,8 +181,11 @@ class SpotsDetectionTab:
 
         self.contours_listbox.bind("<<ListboxSelect>>", self.show_contours_listboxOnSelect)
 
+        self.delete_contour_button = tk.Button(self.contours_section, text="Delete", command=self.delete_contour_button_onClick)
+        self.delete_contour_button.grid(row=1, column=0, padx=5, pady=5)
+
         self.contour_data_listbox = tk.Listbox(self.contours_section)
-        self.contour_data_listbox.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+        self.contour_data_listbox.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
 
         self.contour_data_listbox.bind("<<ListboxSelect>>", self.show_contours_data_listboxOnSelect)
 
@@ -542,7 +545,7 @@ class SpotsDetectionTab:
     def show_contours_listboxOnSelect(self, event):
         contour_index = self.contours_listbox.curselection()
         index = int(contour_index[0])
-        self.refresh_image_after_filtering(index)
+        self.refresh_image_after_filtering(index, True)
 
     def show_contours_data_listboxOnSelect(self, event):
         print("@@")
@@ -644,6 +647,16 @@ class SpotsDetectionTab:
     
     def checkbox_status_changed(self):
         self.refresh_image_after_filtering()
+
+    def delete_contour_button_onClick(self):
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.contours_listbox:
+            contour_index = self.contours_listbox.curselection()
+            index = int(contour_index[0])
+            self.current_operation['contours_data'].pop(index)
+            self.refresh_edit_contours_listbox_data()
+            self.refresh_image_after_filtering(manual_edit=True)
+            
 
     def save_contours_to_memory_onClick(self):
         index = self.original_data_index
@@ -1217,24 +1230,16 @@ class SpotsDetectionTab:
             self.refresh_image_after_filtering()
             self.refresh_edit_contours_listbox_data()
 
-    def refresh_image_after_filtering(self, hilghlight_index=None):
-        filter_params = {}
-        if self.current_operation['edge_image'] is not None:
+    def refresh_image_after_filtering(self, hilghlight_index=None, manual_edit=False):
+        if manual_edit:
+            filter_params = {}
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             previous_processed_img = self.current_operation['processed_image']
             edge_img = self.current_operation['edge_image']
-            contours = self.current_operation['contours']
-            result_image = None
-            self.get_values_from_filter_menu_items(filter_params)
-            result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
+            labeled_image = self.current_operation['labeled_image']
+            contours_data = self.current_operation['contours_data']
+            filtered_mage = self.current_operation['filtered_contours_img']
 
-            contours_data = GetContourData( 
-                filtered_contours= filtered_contours,
-                x_size_coefficient= self.current_size_x_coefficient,
-                y_size_coefficient= self.current_size_y_coefficient,
-                avg_coefficient= self.current_area_coefficient
-                )
-            
             if hilghlight_index:
                 labeled_image = DrawLabels(
                     original_img, 
@@ -1252,20 +1257,60 @@ class SpotsDetectionTab:
                     self.write_labels_var.get(),
                     self.label_contour_color_var.get()
                     )
-
-            self.update_current_operation(
-                previous_processed_img= previous_processed_img, 
-                edge_img= edge_img, 
-                contours= contours,
-                contours_data= contours_data,
-                contour_image= Image.fromarray(result_image),
-                labeled_image=labeled_image
-                )
-            
+            self.update_current_operation(labeled_image=labeled_image)
             if isinstance(labeled_image, np.ndarray):
                 labeled_image = Image.fromarray(labeled_image)
-            img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
+            img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
             self.handle_displaying_image_on_canvas(img)
+        else:
+            filter_params = {}
+            if self.current_operation['edge_image'] is not None:
+                original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+                previous_processed_img = self.current_operation['processed_image']
+                edge_img = self.current_operation['edge_image']
+                contours = self.current_operation['contours']
+                result_image = None
+                self.get_values_from_filter_menu_items(filter_params)
+                result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
+
+                contours_data = GetContourData( 
+                    filtered_contours= filtered_contours,
+                    x_size_coefficient= self.current_size_x_coefficient,
+                    y_size_coefficient= self.current_size_y_coefficient,
+                    avg_coefficient= self.current_area_coefficient
+                    )
+                
+                if hilghlight_index:
+                    labeled_image = DrawLabels(
+                        original_img, 
+                        contours_data,
+                        self.draw_contours_var.get(), 
+                        self.write_labels_var.get(),
+                        self.label_contour_color_var.get(),
+                        hilghlight_index
+                        )
+                else:
+                    labeled_image = DrawLabels(
+                        original_img, 
+                        contours_data, 
+                        self.draw_contours_var.get(), 
+                        self.write_labels_var.get(),
+                        self.label_contour_color_var.get()
+                        )
+
+                self.update_current_operation(
+                    previous_processed_img= previous_processed_img, 
+                    edge_img= edge_img, 
+                    contours= contours,
+                    contours_data= contours_data,
+                    contour_image= Image.fromarray(result_image),
+                    labeled_image=labeled_image
+                    )
+                
+                if isinstance(labeled_image, np.ndarray):
+                    labeled_image = Image.fromarray(labeled_image)
+                img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
+                self.handle_displaying_image_on_canvas(img)
 
     def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
                                 process_name="", labeled_image=None, contours_data=None):
