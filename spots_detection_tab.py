@@ -670,7 +670,11 @@ class SpotsDetectionTab:
         self.parameter_filter_sliders[param_name] = slider
     
     def checkbox_status_changed(self):
-        self.refresh_image_after_filtering()
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.contour_data_listbox:
+            self.refresh_image_after_filtering(manual_edit=True)
+        else:
+            self.refresh_image_after_filtering()
 
     def delete_contour_button_onClick(self):
         focuse_widget = self.root.focus_get()
