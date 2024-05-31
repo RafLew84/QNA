@@ -670,6 +670,7 @@ class SpotsDetectionTab:
             "filename": filename,
             "frame": framenumber,
             "operation": self.current_operation,
+            "contours_num": len(self.current_operation['contours_data']),
             "originally_processed_image": self.originally_processed_image,
             "original_data_index": self.original_data_index,
             "x_coeff": self.current_size_x_coefficient,
@@ -686,7 +687,7 @@ class SpotsDetectionTab:
             for contour_data in self.saved_conoturs:
                 name = contour_data['filename']
                 frame = contour_data['frame']
-                number_of_contours = len(contour_data['operation']['contours_data'])
+                number_of_contours = str(contour_data['contours_num'])
                 if frame == "":
                     self.contour_data_listbox.insert(tk.END, f"{name} | {number_of_contours}")
                 else:
@@ -1182,7 +1183,6 @@ class SpotsDetectionTab:
 
     def get_header_labels_from_mpp_file(self, index):
         header_info = self.data_for_detection[index]['header_info']
-        print(header_info)
         path = self.data_for_detection[index]['file_name']
         filename = os.path.basename(path)
         framenumber = self.data_for_detection[index]['frame_number']
@@ -1232,56 +1232,30 @@ class SpotsDetectionTab:
 
     def refresh_image_after_filtering(self, hilghlight_index=None, manual_edit=False):
         if manual_edit:
-            filter_params = {}
+            self.refresh_image_after_manual_change(hilghlight_index)
+        else:
+            self.refresh_image_after_param_filtering(hilghlight_index)
+
+    def refresh_image_after_param_filtering(self, hilghlight_index):
+        filter_params = {}
+        if self.current_operation['edge_image'] is not None:
             original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
             previous_processed_img = self.current_operation['processed_image']
             edge_img = self.current_operation['edge_image']
-            labeled_image = self.current_operation['labeled_image']
-            contours_data = self.current_operation['contours_data']
-            filtered_mage = self.current_operation['filtered_contours_img']
+            contours = self.current_operation['contours']
+            result_image = None
+            self.get_values_from_filter_menu_items(filter_params)
+            result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
 
-            if hilghlight_index:
-                labeled_image = DrawLabels(
-                    original_img, 
-                    contours_data,
-                    self.draw_contours_var.get(), 
-                    self.write_labels_var.get(),
-                    self.label_contour_color_var.get(),
-                    hilghlight_index
-                    )
-            else:
-                labeled_image = DrawLabels(
-                    original_img, 
-                    contours_data, 
-                    self.draw_contours_var.get(), 
-                    self.write_labels_var.get(),
-                    self.label_contour_color_var.get()
-                    )
-            self.update_current_operation(labeled_image=labeled_image)
-            if isinstance(labeled_image, np.ndarray):
-                labeled_image = Image.fromarray(labeled_image)
-            img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
-            self.handle_displaying_image_on_canvas(img)
-        else:
-            filter_params = {}
-            if self.current_operation['edge_image'] is not None:
-                original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
-                previous_processed_img = self.current_operation['processed_image']
-                edge_img = self.current_operation['edge_image']
-                contours = self.current_operation['contours']
-                result_image = None
-                self.get_values_from_filter_menu_items(filter_params)
-                result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
-
-                contours_data = GetContourData( 
+            contours_data = GetContourData( 
                     filtered_contours= filtered_contours,
                     x_size_coefficient= self.current_size_x_coefficient,
                     y_size_coefficient= self.current_size_y_coefficient,
                     avg_coefficient= self.current_area_coefficient
                     )
                 
-                if hilghlight_index:
-                    labeled_image = DrawLabels(
+            if hilghlight_index:
+                labeled_image = DrawLabels(
                         original_img, 
                         contours_data,
                         self.draw_contours_var.get(), 
@@ -1289,8 +1263,8 @@ class SpotsDetectionTab:
                         self.label_contour_color_var.get(),
                         hilghlight_index
                         )
-                else:
-                    labeled_image = DrawLabels(
+            else:
+                labeled_image = DrawLabels(
                         original_img, 
                         contours_data, 
                         self.draw_contours_var.get(), 
@@ -1298,7 +1272,7 @@ class SpotsDetectionTab:
                         self.label_contour_color_var.get()
                         )
 
-                self.update_current_operation(
+            self.update_current_operation(
                     previous_processed_img= previous_processed_img, 
                     edge_img= edge_img, 
                     contours= contours,
@@ -1307,10 +1281,42 @@ class SpotsDetectionTab:
                     labeled_image=labeled_image
                     )
                 
-                if isinstance(labeled_image, np.ndarray):
-                    labeled_image = Image.fromarray(labeled_image)
-                img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
-                self.handle_displaying_image_on_canvas(img)
+            if isinstance(labeled_image, np.ndarray):
+                labeled_image = Image.fromarray(labeled_image)
+            img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, Image.fromarray(result_image))
+            self.handle_displaying_image_on_canvas(img)
+
+    def refresh_image_after_manual_change(self, hilghlight_index):
+        filter_params = {}
+        original_img = self.data_for_detection[self.original_data_index]['greyscale_image']
+        previous_processed_img = self.current_operation['processed_image']
+        edge_img = self.current_operation['edge_image']
+        labeled_image = self.current_operation['labeled_image']
+        contours_data = self.current_operation['contours_data']
+        filtered_mage = self.current_operation['filtered_contours_img']
+
+        if hilghlight_index:
+            labeled_image = DrawLabels(
+                    original_img, 
+                    contours_data,
+                    self.draw_contours_var.get(), 
+                    self.write_labels_var.get(),
+                    self.label_contour_color_var.get(),
+                    hilghlight_index
+                    )
+        else:
+            labeled_image = DrawLabels(
+                    original_img, 
+                    contours_data, 
+                    self.draw_contours_var.get(), 
+                    self.write_labels_var.get(),
+                    self.label_contour_color_var.get()
+                    )
+        self.update_current_operation(labeled_image=labeled_image)
+        if isinstance(labeled_image, np.ndarray):
+            labeled_image = Image.fromarray(labeled_image)
+        img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
+        self.handle_displaying_image_on_canvas(img)
 
     def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
                                 process_name="", labeled_image=None, contours_data=None):
