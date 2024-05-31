@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import numpy as np
+import copy
 
 from data_process import (
     create_greyscale_image, 
@@ -184,10 +185,11 @@ class SpotsDetectionTab:
         self.delete_contour_button = tk.Button(self.contours_section, text="Delete", command=self.delete_contour_button_onClick)
         self.delete_contour_button.grid(row=1, column=0, padx=5, pady=5)
 
-        self.contour_data_listbox = tk.Listbox(self.contours_section)
+        self.contour_data_listbox = tk.Listbox(self.contours_section, selectmode=tk.MULTIPLE)
         self.contour_data_listbox.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
 
-        self.contour_data_listbox.bind("<<ListboxSelect>>", self.show_contours_data_listboxOnSelect)
+        self.contour_data_listbox.bind("<<ListboxSelect>>", self.select_contours_data_listboxOnSelect)
+        self.contour_data_listbox.bind("<Double-Button-1>", self.show_contours_onDoubleClick)
 
     
     def create_navigation_ui(self):
@@ -547,8 +549,30 @@ class SpotsDetectionTab:
         index = int(contour_index[0])
         self.refresh_image_after_filtering(index, True)
 
-    def show_contours_data_listboxOnSelect(self, event):
-        print("@@")
+    def select_contours_data_listboxOnSelect(self, event):
+        data_index = self.contour_data_listbox.curselection()
+        index = int(data_index[0])
+        data = self.saved_conoturs[index]
+        self.current_operation = data['operation']
+        self.original_data_index = data['original_data_index']
+        self.current_size_x_coefficient = data['x_coeff']
+        self.current_size_y_coefficient = data['y_coeff']
+        self.current_area_coefficient = data['area_coeff']
+        self.refresh_image_after_filtering(manual_edit=True)
+        self.refresh_edit_contours_listbox_data()
+        self.update_avg_area_label(self.current_operation['contours_data'])
+
+    def show_contours_onDoubleClick(self, event):
+        pass
+        # data_index = self.contour_data_listbox.curselection()
+        # index = int(data_index[0])
+        # data = self.saved_conoturs[index]
+        # self.current_operation = data['operation']
+        # self.original_data_index = data['original_data_index']
+        # self.current_size_x_coefficient = data['x_coeff']
+        # self.current_size_y_coefficient = data['y_coeff']
+        # self.current_area_coefficient = data['area_coeff']
+        # self.refresh_image_after_filtering(manual_edit=True)
         
     def update_nearest_neighbour_label(self, text):
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
@@ -656,6 +680,7 @@ class SpotsDetectionTab:
             self.current_operation['contours_data'].pop(index)
             self.refresh_edit_contours_listbox_data()
             self.refresh_image_after_filtering(manual_edit=True)
+            self.update_avg_area_label(self.current_operation['contours_data'])
             
 
     def save_contours_to_memory_onClick(self):
@@ -669,7 +694,7 @@ class SpotsDetectionTab:
         data_to_save = {
             "filename": filename,
             "frame": framenumber,
-            "operation": self.current_operation,
+            "operation": copy.deepcopy(self.current_operation),
             "contours_num": len(self.current_operation['contours_data']),
             "originally_processed_image": self.originally_processed_image,
             "original_data_index": self.original_data_index,
@@ -1294,11 +1319,19 @@ class SpotsDetectionTab:
         labeled_image = self.current_operation['labeled_image']
         contours_data = self.current_operation['contours_data']
         filtered_mage = self.current_operation['filtered_contours_img']
+        filtered_contours = [data['contour'] for data in contours_data]
+
+        new_contours_data = GetContourData( 
+            filtered_contours= filtered_contours,
+            x_size_coefficient= self.current_size_x_coefficient,
+            y_size_coefficient= self.current_size_y_coefficient,
+            avg_coefficient= self.current_area_coefficient
+            )
 
         if hilghlight_index:
             labeled_image = DrawLabels(
                     original_img, 
-                    contours_data,
+                    new_contours_data,
                     self.draw_contours_var.get(), 
                     self.write_labels_var.get(),
                     self.label_contour_color_var.get(),
@@ -1307,12 +1340,12 @@ class SpotsDetectionTab:
         else:
             labeled_image = DrawLabels(
                     original_img, 
-                    contours_data, 
+                    new_contours_data, 
                     self.draw_contours_var.get(), 
                     self.write_labels_var.get(),
                     self.label_contour_color_var.get()
                     )
-        self.update_current_operation(labeled_image=labeled_image)
+        self.update_current_operation(labeled_image=labeled_image, contours_data=new_contours_data)
         if isinstance(labeled_image, np.ndarray):
             labeled_image = Image.fromarray(labeled_image)
         img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
