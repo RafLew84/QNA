@@ -42,6 +42,8 @@ from file_process import (
     get_image_sizes
 )
 
+from iou_window import IntersectionOverUnionWindow
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -190,6 +192,9 @@ class SpotsDetectionTab:
 
         self.contour_data_listbox.bind("<<ListboxSelect>>", self.select_contours_data_listboxOnSelect)
         self.contour_data_listbox.bind("<Double-Button-1>", self.show_contours_onDoubleClick)
+
+        self.cross_contour_button = tk.Button(self.contours_section, text="IoU", command=self.iou_button_onClick)
+        self.cross_contour_button.grid(row=3, column=0, padx=5, pady=5)
 
     
     def create_navigation_ui(self):
@@ -564,15 +569,12 @@ class SpotsDetectionTab:
 
     def show_contours_onDoubleClick(self, event):
         pass
-        # data_index = self.contour_data_listbox.curselection()
-        # index = int(data_index[0])
-        # data = self.saved_conoturs[index]
-        # self.current_operation = data['operation']
-        # self.original_data_index = data['original_data_index']
-        # self.current_size_x_coefficient = data['x_coeff']
-        # self.current_size_y_coefficient = data['y_coeff']
-        # self.current_area_coefficient = data['area_coeff']
-        # self.refresh_image_after_filtering(manual_edit=True)
+
+    def iou_button_onClick(self):
+        iou_window = IntersectionOverUnionWindow(self.app)
+        selected_indices = self.contour_data_listbox.curselection()
+        selected_items = [self.contour_data_listbox.get(i) for i in selected_indices]
+        iou_window.open_new_window(selected_items)
         
     def update_nearest_neighbour_label(self, text):
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
