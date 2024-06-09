@@ -152,16 +152,6 @@ def FindCircularityOfContour(area, perimeter):
         circularity = 0
     return circularity
 
-# def AreaFinder(contours, nm):
-#     areas = []
-#     for contour in contours:
-#         area = AreaOfContour(contour)
-#         areas.append({
-#           "contour": contour,
-#           "area": area * nm  
-#         })
-#     return areas
-
 def distance_between_points_in_nm(point1, point2, x_coeff, y_coeff):
     """
     Calculate Euclidean distance between two points in nanometers (nm).
@@ -242,7 +232,7 @@ def DrawLabels(img, contours_data, draw_contours=False, draw_labels=False, color
             if draw_labels:
                 img = cv2.putText(img, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
         if draw_contours:
-            img = cv2.drawContours(img, [item['contour']], 0, text_color, 1)
+                img = cv2.drawContours(img, [item['contour']], 0, text_color, 1)
     
     return img
     
