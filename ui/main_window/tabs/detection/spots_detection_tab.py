@@ -45,6 +45,12 @@ from data.processing.file_process import (
     get_image_sizes
 )
 
+from ui.main_window.tabs.detection.params import (
+    detection_params,
+    filter_params,
+    preprocess_params
+)
+
 from ui.main_window.tabs.detection.iou_window import IntersectionOverUnionWindow
 
 import logging
@@ -80,30 +86,8 @@ class SpotsDetectionTab:
 
         self.data_for_detection = []
 
-        self.header_info = {}
-
-        self.preprocess_params = {
-            "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
-            "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
-            "GaussianFilter": {"sigma": 4}
-        }
-
-        self.current_size_x_coefficient = 0
-        self.current_size_y_coefficient = 0
-        self.current_area_coefficient = 0
-
-        self.min_size_scale = 0
-        self.max_size_min_scale = 0
-        self.max_size_max_scale = 0
-
-        self.detection_params = {
-            "Canny": {"sigma": 1.}
-        }
-
-        self.filter_params = {
-            "Circularity": {"circularity_low": 0.1, "circularity_high": 0.9},
-            "Area": {"min_area_[nm2]": 0.0, "max_area_[nm2]": 1000}
-        }
+        self.load_params()
+        self.init_attributes()
 
         self.current_operation = {
             "processed_image": None,
@@ -122,6 +106,20 @@ class SpotsDetectionTab:
         self.selected_option = None
 
         self.create_spots_detection_tab()
+
+    def init_attributes(self):
+        self.current_size_x_coefficient = 0
+        self.current_size_y_coefficient = 0
+        self.current_area_coefficient = 0
+
+        self.min_size_scale = 0
+        self.max_size_min_scale = 0
+        self.max_size_max_scale = 0
+
+    def load_params(self):
+        self.preprocess_params = preprocess_params
+        self.detection_params = detection_params
+        self.filter_params = filter_params
     
     def load_data_onClick(self):
         """

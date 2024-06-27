@@ -15,10 +15,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
-# from read_s94 import read_s94_file
-# from read_stp import read_stp_file
-# from read_mpp import read_mpp_file
-
 from data.files.read_mpp import read_mpp_file
 from data.files.read_s94 import read_s94_file
 from data.files.read_stp import read_stp_file
