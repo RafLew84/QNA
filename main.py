@@ -5,9 +5,13 @@ Entry point of the application
 @author: rlewandkow
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import tkinter as tk
 import config
-from main_window import App
+from ui.main_window.main_window import App
 
 
 

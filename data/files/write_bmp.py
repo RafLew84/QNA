@@ -5,6 +5,10 @@ write .bmp file in greyscale
 @author
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 from PIL import Image
 
 def save_bmp_from_s94(file_name, tab):

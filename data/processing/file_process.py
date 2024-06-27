@@ -5,14 +5,17 @@ Functions for file proccessing
 @author
 """
 
-import os
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import re
 import numpy as np
 
-from write_stp import write_STP_file
-from write_txt import write_txt_file
-from data_process import calculate_I_ISET_square, calculate_l0
-from read_s94 import S94_IMAGE_MODE
+from data.files.write_stp import write_STP_file
+from data.files.write_txt import write_txt_file
+from data.processing.data_process import calculate_I_ISET_square, calculate_l0
+from data.files.read_s94 import S94_IMAGE_MODE
 
 import logging
 

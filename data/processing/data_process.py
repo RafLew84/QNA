@@ -4,8 +4,12 @@ Functions for data proccessing
 
 @author: rlewandkow
 """
+
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 from math import sqrt
-import os
 import csv
 import numpy as np
 from statistics import mean

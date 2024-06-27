@@ -7,17 +7,23 @@ Module for loading and processing data in the application.
 rlewandkow
 """
 
-import os
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
-from read_s94 import read_s94_file
-from read_stp import read_stp_file
-from read_mpp import read_mpp_file
+# from read_s94 import read_s94_file
+# from read_stp import read_stp_file
+# from read_mpp import read_mpp_file
 
-from file_process import (
+from data.files.read_mpp import read_mpp_file
+from data.files.read_s94 import read_s94_file
+from data.files.read_stp import read_stp_file
+
+from data.processing.file_process import (
     process_stp_files_I_ISET_map, process_s94_files_I_ISET_map,
     process_mpp_files_I_ISET_map, process_stp_and_s94_files_l0,
     process_mpp_files_l0, process_mpp_files_l0_from_I_ISET_map,

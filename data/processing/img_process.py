@@ -5,6 +5,10 @@ Functions for image proccessing
 @author
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import cv2
 from scipy import ndimage as ndi
 
@@ -16,7 +20,7 @@ from PIL import Image
 
 import logging
 
-from file_process import calculate_pixels_from_nm
+from data.processing.file_process import calculate_pixels_from_nm
 
 logger = logging.getLogger(__name__)
 

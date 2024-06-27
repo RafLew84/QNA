@@ -6,14 +6,16 @@ Module for data analisys in the application.
 rlewandkow
 """
 
-import os
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from PIL import ImageTk
-from data_process import create_greyscale_image
+from data.processing.data_process import create_greyscale_image
 
 import logging
 

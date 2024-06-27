@@ -6,7 +6,11 @@ This module contains a function to write data to a .txt file.
 
 @author: rlewandkow
 """
-import os
+
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import logging
 
 logger = logging.getLogger(__name__)

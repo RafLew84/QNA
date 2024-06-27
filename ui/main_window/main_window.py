@@ -8,13 +8,17 @@ This module defines the main application class and the entry point of the applic
 rlewandkow
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import tkinter as tk
 
 from tkinter import ttk
 
-from load_data_tab import LoadDataTab
-from noise_analisys_tab import NoiseAnalysisTab
-from spots_detection_tab import SpotsDetectionTab
+from ui.main_window.tabs.load_data.load_data_tab import LoadDataTab
+from ui.main_window.tabs.noise.noise_analisys_tab import NoiseAnalysisTab
+from ui.main_window.tabs.detection.spots_detection_tab import SpotsDetectionTab
 
 import logging
 

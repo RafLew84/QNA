@@ -38,6 +38,10 @@ Actual image:       -3.459 ...  7.025 nm  ( -2576 ... 5232 RAW)
 */
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import struct
 import logging
 import numpy as np

@@ -6,6 +6,10 @@ File consisting code for Intersection over Union window to pop from spots detect
 rlewandkow
 """
 
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import tkinter as tk
 from tkinter import ttk
 

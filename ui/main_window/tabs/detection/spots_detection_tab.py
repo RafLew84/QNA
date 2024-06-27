@@ -6,21 +6,24 @@ Module for spots detection in the application.
 rlewandkow
 """
 
-import os
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import numpy as np
 import copy
 
-from data_process import (
+from data.processing.data_process import (
     create_greyscale_image, 
     save_labeled_image, 
     save_avg_area_to_csv,
     save_data_to_csv
 )
 
-from img_process import (
+from data.processing.img_process import (
     NlMeansDenois, 
     GaussianBlur, 
     GaussianFilter, 
@@ -36,13 +39,13 @@ from img_process import (
     process_contours_filters
 )
 
-from file_process import (
+from data.processing.file_process import (
     calculate_avg_nm_per_px, 
     calculate_pixel_to_nm_coefficients,
     get_image_sizes
 )
 
-from iou_window import IntersectionOverUnionWindow
+from ui.main_window.tabs.detection.iou_window import IntersectionOverUnionWindow
 
 import logging
 
