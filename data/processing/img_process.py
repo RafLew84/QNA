@@ -320,7 +320,7 @@ def get_mouse_position_in_canvas(scale_factor, x_canvas, y_canvas, event):
 
 def get_contour_info_at_position(current_operation, x, y):
     # Iterate through contours and check if the mouse position is within any contour
-    contours_data = current_operation['contours_data']
+    contours_data = current_operation.contours_data
     for item in contours_data:
         if is_point_inside_contour((x, y), item['contour']):
             return item

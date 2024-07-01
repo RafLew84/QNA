@@ -73,6 +73,8 @@ from ui.main_window.tabs.detection.contours_data import (
     insert_contour
 )
 
+from ui.main_window.tabs.detection.current_operation_model import CurrentOperation
+
 from ui.main_window.tabs.detection.preprocess_operations import create_preprocess_operation
 from ui.main_window.tabs.detection.contours import create_contour_data
 
@@ -112,16 +114,7 @@ class SpotsDetectionTab:
         self.load_params()
         self.init_attributes()
 
-        self.current_operation = {
-            "processed_image": None,
-            "edge_image": None,
-            "filtered_contours_img": None,
-            "process_name": "",
-            "contours": [],
-            "contours_data": [],
-            "labels": [],
-            "labeled_image": None
-        }
+        self.current_operation = CurrentOperation()
 
         self.originally_processed_image = None
 
@@ -316,7 +309,7 @@ class SpotsDetectionTab:
     def refresh_edit_contours_listbox_data(self):
         self.contours_listbox.delete(0, tk.END)
         if self.current_operation:
-            for contour_data in self.current_operation['contours_data']:
+            for contour_data in self.current_operation.contours_data:
                 name = contour_data['name']
                 area = contour_data['area']
                 nearest = contour_data['nearest_neighbour']
@@ -325,28 +318,27 @@ class SpotsDetectionTab:
 
     def on_canvas_hover(self, event):
         x, y = get_mouse_position_in_canvas(
-            scale_factor= self.scale_factor_var.get(),
-            x_canvas= self.data_canvas_detection.canvasx(event.x),
-            y_canvas= self.data_canvas_detection.canvasy(event.y),
-            event= event
+            scale_factor=self.scale_factor_var.get(),
+            x_canvas=self.data_canvas_detection.canvasx(event.x),
+            y_canvas=self.data_canvas_detection.canvasy(event.y),
+            event=event
         )
 
         # Check if the mouse is over a contour
         item = get_contour_info_at_position(
-            current_operation= self.current_operation,
-            x= x, 
-            y= y
-            )
+            current_operation=self.current_operation,
+            x=x,
+            y=y
+        )
         if item:
-            # contour_name = item['name']
+            # Update contour labels with data from the item
             self.update_contour_labels(
-                name= item['name'],
-                area= item['area'],
-                distance= item['distance_to_nearest_neighbour']
+                name=item['name'],
+                area=item['area'],
+                distance=item['distance_to_nearest_neighbour']
             )
 
             self.update_nearest_neighbour_label(item['nearest_neighbour'])
-            
         else:
             pass
 
@@ -588,7 +580,7 @@ class SpotsDetectionTab:
         self.current_area_coefficient = data['area_coeff']
         self.refresh_image_after_filtering(manual_edit=True)
         self.refresh_edit_contours_listbox_data()
-        self.update_avg_area_label(self.current_operation['contours_data'])
+        self.update_avg_area_label(self.current_operation.contours_data)
 
     def show_contours_onDoubleClick(self, event):
         pass
@@ -706,10 +698,10 @@ class SpotsDetectionTab:
         if focuse_widget == self.contours_listbox:
             contour_index = self.contours_listbox.curselection()
             index = int(contour_index[0])
-            self.current_operation['contours_data'].pop(index)
+            self.current_operation.contours_data.pop(index)
             self.refresh_edit_contours_listbox_data()
             self.refresh_image_after_filtering(manual_edit=True)
-            self.update_avg_area_label(self.current_operation['contours_data'])
+            self.update_avg_area_label(self.current_operation.contours_data)
             
 
     def save_contours_to_memory_onClick(self):
@@ -721,7 +713,7 @@ class SpotsDetectionTab:
             filename= filename,
             framenumber= framenumber,
             operation= copy.deepcopy(self.current_operation),
-            contours_num= len(self.current_operation['contours_data']),
+            contours_num= len(self.current_operation.contours_data),
             originally_processed_image= self.originally_processed_image,
             original_data_index= self.original_data_index,
             x_coeff= self.current_size_x_coefficient,
@@ -747,12 +739,12 @@ class SpotsDetectionTab:
 
 
     def save_to_files(self):
-        labeled_image = self.current_operation['labeled_image']
+        labeled_image = self.current_operation.labeled_image
         if isinstance(labeled_image, np.ndarray):
             labeled_image = Image.fromarray(labeled_image)
         output_dir, name = self.save_img(labeled_image)
 
-        contours_data = self.current_operation['contours_data']
+        contours_data = self.current_operation.contours_data
 
         # Define the CSV filename
         csv_filename = name + ".csv"  # Use the same 'name' as the PNG file
@@ -1281,11 +1273,11 @@ class SpotsDetectionTab:
 
     def refresh_image_after_param_filtering(self, hilghlight_index):
         filter_params = {}
-        if self.current_operation['edge_image'] is not None:
+        if self.current_operation.edge_image is not None:
             original_img = get_greyscale_image_at_index(self.original_data_index)
-            previous_processed_img = self.current_operation['processed_image']
-            edge_img = self.current_operation['edge_image']
-            contours = self.current_operation['contours']
+            previous_processed_img = self.current_operation.processed_image
+            edge_img = self.current_operation.edge_image
+            contours = self.current_operation.contours
             result_image = None
             self.get_values_from_filter_menu_items(filter_params)
             result_image, filtered_contours = process_contours_filters(filter_params, edge_img, contours, self.current_area_coefficient)
@@ -1314,15 +1306,13 @@ class SpotsDetectionTab:
                         self.write_labels_var.get(),
                         self.label_contour_color_var.get()
                         )
-
-            self.update_current_operation(
-                    previous_processed_img= previous_processed_img, 
-                    edge_img= edge_img, 
-                    contours= contours,
-                    contours_data= contours_data,
-                    contour_image= Image.fromarray(result_image),
-                    labeled_image=labeled_image
-                    )
+                
+            self.current_operation.processed_image = previous_processed_img
+            self.current_operation.edge_image = edge_img
+            self.current_operation.contours = contours
+            self.current_operation.contours_data = contours_data
+            self.current_operation.filtered_contours_img = Image.fromarray(result_image)
+            self.current_operation.labeled_image = labeled_image
                 
             if isinstance(labeled_image, np.ndarray):
                 labeled_image = Image.fromarray(labeled_image)
@@ -1331,11 +1321,11 @@ class SpotsDetectionTab:
 
     def refresh_image_after_manual_change(self, hilghlight_index):
         original_img = get_greyscale_image_at_index(self.original_data_index)
-        previous_processed_img = self.current_operation['processed_image']
-        edge_img = self.current_operation['edge_image']
-        labeled_image = self.current_operation['labeled_image']
-        contours_data = self.current_operation['contours_data']
-        filtered_mage = self.current_operation['filtered_contours_img']
+        previous_processed_img = self.current_operation.processed_image
+        edge_img = self.current_operation.edge_image
+        labeled_image = self.current_operation.labeled_image
+        contours_data = self.current_operation.contours_data
+        filtered_mage = self.current_operation.filtered_contours_img
         filtered_contours = [data['contour'] for data in contours_data]
 
         new_contours_data = GetContourData( 
@@ -1362,7 +1352,10 @@ class SpotsDetectionTab:
                     self.write_labels_var.get(),
                     self.label_contour_color_var.get()
                     )
-        self.update_current_operation(labeled_image=labeled_image, contours_data=new_contours_data)
+        
+        self.current_operation.labeled_image = labeled_image
+        self.current_operation.contours_data = new_contours_data
+        # self.update_current_operation(labeled_image=labeled_image, contours_data=new_contours_data)
         if isinstance(labeled_image, np.ndarray):
             labeled_image = Image.fromarray(labeled_image)
         img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
@@ -1432,13 +1425,11 @@ class SpotsDetectionTab:
             preprocessed_img = Image.fromarray(np.zeros_like(original_img))
         elif focuse_widget == self.operations_listbox:
             preprocessed_img = img
-        
-        self.update_current_operation(
-            previous_processed_img= preprocessed_img,
-            edge_img= edge_img,
-            contour_image= filtered_img,
-            contours= contours
-        )
+
+        self.current_operation.processed_image = preprocessed_img
+        self.current_operation.edge_image = edge_img
+        self.current_operation.filtered_contours_img = filtered_img
+        self.current_operation.contours = contours
 
     def navigate_prev_onClick(self):
         """
@@ -1511,7 +1502,7 @@ class SpotsDetectionTab:
         Args:
             event: The event triggered by the slider change.
         """
-        if self.current_operation['edge_image'] is None:
+        if self.current_operation.edge_image is None:
             selected_index = self.data_listbox_detection.curselection()
             if selected_index:
                 index = int(selected_index[0])
@@ -1522,11 +1513,11 @@ class SpotsDetectionTab:
                 selected_option = self.choose_display_image_option_dropdown_var.get()
                 self.display_processed_image(opertation_index, "Preprocess", selected_option)
         else:
-            preprocess_img = self.current_operation['processed_image']
-            edge_img = self.current_operation['edge_image']
-            labeled_image = self.current_operation['labeled_image']
+            preprocess_img = self.current_operation.processed_image
+            edge_img = self.current_operation.edge_image
+            labeled_image = self.current_operation.labeled_image
             original_img = get_greyscale_image_at_index(self.original_data_index)
-            filtered_img = self.current_operation['filtered_contours_img']
+            filtered_img = self.current_operation.filtered_contours_img
             img = None
             if isinstance(labeled_image, np.ndarray):
                 labeled_image = Image.fromarray(labeled_image)
