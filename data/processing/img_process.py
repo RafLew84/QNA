@@ -208,12 +208,12 @@ def GetContourData(filtered_contours, x_size_coefficient, y_size_coefficient, av
             min_distance = 0.0
         if not min_index:
             min_index = -1
-        (x, y), radius = cv2.minEnclosingCircle(contour)
-        aprox_area = np.pi * (radius ** 2)
+        # (x, y), radius = cv2.minEnclosingCircle(contour)
+        # aprox_area = np.pi * (radius ** 2)
         contour_data.append({
             "name": name,
             "contour": contour,
-            "area": aprox_area * area_coefficient,
+            "area": area * area_coefficient,
             "moments": M,
             "distance_to_nearest_neighbour": min_distance,
             "nearest_neighbour": f"{min_index:03}"
