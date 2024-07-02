@@ -21,6 +21,15 @@ class CurrentOperation:
         self._labels = []
         self._labeled_image = None
         self._image_to_process = None
+        self._raw_data_index = None
+
+    @property
+    def raw_data_index(self):
+        return self._raw_data_index
+    
+    @raw_data_index.setter
+    def raw_data_index(self, value):
+        self._raw_data_index = value
 
     @property
     def image_to_process(self):

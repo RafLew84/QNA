@@ -160,7 +160,6 @@ class SpotsDetectionTab:
         """
         try:
             # Data for analisys
-            self.original_data_index = None
 
             self.configure_tab()
 
@@ -572,7 +571,7 @@ class SpotsDetectionTab:
         index = int(data_index[0])
         data = get_contours_data_at_index(index)
         self.current_operation = data['operation']
-        self.original_data_index = data['original_data_index']
+        self.current_operation.raw_data_index = data['original_data_index']
         self.current_size_x_coefficient = data['x_coeff']
         self.current_size_y_coefficient = data['y_coeff']
         self.current_area_coefficient = data['area_coeff']
@@ -703,7 +702,7 @@ class SpotsDetectionTab:
             
 
     def save_contours_to_memory_onClick(self):
-        index = self.original_data_index
+        index = self.current_operation.raw_data_index
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)
 
@@ -713,7 +712,7 @@ class SpotsDetectionTab:
             operation= copy.deepcopy(self.current_operation),
             contours_num= len(self.current_operation.contours_data),
             originally_processed_image= self.current_operation.image_to_process,
-            original_data_index= self.original_data_index,
+            original_data_index= self.current_operation.raw_data_index,
             x_coeff= self.current_size_x_coefficient,
             y_coeff= self.current_size_y_coefficient,
             area_coeff= self.current_area_coefficient
@@ -754,7 +753,7 @@ class SpotsDetectionTab:
         save_avg_area_to_csv(output_dir, csv_filename, avg_area)
 
     def save_img(self, labeled_image):
-        index = self.original_data_index
+        index = self.current_operation.raw_data_index
         path = get_path_at_index(index)
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)
@@ -850,7 +849,7 @@ class SpotsDetectionTab:
         elif focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            img = Image.fromarray(get_preprocessed_image_data_at_index(self.original_data_index, operations_index))
+            img = Image.fromarray(get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operations_index))
             self.current_operation.image_to_process = img
         elif focuse_widget == self.contours_listbox:
             img = self.current_operation.image_to_process
@@ -889,7 +888,7 @@ class SpotsDetectionTab:
         """
         self.operations_listbox.delete(0, tk.END)
 
-        selected_index = self.original_data_index
+        selected_index = self.current_operation.raw_data_index
 
         operations = get_all_operations(selected_index)
         self.operations_listbox.insert(tk.END, *operations)
@@ -964,7 +963,7 @@ class SpotsDetectionTab:
         if self.selected_option is None:
             return  # No option selected
         params = {}
-        index = self.original_data_index
+        index = self.current_operation.raw_data_index
         focuse_widget = self.root.focus_get()
         img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
 
@@ -1107,14 +1106,14 @@ class SpotsDetectionTab:
                 if option in options:
                     # Perform operations for each option
                     if option == "processed":
-                        img_data = get_preprocessed_image_data_at_index(self.original_data_index, operation_index)
+                        img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
                         img = Image.fromarray(img_data)
                     elif option == "original":
-                        img = get_greyscale_image_at_index(self.original_data_index)
+                        img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
                     elif option == "both":
-                        img_data = get_preprocessed_image_data_at_index(self.original_data_index, operation_index)
+                        img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
                         processed_img = Image.fromarray(img_data)
-                        original_img = get_greyscale_image_at_index(self.original_data_index)
+                        original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
                         # Concatenate the images horizontally
                         img = concatenate_two_images(processed_img, original_img)
         except Exception as e:
@@ -1273,7 +1272,7 @@ class SpotsDetectionTab:
     def refresh_image_after_param_filtering(self, hilghlight_index):
         filter_params = {}
         if self.current_operation.edge_image is not None:
-            original_img = get_greyscale_image_at_index(self.original_data_index)
+            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
             previous_processed_img = self.current_operation.processed_image
             edge_img = self.current_operation.edge_image
             contours = self.current_operation.contours
@@ -1319,7 +1318,7 @@ class SpotsDetectionTab:
             self.handle_displaying_image_on_canvas(img)
 
     def refresh_image_after_manual_change(self, hilghlight_index):
-        original_img = get_greyscale_image_at_index(self.original_data_index)
+        original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
         previous_processed_img = self.current_operation.processed_image
         edge_img = self.current_operation.edge_image
         labeled_image = self.current_operation.labeled_image
@@ -1400,7 +1399,7 @@ class SpotsDetectionTab:
     def handle_sigma_data_creation(self, sigma_value):
         params = {}
         filter_params = {}
-        index = self.original_data_index
+        index = self.current_operation.raw_data_index
         focuse_widget = self.root.focus_get()
         img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
 
@@ -1483,7 +1482,7 @@ class SpotsDetectionTab:
             self.data_listbox_detection.selection_set(index - 1)
             self.data_listbox_detection.see(index - 1)
 
-            self.original_data_index = index - 1
+            self.current_operation.raw_data_index = index - 1
             self.refresh_data_in_operations_listbox()
         self.resize_canvas_detection_scrollregion()
 
@@ -1515,7 +1514,7 @@ class SpotsDetectionTab:
             preprocess_img = self.current_operation.processed_image
             edge_img = self.current_operation.edge_image
             labeled_image = self.current_operation.labeled_image
-            original_img = get_greyscale_image_at_index(self.original_data_index)
+            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
             filtered_img = self.current_operation.filtered_contours_img
             img = None
             if isinstance(labeled_image, np.ndarray):
@@ -1541,7 +1540,7 @@ class SpotsDetectionTab:
         # Load greyscale image
         img = get_greyscale_image_at_index(index)
 
-        self.original_data_index = index
+        self.current_operation.raw_data_index = index
 
         self.handle_displaying_image_on_canvas(img)
 
