@@ -210,6 +210,19 @@ def GetContourData(filtered_contours, x_size_coefficient, y_size_coefficient, av
             min_index = -1
         # (x, y), radius = cv2.minEnclosingCircle(contour)
         # aprox_area = np.pi * (radius ** 2)
+        # aprox_area = 0
+        # if len(contour) >= 5:
+        #     # Fit an ellipse to the contour
+        #     ellipse = cv2.fitEllipse(contour)
+
+        #     # Get the size of the fitted ellipse
+        #     (center, axes, orientation) = ellipse
+        #     major_axis_length = axes[0]
+        #     minor_axis_length = axes[1]
+
+        #     # Calculate the area of the ellipse
+        #     aprox_area = np.pi * (major_axis_length / 2) * (minor_axis_length / 2)
+        
         contour_data.append({
             "name": name,
             "contour": contour,

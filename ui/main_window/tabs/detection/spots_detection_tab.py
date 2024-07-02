@@ -99,11 +99,6 @@ class SpotsDetectionTab:
             spots_detection_tab (ttk.Frame): The frame representing the spots detection tab.
             app: The application instance.
             root: The root Tkinter instance.
-            data_for_detection (list): List of data for spots detection.
-            header_info (dict): Header information for the data.
-            preprocess_params (dict): Parameters for image preprocessing methods.
-            detection_params (dict): Parameters for spot detection methods.
-            selected_option: The selected detection option.
         """
 
         self.spots_detection_tab = ttk.Frame(notebook)
@@ -121,6 +116,17 @@ class SpotsDetectionTab:
         self.create_spots_detection_tab()
 
     def init_attributes(self):
+        """
+        Initialize attributes for the SpotsDetectionTab instance.
+
+        Attributes:
+            current_size_x_coefficient (float): Coefficient for the current size in the x dimension.
+            current_size_y_coefficient (float): Coefficient for the current size in the y dimension.
+            current_area_coefficient (float): Coefficient for the current area size.
+            min_size_scale (float): Minimum size scale for minimum size slider.
+            max_size_min_scale (float): Minimum scale for the maximum size slider.
+            max_size_max_scale (float): Maximum scale for the maximum size slider.
+        """
         self.current_size_x_coefficient = 0
         self.current_size_y_coefficient = 0
         self.current_area_coefficient = 0
@@ -130,6 +136,14 @@ class SpotsDetectionTab:
         self.max_size_max_scale = 0
 
     def load_params(self):
+        """
+        Load parameters for detection, filtering, and preprocessing.
+
+        Attributes:
+            preprocess_params (dict): Parameters for image preprocessing methods.
+            detection_params (dict): Parameters for spot detection methods.
+            filter_params (dict): Parameters for filtering methods.
+        """
         self.preprocess_params = preprocess_params
         self.detection_params = detection_params
         self.filter_params = filter_params
@@ -189,6 +203,12 @@ class SpotsDetectionTab:
             raise ValueError(error_msg)
         
     def create_contours_edit_ui(self):
+        """
+        Create the user interface for editing contours.
+
+        This method sets up the contours section with listboxes and buttons
+        for displaying and interacting with contour data.
+        """
         self.contours_section = ttk.Frame(self.spots_detection_tab, padding="3")
         self.contours_section.grid(row=1, column=4,rowspan=2, padx=5, pady=2, sticky="nsew")
         
@@ -211,6 +231,11 @@ class SpotsDetectionTab:
 
     
     def create_navigation_ui(self):
+        """
+        Create the user interface for navigation.
+
+        This method sets up the navigation slider and buttons for navigating through images.
+        """
         # Slider for navigation
         self.navigation_slider = tk.Scale(
             self.spots_detection_tab, 
@@ -228,11 +253,21 @@ class SpotsDetectionTab:
         self.next_button.grid(row=4, column=4, padx=5, pady=5)
         
     def configure_tab(self):
+        """
+        Configure the grid layout for the spots detection tab.
+
+        This method sets the row and column weights to ensure proper resizing of the UI elements.
+        """
         # Set row and column weights
         self.spots_detection_tab.grid_rowconfigure(1, weight=1)
         self.spots_detection_tab.grid_columnconfigure(2, weight=1)
         
     def create_scaling_ui(self):
+        """
+        Create the user interface for scaling.
+
+        This method sets up a label, slider, and event binding for scaling operations.
+        """
         # Scale factor label and slider
         self.scale_factor_label = tk.Label(self.spots_detection_tab, text="Scale Factor:")
         self.scale_factor_label.grid(row=3, column=1, padx=5, pady=5, sticky="e")
@@ -253,6 +288,11 @@ class SpotsDetectionTab:
         self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
         
     def create_canvas_ui(self):
+        """
+        Create the user interface for the canvas.
+
+        This method sets up a canvas with scrollbars and event bindings for displaying data.
+        """
         # Add a canvas to display the data
         # Add Motions and add action on hover
         self.data_canvas_detection = tk.Canvas(self.spots_detection_tab, bg="white")
@@ -278,6 +318,11 @@ class SpotsDetectionTab:
 
         
     def create_data_ui(self):
+        """
+        Create the user interface for displaying and interacting with data.
+
+        This method sets up buttons, listboxes, and scrollbars for loading and displaying data.
+        """
         # Button to load data
         self.load_data_button = tk.Button(
             self.spots_detection_tab, 
@@ -304,6 +349,11 @@ class SpotsDetectionTab:
         self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
         
     def refresh_edit_contours_listbox_data(self):
+        """
+        Refresh the data displayed in the contours listbox.
+
+        This method clears the existing data in the listbox and inserts updated contour data.
+        """
         self.contours_listbox.delete(0, tk.END)
         if self.current_operation:
             for contour_data in self.current_operation.contours_data:
@@ -314,6 +364,16 @@ class SpotsDetectionTab:
                 self.contours_listbox.insert(tk.END, f"{name} | {area:.3f} | {nearest} | {distance:.2f}")
 
     def on_canvas_hover(self, event):
+        """
+        Handle mouse hover events on the canvas.
+
+        Retrieves mouse position relative to the canvas, adjusts for scale factor,
+        and updates UI elements based on the detected contour under the cursor.
+
+        Args:
+            event (tk.Event): The mouse event.
+
+        """
         x, y = get_mouse_position_in_canvas(
             scale_factor=self.scale_factor_var.get(),
             x_canvas=self.data_canvas_detection.canvasx(event.x),
@@ -562,11 +622,30 @@ class SpotsDetectionTab:
             raise KeyError(error_msg)
         
     def show_contours_listboxOnSelect(self, event):
+        """
+        Handle selection events in the contours listbox.
+
+        This method retrieves the index of the selected contour from the listbox,
+        refreshes the image after filtering, and updates the UI accordingly.
+
+        Args:
+            event (tk.Event): The selection event from the listbox.
+        """
         contour_index = self.contours_listbox.curselection()
         index = int(contour_index[0])
         self.refresh_image_after_filtering(index, True)
 
     def select_contours_data_listboxOnSelect(self, event):
+        """
+        Handle selection events in the contour data listbox.
+
+        This method retrieves the index of the selected data from the listbox,
+        updates the current operation and coefficients, refreshes the image after filtering,
+        and updates the UI accordingly.
+
+        Args:
+            event (tk.Event): The selection event from the listbox.
+        """
         data_index = self.contour_data_listbox.curselection()
         index = int(data_index[0])
         data = get_contours_data_at_index(index)
@@ -583,25 +662,64 @@ class SpotsDetectionTab:
         pass
 
     def iou_button_onClick(self):
+        """
+        Handle click event for IoU button.
+
+        This method creates an IntersectionOverUnionWindow instance,
+        retrieves selected indices from contour data listbox,
+        retrieves selected items based on indices, and opens a new window
+        displaying IoU information for selected items.
+
+        """
         iou_window = IntersectionOverUnionWindow(self.app)
         selected_indices = self.contour_data_listbox.curselection()
         selected_items = [self.contour_data_listbox.get(i) for i in selected_indices]
         iou_window.open_new_window(selected_items)
         
     def update_nearest_neighbour_label(self, text):
+        """
+        Update the nearest neighbour label with the provided text.
+
+        Args:
+            text (str): The text to display in the nearest neighbour label.
+        """
         self.nearest_neighbour_name_label.config(text=f"Nearest neighbour: {text}")
         
     def update_avg_area_label(self, contour_data):
+        """
+        Update the average area label with the calculated average area based on contour data.
+
+        Args:
+            contour_data (list): List of contour data dictionaries.
+
+        """
         avg_area = calculate_contour_avg_area(contour_data)
         self.avg_area_label.config(text=f"Average Area: {avg_area:.3f} nm2")
 
     def update_contour_labels(self, name, area, distance):
+        """
+        Update the contour labels with the provided data.
+
+        Args:
+            name (str): The name of the contour.
+            area (float): The area of the contour.
+            distance (float): The shortest distance associated with the contour.
+        """
         # Update the text of each label
         self.contour_name_label.config(text=f"Name: {name}")
         self.contour_area_label.config(text=f"Area: {area:.3} nm2")
         self.contour_shortest_distance_label.config(text=f"Shortest distance: {distance:.3} nm")
         
     def create_filter_menu_items(self, row):
+        """
+        Create filter menu items based on filter parameters.
+
+        Args:
+            row (int): The starting row index for placing menu items.
+
+        Returns:
+            int: The updated row index after placing menu items.
+        """
         for filter_type, params in self.filter_params.items():
             filter_frame = ttk.Label(self.detection_section_menu, text=filter_type + ":")
             filter_frame.grid(row=row, column=0, padx=10, pady=5, sticky="nsew")
@@ -625,6 +743,12 @@ class SpotsDetectionTab:
         return row
 
     def add_chackboxes_to_menu(self, row):
+        """
+        Add checkboxes for draw contours, write labels, and label contour color to the menu.
+
+        Args:
+            row (int): The row index to place the checkboxes.
+        """
         draw_contours_var = tk.IntVar()
         draw_contours_checkbox = tk.Checkbutton(
             self.detection_section_menu, text="Draw Contours", 
@@ -655,6 +779,14 @@ class SpotsDetectionTab:
         self.label_contour_color_var = label_contour_color_var
 
     def add_slider_to_menu(self, row, param_name, param_value):
+        """
+        Add a slider to the menu for adjusting filter parameters.
+
+        Args:
+            row (int): The row index to place the slider.
+            param_name (str): The name of the parameter.
+            param_value (float): The initial value of the parameter.
+        """
         if param_name.startswith("min"):
             slider = ttk.Scale(
                         self.detection_section_menu,
@@ -684,6 +816,12 @@ class SpotsDetectionTab:
         self.parameter_filter_sliders[param_name] = slider
     
     def checkbox_status_changed(self):
+        """
+        Handle changes in checkbox status.
+
+        Checks if the focus is on the contour data listbox and triggers
+        image refreshing with manual edit if so, otherwise triggers image refreshing.
+        """
         focuse_widget = self.root.focus_get()
         if focuse_widget == self.contour_data_listbox:
             self.refresh_image_after_filtering(manual_edit=True)
@@ -691,6 +829,13 @@ class SpotsDetectionTab:
             self.refresh_image_after_filtering()
 
     def delete_contour_button_onClick(self):
+        """
+        Handle the click event of the delete contour button.
+
+        Deletes the selected contour from the current operation's contour data,
+        refreshes the contours listbox data, refreshes the image after filtering,
+        and updates the average area label.
+        """
         focuse_widget = self.root.focus_get()
         if focuse_widget == self.contours_listbox:
             contour_index = self.contours_listbox.curselection()
@@ -702,6 +847,12 @@ class SpotsDetectionTab:
             
 
     def save_contours_to_memory_onClick(self):
+        """
+        Handle the click event of the save contours to memory button.
+
+        Saves the current operation's contour data to memory, inserts it into the
+        saved contours list, and refreshes the saved contours listbox data.
+        """
         index = self.current_operation.raw_data_index
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)
@@ -722,6 +873,12 @@ class SpotsDetectionTab:
         self.refresh_saved_contours_listbox_data()
 
     def refresh_saved_contours_listbox_data(self):
+        """
+        Refresh the data in the saved contours listbox.
+
+        Retrieves contours data from memory, updates the saved contours listbox
+        with filenames, frame numbers, and number of contours.
+        """
         self.contour_data_listbox.delete(0, tk.END)
         contours = get_contours_data()
         if contours:
@@ -736,6 +893,12 @@ class SpotsDetectionTab:
 
 
     def save_to_files(self):
+        """
+        Save labeled image and contour data to files.
+
+        Saves the labeled image to a PNG file and the contour data to a CSV file.
+        Also calculates and saves the average area of contours to a CSV file.
+        """
         labeled_image = self.current_operation.labeled_image
         if isinstance(labeled_image, np.ndarray):
             labeled_image = Image.fromarray(labeled_image)
@@ -753,6 +916,15 @@ class SpotsDetectionTab:
         save_avg_area_to_csv(output_dir, csv_filename, avg_area)
 
     def save_img(self, labeled_image):
+        """
+        Save labeled image to disk.
+
+        Args:
+            labeled_image (PIL.Image.Image or np.ndarray): Labeled image to save.
+
+        Returns:
+            tuple: Tuple containing output directory and filename.
+        """
         index = self.current_operation.raw_data_index
         path = get_path_at_index(index)
         filename = get_filename_at_index(index)
@@ -764,6 +936,15 @@ class SpotsDetectionTab:
         self.save_to_files()
         
     def get_values_from_filter_menu_items(self, params):
+        """
+        Retrieve values from filter menu sliders and update the params dictionary.
+
+        Args:
+            params (dict): Dictionary to update with parameter values.
+
+        Notes:
+            If a slider value cannot be converted to float, it is added as a string to params.
+        """
         for param_name, slider in self.parameter_filter_sliders.items():
             try:
                 params[param_name] = float(slider.get())
@@ -1167,6 +1348,20 @@ class SpotsDetectionTab:
             logger.error(error_msg)
 
     def create_data_for_header_labels_based_on_file_ext(self, index, file_ext):
+        """
+        Create header labels data based on the file extension.
+
+        Args:
+            index (int): Index of the data.
+            file_ext (str): File extension.
+
+        Returns:
+            dict: Header labels data.
+
+        Raises:
+            KeyError: If header labels function for the specified file extension is missing.
+            Exception: For any other unexpected errors.
+        """
         try:
             header_labels_generator = {
                 "s94": self.get_header_labels_from_s94_file,
@@ -1185,6 +1380,19 @@ class SpotsDetectionTab:
             raise
 
     def get_header_labels_from_stp_file(self, index):
+        """
+        Retrieve header labels for an STP file based on the index.
+
+        Args:
+            index (int): Index of the data.
+
+        Returns:
+            list: List of header labels for the STP file.
+
+        Notes:
+            - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
+            - Constructs a list of formatted strings with relevant header information.
+        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         stp_labels = [
@@ -1201,6 +1409,19 @@ class SpotsDetectionTab:
         return stp_labels
     
     def get_header_labels_from_s94_file(self, index):
+        """
+        Retrieve header labels for an S94 file based on the index.
+
+        Args:
+            index (int): Index of the data.
+
+        Returns:
+            list: List of header labels for the S94 file.
+
+        Notes:
+            - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
+            - Constructs a list of formatted strings with relevant header information.
+        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         s94_labels = [
@@ -1216,6 +1437,19 @@ class SpotsDetectionTab:
         return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
+        """
+        Retrieve header labels for an MPP file based on the index.
+
+        Args:
+            index (int): Index of the data.
+
+        Returns:
+            list: List of header labels for the MPP file.
+
+        Notes:
+            - Retrieves header information using helper functions `get_header_info_at_index`, `get_filename_at_index`, and `get_framenumber_at_index`.
+            - Constructs a list of formatted strings with relevant header information.
+        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)
@@ -1257,6 +1491,18 @@ class SpotsDetectionTab:
             raise ValueError(error_msg)
         
     def filter_slider_on_change(self, param_name, value):
+        """
+        Callback function for when a filter slider changes its value.
+
+        Args:
+            param_name (str): Name of the parameter associated with the slider.
+            value (float): New value of the slider.
+
+        Notes:
+            - Updates the label text for the parameter filter label associated with `param_name`.
+            - Calls `refresh_image_after_filtering()` to update the displayed image after filtering.
+            - Calls `refresh_edit_contours_listbox_data()` to update the contours list box data.
+        """
         if param_name in self.parameter_filter_labels:
             label_text = f"{param_name.replace('_', ' ').capitalize()}: {float(value):.1f}"
             self.parameter_filter_labels[param_name].config(text=label_text)
@@ -1264,12 +1510,37 @@ class SpotsDetectionTab:
             self.refresh_edit_contours_listbox_data()
 
     def refresh_image_after_filtering(self, hilghlight_index=None, manual_edit=False):
+        """
+        Refreshes the image display after applying filters or manual edits.
+
+        Args:
+            highlight_index (int or None): Index of the contour to highlight after filtering.
+            manual_edit (bool): Flag indicating if the refresh was triggered by a manual edit.
+
+        Notes:
+            - Calls either `refresh_image_after_manual_change()` or `refresh_image_after_param_filtering()`
+              based on the value of `manual_edit`.
+            - Provides the option to highlight a specific contour identified by `highlight_index`.
+        """
         if manual_edit:
             self.refresh_image_after_manual_change(hilghlight_index)
         else:
             self.refresh_image_after_param_filtering(hilghlight_index)
 
     def refresh_image_after_param_filtering(self, hilghlight_index):
+        """
+        Refreshes the image after applying parameterized filters to contours.
+
+        Args:
+            highlight_index (int or None): Index of the contour to highlight.
+
+        Notes:
+            - Retrieves filter parameters from the UI.
+            - Processes contours using the retrieved parameters.
+            - Draws labels and updates the displayed image based on filtered contours.
+            - Updates attributes in the current operation object.
+            - Concatenates multiple images and displays the result on a canvas.
+        """
         filter_params = {}
         if self.current_operation.edge_image is not None:
             original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
@@ -1318,6 +1589,19 @@ class SpotsDetectionTab:
             self.handle_displaying_image_on_canvas(img)
 
     def refresh_image_after_manual_change(self, hilghlight_index):
+        """
+        Refreshes the image after a manual change to contours.
+
+        Args:
+            highlight_index (int or None): Index of the contour to highlight.
+
+        Notes:
+            - Retrieves necessary attributes from the current operation object.
+            - Constructs new contours data based on filtered contours.
+            - Draws labels on the original image based on user settings and highlights a contour if specified.
+            - Updates attributes in the current operation object with the processed data.
+            - Concatenates multiple images and displays the result on a canvas.
+        """
         original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
         previous_processed_img = self.current_operation.processed_image
         edge_img = self.current_operation.edge_image
@@ -1358,28 +1642,6 @@ class SpotsDetectionTab:
             labeled_image = Image.fromarray(labeled_image)
         img = concatenate_four_images(previous_processed_img, labeled_image, edge_img, filtered_mage)
         self.handle_displaying_image_on_canvas(img)
-
-    def update_current_operation(self, previous_processed_img=None, edge_img=None, contours=None, contour_image=None,
-                                process_name="", labeled_image=None, contours_data=None):
-        current_operation = self.current_operation.copy()  # Make a copy to avoid modifying the original dictionary
-        # Update specific attributes if provided
-        if contours_data is not None:
-            current_operation["contours_data"] = contours_data
-            self.update_avg_area_label(contour_data= contours_data)
-        if previous_processed_img is not None:
-            current_operation["processed_image"] = previous_processed_img
-        if edge_img is not None:
-            current_operation["edge_image"] = edge_img
-        if contours is not None:
-            current_operation["contours"] = contours
-        if contour_image is not None:
-            current_operation["filtered_contours_img"] = contour_image
-        if process_name:
-            current_operation["process_name"] = process_name
-        if labeled_image is not None:
-            current_operation["labeled_image"] = labeled_image
-
-        self.current_operation = current_operation
         
     def refresh_image_on_sigma_slider_change(self, sigma_value):
         """
@@ -1397,6 +1659,20 @@ class SpotsDetectionTab:
         self.refresh_edit_contours_listbox_data()
 
     def handle_sigma_data_creation(self, sigma_value):
+        """
+        Handles the creation of sigma data for image processing.
+
+        Args:
+            sigma_value (float): The sigma value for edge detection.
+
+        Notes:
+            - Retrieves necessary parameters and filter settings.
+            - Retrieves the image based on the selected file in the listbox.
+            - Performs edge detection using Canny method with the given sigma value.
+            - Finds contours in the resulting edge image.
+            - Applies filters to contours based on specified filter parameters.
+            - Updates attributes in the current operation object with processed data.
+        """
         params = {}
         filter_params = {}
         index = self.current_operation.raw_data_index
@@ -1606,6 +1882,13 @@ class SpotsDetectionTab:
             self.refresh_data_in_operations_listbox()
 
     def calculate_scales_for_minmax_area_filters(self, x, y):
+        """
+        Calculates scales for minimum and maximum area filters based on given parameters.
+
+        Args:
+            x (float): Width or size parameter.
+            y (float): Height or size parameter.
+        """
         min_size_coeff = 0.02
         max_size_coeff = 0.1
         pixels = (x * min_size_coeff) * ( min_size_coeff * y)
