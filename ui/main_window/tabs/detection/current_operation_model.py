@@ -20,6 +20,15 @@ class CurrentOperation:
         self._contours_data = []
         self._labels = []
         self._labeled_image = None
+        self._image_to_process = None
+
+    @property
+    def image_to_process(self):
+        return self._image_to_process
+    
+    @image_to_process.setter
+    def image_to_process(self, value):
+        self._image_to_process = value
 
     @property
     def processed_image(self):

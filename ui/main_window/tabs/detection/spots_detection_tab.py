@@ -116,8 +116,6 @@ class SpotsDetectionTab:
 
         self.current_operation = CurrentOperation()
 
-        self.originally_processed_image = None
-
         self.selected_option = None
 
         self.create_spots_detection_tab()
@@ -714,7 +712,7 @@ class SpotsDetectionTab:
             framenumber= framenumber,
             operation= copy.deepcopy(self.current_operation),
             contours_num= len(self.current_operation.contours_data),
-            originally_processed_image= self.originally_processed_image,
+            originally_processed_image= self.current_operation.image_to_process,
             original_data_index= self.original_data_index,
             x_coeff= self.current_size_x_coefficient,
             y_coeff= self.current_size_y_coefficient,
@@ -845,16 +843,17 @@ class SpotsDetectionTab:
         Returns:
             Image: The selected image.
         """
+        img = None
         if focuse_widget == self.data_listbox_detection:
             img = get_greyscale_image_at_index(index)
-            self.originally_processed_image = img
+            self.current_operation.image_to_process = img
         elif focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
             img = Image.fromarray(get_preprocessed_image_data_at_index(self.original_data_index, operations_index))
-            self.originally_processed_image = img
+            self.current_operation.image_to_process = img
         elif focuse_widget == self.contours_listbox:
-            img = self.originally_processed_image
+            img = self.current_operation.image_to_process
         return img
 
     def handle_displaying_image_on_canvas(self, img):
