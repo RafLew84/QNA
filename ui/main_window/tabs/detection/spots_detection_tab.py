@@ -116,7 +116,7 @@ class SpotsDetectionTab:
 
         self.current_operation = CurrentOperation()
 
-        self.selected_option = None
+        self.selected_preprocess_option = None
 
         self.create_spots_detection_tab()
 
@@ -920,7 +920,7 @@ class SpotsDetectionTab:
         Args:
             selected_option (str): The selected preprocessing option from the dropdown menu.
         """
-        self.selected_option = selected_option
+        self.selected_preprocess_option = selected_option
         for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
                        *self.parameter_preprocess_buttons]:
             widget.destroy()
@@ -960,7 +960,7 @@ class SpotsDetectionTab:
         """
         Apply preprocessing operation based on the selected option and parameters.
         """
-        if self.selected_option is None:
+        if self.selected_preprocess_option is None:
             return  # No option selected
         params = {}
         index = self.current_operation.raw_data_index
@@ -998,14 +998,14 @@ class SpotsDetectionTab:
         Returns:
             tuple: A tuple containing the processed image and the name of the applied preprocessing operation.
         """
-        if self.selected_option == "GaussianBlur":
+        if self.selected_preprocess_option == "GaussianBlur":
             process_name = "GaussianBlur"
             result_image = GaussianBlur(
                 img=np.array(img), 
                 sigmaX=params['sigmaX'],
                 sigmaY=params['sigmaY']
                 )
-        elif self.selected_option == "Non-local Mean Denoising":
+        elif self.selected_preprocess_option == "Non-local Mean Denoising":
             process_name = "Non-local Mean Denoising"
             result_image = NlMeansDenois(
                 img=np.array(img),
@@ -1013,14 +1013,14 @@ class SpotsDetectionTab:
                 searchWinwowSize=params['searchWindowSize'],
                 templateWindowSize=params['templateWindowSize']
                 )
-        elif self.selected_option == "GaussianFilter":
+        elif self.selected_preprocess_option == "GaussianFilter":
             process_name = "GaussianFilter"
             result_image = GaussianFilter(
                 img=np.array(img),
                 sigma=params['sigma']
             )
         else:
-            msg = f"Invalid preprocessing option: {self.selected_option}"
+            msg = f"Invalid preprocessing option: {self.selected_preprocess_option}"
             logger.error(msg)
             raise ValueError(msg)
             
