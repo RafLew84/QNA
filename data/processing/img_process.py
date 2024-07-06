@@ -208,6 +208,8 @@ def GetContourData(filtered_contours, x_size_coefficient, y_size_coefficient, av
             min_distance = 0.0
         if not min_index:
             min_index = -1
+
+        # area
         
         contour_data.append({
             "name": name,
