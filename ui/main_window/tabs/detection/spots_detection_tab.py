@@ -16,13 +16,6 @@ from PIL import Image, ImageTk
 import numpy as np
 import copy
 
-from data.processing.data_process import (
-    create_greyscale_image, 
-    save_labeled_image, 
-    save_avg_area_to_csv,
-    save_data_to_csv
-)
-
 from data.processing.img_process import (
     NlMeansDenois, 
     GaussianBlur, 
@@ -82,6 +75,12 @@ from ui.main_window.tabs.detection.canvas_operations import (
     perform_gaussian_blur,
     perform_non_local_denoising,
     perform_gaussian_filter
+)
+
+from ui.main_window.tabs.detection.save_data import (
+    save_labeled_image, 
+    save_avg_area_to_csv,
+    save_data_to_csv
 )
 
 from ui.main_window.tabs.detection.current_operation_model import CurrentOperation

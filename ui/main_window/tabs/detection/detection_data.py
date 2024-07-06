@@ -11,7 +11,7 @@ import os, sys
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 from data.processing.data_process import (
-    create_greyscale_image
+    convert_data_to_greyscale_image
 )
 
 data_for_detection = []
@@ -60,7 +60,7 @@ def insert_data(file_ext, item):
                 "file_name": item['file_name'],
                 "header_info": item['header_info'],
                 "original_data": item['data'],
-                "greyscale_image": create_greyscale_image(item['data']),
+                "greyscale_image": convert_data_to_greyscale_image(item['data']),
                 "operations": []
             })
     elif file_ext.lower() == "mpp":
@@ -73,7 +73,7 @@ def insert_data(file_ext, item):
                 "frame_number": i,
                 "header_info": item['header_info'],
                 "original_data": frame,
-                "greyscale_image": create_greyscale_image(frame),
+                "greyscale_image": convert_data_to_greyscale_image(frame),
                 "operations": []
                 })
     return data_name

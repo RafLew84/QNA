@@ -15,7 +15,7 @@ from tkinter import ttk
 from tkinter import filedialog, messagebox, Scrollbar, Text
 
 from PIL import ImageTk
-from data.processing.data_process import create_greyscale_image
+from data.processing.data_process import convert_data_to_greyscale_image
 
 import logging
 
@@ -240,7 +240,7 @@ class NoiseAnalysisTab:
             self.data_canvas.delete("all")
             points = self.extract_data_from_file_dic(data, mpp)
 
-            img = create_greyscale_image(points)
+            img = convert_data_to_greyscale_image(points)
 
             # Convert the PIL image to a Tkinter PhotoImage
             photo = ImageTk.PhotoImage(img)
