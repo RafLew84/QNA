@@ -33,8 +33,6 @@ from data.processing.img_process import (
     concatenate_four_images,
     GetContourData, 
     DrawLabels,
-    get_mouse_position_in_canvas,
-    get_contour_info_at_position, 
     calculate_contour_avg_area,
     process_contours_filters
 )
@@ -45,7 +43,7 @@ from data.processing.file_process import (
     get_image_sizes
 )
 
-from ui.main_window.tabs.detection.params import (
+from ui.main_window.tabs.detection.params_default_values import (
     detection_params,
     filter_params,
     preprocess_params
@@ -63,7 +61,11 @@ from ui.main_window.tabs.detection.detection_data import (
     get_file_extension,
     insert_data,
     insert_operation_at_index,
-    clear_detection_data
+    clear_detection_data,
+    get_s94_labels,
+    get_mpp_labels,
+    get_stp_labels,
+    calculate_min_max_coeff_for_filters
 )
 
 from ui.main_window.tabs.detection.contours_data import (
@@ -71,6 +73,15 @@ from ui.main_window.tabs.detection.contours_data import (
     get_contours_data_at_index,
     get_contours_data,
     insert_contour
+)
+
+from ui.main_window.tabs.detection.canvas_operations import (
+    get_mouse_position_in_canvas,
+    get_contour_info_at_position,
+    scale_factor_resize_image,
+    perform_gaussian_blur,
+    perform_non_local_denoising,
+    perform_gaussian_filter
 )
 
 from ui.main_window.tabs.detection.current_operation_model import CurrentOperation
@@ -134,35 +145,7 @@ class SpotsDetectionTab:
         self.min_size_scale = 0
         self.max_size_min_scale = 0
         self.max_size_max_scale = 0
-
-    def load_params(self):
-        """
-        Load parameters for detection, filtering, and preprocessing.
-
-        Attributes:
-            preprocess_params (dict): Parameters for image preprocessing methods.
-            detection_params (dict): Parameters for spot detection methods.
-            filter_params (dict): Parameters for filtering methods.
-        """
-        self.preprocess_params = preprocess_params
-        self.detection_params = detection_params
-        self.filter_params = filter_params
     
-    def load_data_onClick(self):
-        """
-        Load data for spots detection when the load data button is clicked.
-
-        Raises:
-            ValueError: If there is an issue loading the data.
-        """
-        try:
-            # self.data_for_detection = self.app.get_data()
-            self.insert_formated_data_to_process()
-        except Exception as e:
-            error_msg = f"Error loading data for spots detection: {e}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
     def create_spots_detection_tab(self):
         """
         Create the GUI components for the spots detection tab.
@@ -202,6 +185,48 @@ class SpotsDetectionTab:
             logger.error(error_msg)
             raise ValueError(error_msg)
         
+    
+    def configure_tab(self):
+        """
+        Configure the grid layout for the spots detection tab.
+
+        This method sets the row and column weights to ensure proper resizing of the UI elements.
+        """
+        # Set row and column weights
+        self.spots_detection_tab.grid_rowconfigure(1, weight=1)
+        self.spots_detection_tab.grid_columnconfigure(2, weight=1)
+    
+    def create_data_ui(self):
+        """
+        Create the user interface for displaying and interacting with data.
+
+        This method sets up buttons, listboxes, and scrollbars for loading and displaying data.
+        """
+        # Button to load data
+        self.load_data_button = tk.Button(
+            self.spots_detection_tab, 
+            text="Load Data", 
+            command=self.load_data_onClick
+            )
+        self.load_data_button.grid(row=0, column=0, padx=5, pady=5)
+        
+        # Create listbox to display filenames
+        self.data_listbox_detection = tk.Listbox(
+            self.spots_detection_tab, 
+            width=20, 
+            height=10, 
+            selectmode=tk.SINGLE
+            )
+        self.data_listbox_detection.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_scrollbar_detection = tk.Scrollbar(
+            self.spots_detection_tab, 
+            orient=tk.VERTICAL, 
+            command=self.data_listbox_detection.yview
+            )
+        self.listbox_scrollbar_detection.grid(row=1, column=1, rowspan=2, sticky="ns")
+        self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
+        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+
     def create_contours_edit_ui(self):
         """
         Create the user interface for editing contours.
@@ -251,16 +276,6 @@ class SpotsDetectionTab:
         self.prev_button.grid(row=4, column=0, padx=5, pady=5)
         self.next_button = tk.Button(self.spots_detection_tab, text="Next", command=self.navigate_next_onClick)
         self.next_button.grid(row=4, column=4, padx=5, pady=5)
-        
-    def configure_tab(self):
-        """
-        Configure the grid layout for the spots detection tab.
-
-        This method sets the row and column weights to ensure proper resizing of the UI elements.
-        """
-        # Set row and column weights
-        self.spots_detection_tab.grid_rowconfigure(1, weight=1)
-        self.spots_detection_tab.grid_columnconfigure(2, weight=1)
         
     def create_scaling_ui(self):
         """
@@ -316,37 +331,33 @@ class SpotsDetectionTab:
         # Bind event for canvas resizing
         self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
 
-        
-    def create_data_ui(self):
+    def load_params(self):
         """
-        Create the user interface for displaying and interacting with data.
+        Load parameters for detection, filtering, and preprocessing.
 
-        This method sets up buttons, listboxes, and scrollbars for loading and displaying data.
+        Attributes:
+            preprocess_params (dict): Parameters for image preprocessing methods.
+            detection_params (dict): Parameters for spot detection methods.
+            filter_params (dict): Parameters for filtering methods.
         """
-        # Button to load data
-        self.load_data_button = tk.Button(
-            self.spots_detection_tab, 
-            text="Load Data", 
-            command=self.load_data_onClick
-            )
-        self.load_data_button.grid(row=0, column=0, padx=5, pady=5)
-        
-        # Create listbox to display filenames
-        self.data_listbox_detection = tk.Listbox(
-            self.spots_detection_tab, 
-            width=20, 
-            height=10, 
-            selectmode=tk.SINGLE
-            )
-        self.data_listbox_detection.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
-        self.listbox_scrollbar_detection = tk.Scrollbar(
-            self.spots_detection_tab, 
-            orient=tk.VERTICAL, 
-            command=self.data_listbox_detection.yview
-            )
-        self.listbox_scrollbar_detection.grid(row=1, column=1, rowspan=2, sticky="ns")
-        self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
-        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+        self.preprocess_params = preprocess_params
+        self.detection_params = detection_params
+        self.filter_params = filter_params
+    
+    def load_data_onClick(self):
+        """
+        Load data for spots detection when the load data button is clicked.
+
+        Raises:
+            ValueError: If there is an issue loading the data.
+        """
+        try:
+            # self.data_for_detection = self.app.get_data()
+            self.insert_formated_data_to_process()
+        except Exception as e:
+            error_msg = f"Error loading data for spots detection: {e}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         
     def refresh_edit_contours_listbox_data(self):
         """
@@ -1049,7 +1060,7 @@ class SpotsDetectionTab:
         # Retrieve the scale factor
         scale_factor = self.scale_factor_var.get()
         # Resize the image
-        img = img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
+        img = scale_factor_resize_image(img, scale_factor)
 
         # Convert the PIL image to a Tkinter PhotoImage
         photo = ImageTk.PhotoImage(img)
@@ -1179,33 +1190,21 @@ class SpotsDetectionTab:
         Returns:
             tuple: A tuple containing the processed image and the name of the applied preprocessing operation.
         """
-        if self.selected_preprocess_option == "GaussianBlur":
-            process_name = "GaussianBlur"
-            result_image = GaussianBlur(
-                img=np.array(img), 
-                sigmaX=params['sigmaX'],
-                sigmaY=params['sigmaY']
-                )
-        elif self.selected_preprocess_option == "Non-local Mean Denoising":
-            process_name = "Non-local Mean Denoising"
-            result_image = NlMeansDenois(
-                img=np.array(img),
-                h=params['h'],
-                searchWinwowSize=params['searchWindowSize'],
-                templateWindowSize=params['templateWindowSize']
-                )
-        elif self.selected_preprocess_option == "GaussianFilter":
-            process_name = "GaussianFilter"
-            result_image = GaussianFilter(
-                img=np.array(img),
-                sigma=params['sigma']
-            )
+        preprocess_operations = {
+            "GaussianBlur": perform_gaussian_blur,
+            "Non-local Mean Denoising": perform_non_local_denoising,
+            "GaussianFilter": perform_gaussian_filter,
+        }
+
+        if self.selected_preprocess_option in preprocess_operations:
+            process_function = preprocess_operations[self.selected_preprocess_option]
+            process_name, result_image = process_function(params, img)
         else:
             msg = f"Invalid preprocessing option: {self.selected_preprocess_option}"
             logger.error(msg)
             raise ValueError(msg)
             
-        return result_image,process_name
+        return result_image, process_name
 
     def get_values_from_preprocess_menu_items(self, params):
         """
@@ -1395,17 +1394,7 @@ class SpotsDetectionTab:
         """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
-        stp_labels = [
-            f"Filename: {filename}",
-            f"X Amplitude: {header_info.get('X Amplitude', '')}",
-            f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
-            f"Z Amplitude: {header_info.get('Z Amplitude', '')}",
-            f"Number of cols: {header_info.get('Number of columns', '')}",
-            f"Number of rows: {header_info.get('Number of rows', '')}",
-            f"X Offset: {header_info.get('X Offset', '')}",
-            f"Y Offset: {header_info.get('Y Offset', '')}",
-            f"Z Gain: {header_info.get('Z Gain', '')}"
-        ]
+        stp_labels = get_stp_labels(header_info, filename)
         return stp_labels
     
     def get_header_labels_from_s94_file(self, index):
@@ -1424,16 +1413,7 @@ class SpotsDetectionTab:
         """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
-        s94_labels = [
-            f"Filename: {filename}",
-            f"X Amplitude: {header_info.get('x_size', '')}",
-            f"Y Amplitude: {header_info.get('y_size', '')}",
-            f"Number of cols: {header_info.get('x_points', '')}",
-            f"Number of rows: {header_info.get('y_points', '')}",
-            f"X Offset: {header_info.get('x_offset', '')}",
-            f"Y Offset: {header_info.get('y_offset', '')}",
-            f"Z Gain: {header_info.get('z_gain', '')}"
-        ]
+        s94_labels = get_s94_labels(header_info, filename)
         return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
@@ -1453,17 +1433,7 @@ class SpotsDetectionTab:
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)
-        mpp_labels = [
-            f"Filename: {filename}",
-            f"Frame: {framenumber}",
-            f'X Amplitude: {header_info.get("Control", {}).get("X Amplitude", "")}',
-            f'Y Amplitude: {header_info.get("Control", {}).get("Y Amplitude", "")}',
-            f'Number of cols: {header_info.get("General Info", {}).get("Number of columns", "")}',
-            f'Number of rows: {header_info.get("General Info", {}).get("Number of rows", "")}',
-            f'X Offset: {header_info.get("Control", {}).get("X Offset", "")}',
-            f'Y Offset: {header_info.get("Control", {}).get("Y Offset", "")}',
-            f'Z Gain: {header_info.get("Control", {}).get("Z Gain", "")}'
-        ]
+        mpp_labels = get_mpp_labels(header_info, filename, framenumber)
         return mpp_labels
 
     def sigma_slider_onChange(self, value, param_name):
@@ -1889,10 +1859,7 @@ class SpotsDetectionTab:
             x (float): Width or size parameter.
             y (float): Height or size parameter.
         """
-        min_size_coeff = 0.02
-        max_size_coeff = 0.1
-        pixels = (x * min_size_coeff) * ( min_size_coeff * y)
-        self.min_size_scale = pixels * self.current_area_coefficient
+        min_pixels, max_pixels = calculate_min_max_coeff_for_filters(x, y)
+        self.min_size_scale = min_pixels * self.current_area_coefficient
         self.max_size_min_scale = self.min_size_scale
-        max_pixels = (x * max_size_coeff) * ( max_size_coeff * y)
         self.max_size_max_scale = max_pixels * self.current_area_coefficient

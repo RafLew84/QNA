@@ -83,3 +83,48 @@ def insert_operation_at_index(index, operation):
 
 def clear_detection_data():
     data_for_detection.clear()
+
+def get_s94_labels(header_info, filename):
+    return [
+        f"Filename: {filename}",
+        f"X Amplitude: {header_info.get('x_size', '')}",
+        f"Y Amplitude: {header_info.get('y_size', '')}",
+        f"Number of cols: {header_info.get('x_points', '')}",
+        f"Number of rows: {header_info.get('y_points', '')}",
+        f"X Offset: {header_info.get('x_offset', '')}",
+        f"Y Offset: {header_info.get('y_offset', '')}",
+        f"Z Gain: {header_info.get('z_gain', '')}"
+    ]
+
+def get_mpp_labels(header_info, filename, framenumber):
+    return [
+        f"Filename: {filename}",
+        f"Frame: {framenumber}",
+        f'X Amplitude: {header_info.get("Control", {}).get("X Amplitude", "")}',
+        f'Y Amplitude: {header_info.get("Control", {}).get("Y Amplitude", "")}',
+        f'Number of cols: {header_info.get("General Info", {}).get("Number of columns", "")}',
+        f'Number of rows: {header_info.get("General Info", {}).get("Number of rows", "")}',
+        f'X Offset: {header_info.get("Control", {}).get("X Offset", "")}',
+        f'Y Offset: {header_info.get("Control", {}).get("Y Offset", "")}',
+        f'Z Gain: {header_info.get("Control", {}).get("Z Gain", "")}'
+    ]
+
+def get_stp_labels(header_info, filename):
+    return [
+        f"Filename: {filename}",
+        f"X Amplitude: {header_info.get('X Amplitude', '')}",
+        f"Y Amplitude: {header_info.get('Y Amplitude', '')}",
+        f"Z Amplitude: {header_info.get('Z Amplitude', '')}",
+        f"Number of cols: {header_info.get('Number of columns', '')}",
+        f"Number of rows: {header_info.get('Number of rows', '')}",
+        f"X Offset: {header_info.get('X Offset', '')}",
+        f"Y Offset: {header_info.get('Y Offset', '')}",
+        f"Z Gain: {header_info.get('Z Gain', '')}"
+    ]
+
+def calculate_min_max_coeff_for_filters(x, y):
+    min_size_coeff = 0.02
+    max_size_coeff = 0.1
+    min_pixels = (x * min_size_coeff) * ( min_size_coeff * y)
+    max_pixels = (x * max_size_coeff) * ( max_size_coeff * y)
+    return min_pixels,max_pixels
