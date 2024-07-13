@@ -19,6 +19,7 @@ from tkinter import ttk
 from ui.main_window.tabs.load_data.load_data_tab import LoadDataTab
 from ui.main_window.tabs.noise.noise_analisys_tab import NoiseAnalysisTab
 from ui.main_window.tabs.detection.spots_detection_tab import SpotsDetectionTab
+from ui.main_window.tabs.preprocessing.preprocessing_tab import PreprocessingTab
 
 import logging
 
@@ -55,8 +56,9 @@ class App:
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
         self.load_data_tab = LoadDataTab(self.notebook, self)
-        self.noise_analisys_tab = NoiseAnalysisTab(self.notebook, self)
+        self.preprocessing_tab = PreprocessingTab(self.notebook, self)
         self.spots_detection_tab = SpotsDetectionTab(self.notebook, self)
+        self.noise_analisys_tab = NoiseAnalysisTab(self.notebook, self)
 
         # Configure grid row and column weights for rescaling
         self.root.grid_rowconfigure(0, weight=1)
