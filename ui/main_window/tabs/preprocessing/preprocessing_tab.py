@@ -14,15 +14,34 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 
+from ui.main_window.tabs.detection.preprocess_operations import create_preprocess_operation
+
 from ui.main_window.tabs.preprocessing.preprocessing_data import (
     data_for_preprocessing,
     get_file_extension,
     get_filename_at_index,
     get_header_info_at_index,
     get_framenumber_at_index,
+    get_greyscale_image_at_index,
+    get_all_operations,
     get_mpp_labels,
     get_s94_labels,
-    get_stp_labels
+    get_stp_labels,
+    get_preprocessed_image_data_at_index,
+    insert_data,
+    clear_preprocessing_data,
+    insert_operation_at_index
+)
+
+from data.processing.img_process import (
+    concatenate_two_images
+)
+
+from ui.main_window.tabs.detection.canvas_operations import (
+    scale_factor_resize_image,
+    perform_gaussian_blur,
+    perform_non_local_denoising,
+    perform_gaussian_filter
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -48,6 +67,8 @@ class PreprocessingTab:
         self.load_params()
 
         self.create_preprocessing_tab()
+
+        self.current_data_index = 0
 
     def create_preprocessing_tab(self):
         self.configure_tab()
@@ -97,27 +118,89 @@ class PreprocessingTab:
         self.load_data_button.grid(row=0, column=0, padx=5, pady=5)
         
         # Create listbox to display filenames
-        self.data_listbox_detection = tk.Listbox(
+        self.data_listbox_preprocessing = tk.Listbox(
             self.preprocessing_tab, 
             width=20, 
             height=10, 
             selectmode=tk.SINGLE
             )
-        self.data_listbox_detection.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
-        self.listbox_scrollbar_detection = tk.Scrollbar(
+        self.data_listbox_preprocessing.grid(row=1, column=0, rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_scrollbar_preprocessing = tk.Scrollbar(
             self.preprocessing_tab, 
             orient=tk.VERTICAL, 
-            command=self.data_listbox_detection.yview
+            command=self.data_listbox_preprocessing.yview
             )
-        self.listbox_scrollbar_detection.grid(row=1, column=1, rowspan=2, sticky="ns")
-        self.data_listbox_detection.config(yscrollcommand=self.listbox_scrollbar_detection.set)
-        self.data_listbox_detection.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+        self.listbox_scrollbar_preprocessing.grid(row=1, column=1, rowspan=2, sticky="ns")
+        self.data_listbox_preprocessing.config(yscrollcommand=self.listbox_scrollbar_preprocessing.set)
+        self.data_listbox_preprocessing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
     def load_data_onClick(self):
-        pass
+        try:
+            # self.data_for_detection = self.app.get_data()
+            self.insert_formated_data_to_process()
+        except Exception as e:
+            error_msg = f"Error loading data for spots detection: {e}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
+    def insert_formated_data_to_process(self):
+        clear_preprocessing_data()
+        self.data_listbox_preprocessing.delete(0, tk.END)
 
-    def show_data_onDataListboxSelect(self):
-        pass
+        data = self.app.get_data()
+        file_ext = data[0]['file_name'][-3:]
+        for item in data:
+            data_name = insert_data(file_ext, item)
+            self.data_listbox_preprocessing.insert(tk.END, *data_name)
+        self.update_navigation_slider_range()
+
+    def show_data_onDataListboxSelect(self, event):
+        file_ext = get_file_extension()
+        # Get the index of the selected filename
+        selected_index = self.data_listbox_preprocessing.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            self.current_data_index = index
+            # Update navigation slider
+            self.navigation_slider.set(index + 1)
+            self.display_image(index)
+            self.refresh_data_in_operations_listbox()
+    
+    def display_image(self, index):
+        # Clear previous data
+        self.data_canvas_preprocessing.delete("all")
+        self.display_header_info_labels()
+
+        # Load greyscale image
+        img = get_greyscale_image_at_index(index)
+        self.handle_displaying_image_on_canvas(img)
+
+    def refresh_data_in_operations_listbox(self):
+        self.operations_listbox.delete(0, tk.END)
+        selected_index = self.data_listbox_preprocessing.curselection()
+        if selected_index:
+            index = int(selected_index[0])        
+            operations = get_all_operations(index)
+            self.operations_listbox.insert(tk.END, *operations)
+
+    def handle_displaying_image_on_canvas(self, img):
+        # Retrieve the scale factor
+        scale_factor = self.scale_factor_var.get()
+        # Resize the image
+        img = scale_factor_resize_image(img, scale_factor)
+
+        # Convert the PIL image to a Tkinter PhotoImage
+        photo = ImageTk.PhotoImage(img)
+
+        # Display the image on the canvas
+        self.data_canvas_preprocessing.create_image(0, 0, anchor="nw", image=photo)
+
+        # Save a reference to the PhotoImage to prevent garbage collection
+        self.data_canvas_preprocessing.image = photo
+
+    def update_navigation_slider_range(self):
+        num_items = len(self.data_listbox_preprocessing.get(0, tk.END))
+        self.navigation_slider.config(from_=1, to=num_items)
 
     def create_navigation_ui(self):
         # Slider for navigation
@@ -157,40 +240,97 @@ class PreprocessingTab:
         self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
         
     def create_canvas_ui(self):
-        self.data_canvas_detection = tk.Canvas(self.preprocessing_tab, bg="white")
-        self.data_canvas_detection.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
-        self.vertical_scrollbar_detection = tk.Scrollbar(
+        self.data_canvas_preprocessing = tk.Canvas(self.preprocessing_tab, bg="white")
+        self.data_canvas_preprocessing.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
+        self.vertical_scrollbar_preprocessing = tk.Scrollbar(
             self.preprocessing_tab, 
             orient=tk.VERTICAL, 
-            command=self.data_canvas_detection.yview
+            command=self.data_canvas_preprocessing.yview
             )
-        self.vertical_scrollbar_detection.grid(row=1, column=3, sticky="ns")
-        self.data_canvas_detection.configure(yscrollcommand=self.vertical_scrollbar_detection.set)
-        self.horizontal_scrollbar_detection = tk.Scrollbar(
+        self.vertical_scrollbar_preprocessing.grid(row=1, column=3, sticky="ns")
+        self.data_canvas_preprocessing.configure(yscrollcommand=self.vertical_scrollbar_preprocessing.set)
+        self.horizontal_scrollbar_preprocessing = tk.Scrollbar(
             self.preprocessing_tab, 
             orient=tk.HORIZONTAL, 
-            command=self.data_canvas_detection.xview
+            command=self.data_canvas_preprocessing.xview
             )
-        self.horizontal_scrollbar_detection.grid(row=2, column=2, sticky="ew")
-        self.data_canvas_detection.configure(xscrollcommand=self.horizontal_scrollbar_detection.set)
+        self.horizontal_scrollbar_preprocessing.grid(row=2, column=2, sticky="ew")
+        self.data_canvas_preprocessing.configure(xscrollcommand=self.horizontal_scrollbar_preprocessing.set)
         
         # Bind event for canvas resizing
-        self.data_canvas_detection.bind("<Configure>", self.resize_canvas_detection_scrollregion)
+        self.data_canvas_preprocessing.bind("<Configure>", self.resize_canvas_detection_scrollregion)
 
-    def update_image_from_navigation_slider_onChange(self):
-        pass
+    def update_image_from_navigation_slider_onChange(self, event):
+        selected_index = self.data_listbox_preprocessing.curselection()
+        if selected_index:
+            try:
+                index = int(self.navigation_slider.get())
+            except ValueError:
+                logger.error("Invalid slider value")
+                return
+            if index <= 0:
+                logger.error("Slider value out of range")
+                return
+            self.display_image(index - 1)
+
+            # Update listbox selection
+            self.data_listbox_preprocessing.selection_clear(0, tk.END)
+            self.data_listbox_preprocessing.selection_set(index - 1)
+            self.data_listbox_preprocessing.see(index - 1)
+
+            self.refresh_data_in_operations_listbox()
+        self.resize_canvas_detection_scrollregion()
 
     def navigate_prev_onClick(self):
-        pass
+        try:
+            current_value = self.navigation_slider.get()
+            if current_value > 0:
+                self.navigation_slider.set(current_value - 1)
+        except ValueError:
+            error_msg = "Invalid current value for navigation slider"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     def navigate_next_onClick(self):
-        pass
+        try:
+            current_value = self.navigation_slider.get()
+            self.navigation_slider.set(current_value + 1)
+        except ValueError:
+            error_msg = "Invalid current value for navigation slider"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
     def update_image_on_rescale_slider_change(self):
-        pass
+        selected_index = self.data_listbox_preprocessing.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            self.display_image(index)
+        selected_index = self.operations_listbox.curselection()
+        if selected_index:
+            opertation_index = int(selected_index[0])
+            self.display_processed_image(opertation_index)
+        self.resize_canvas_detection_scrollregion()
 
-    def resize_canvas_detection_scrollregion(self, event):
-        pass
+    def display_processed_image(self, operation_index):
+
+        # Clear previous data
+        try:
+            self.data_canvas_preprocessing.delete("all")
+            img = None
+            index = self.current_data_index
+            img_data = get_preprocessed_image_data_at_index(index, operation_index)
+            processed_img = Image.fromarray(img_data)
+            original_img = get_greyscale_image_at_index(index)
+            # Concatenate the images horizontally
+            img = concatenate_two_images(processed_img, original_img)
+            self.handle_displaying_image_on_canvas(img)
+        except Exception as e:
+            # Handle any unexpected errors and log them
+            error_msg = f"Error displaying processed image: {e}"
+            logger.error(error_msg)
+
+    def resize_canvas_detection_scrollregion(self, event=None):
+        self.data_canvas_preprocessing.config(scrollregion=self.data_canvas_preprocessing.bbox("all"))
 
     def display_header_info_labels(self):
         try:
@@ -200,7 +340,7 @@ class PreprocessingTab:
             # Header info labels
             header_labels = []
 
-            selected_index = self.data_listbox_detection.curselection()
+            selected_index = self.data_listbox_preprocessing.curselection()
             if selected_index:
                 index = int(selected_index[0])
                 file_ext = get_file_extension()
@@ -213,17 +353,6 @@ class PreprocessingTab:
             logger.error(error_msg)
 
     def display_detection_section_menu(self):
-        """
-        Display the dropdown menu for selecting preprocess and detection options.
-
-        This method creates and places a dropdown menu for selecting preprocess and detection options,
-        such as "Preprocess" and "Detection".
-
-        Raises:
-            ValueError: If an error occurs while creating the dropdown menu.
-
-        """
-        
         try:
             self.display_preprocess_options_menu()
 
@@ -295,16 +424,6 @@ class PreprocessingTab:
         self.parameter_preprocess_buttons.append(apply_button)
 
     def create_preprocess_menu_items(self, row, param_name, param_value):
-        """
-        Create GUI elements for displaying a preprocessing parameter.
-
-        This method creates a label and an entry field for a preprocessing parameter.
-
-        Args:
-            row (int): The row index where the GUI elements should be placed.
-            param_name (str): The name of the preprocessing parameter.
-            param_value: The value of the preprocessing parameter.
-        """
         label = tk.Label(self.preprocess_section_menu, text=param_name, width=15)
         label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
         entry = tk.Entry(self.preprocess_section_menu)
@@ -314,10 +433,74 @@ class PreprocessingTab:
         self.parameter_preprocess_labels[param_name] = label
 
     def apply_preprocessing_onClick(self):
-        pass
+        if self.selected_preprocess_option is None:
+            return  # No option selected
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
 
-    def show_operations_image_listboxOnSelect(self):
-        pass
+        result_image = None
+        process_name = None
+
+        self.get_values_from_preprocess_menu_items(params)
+        # Apply preprocessing based on selected option and parameters
+        result_image, process_name = self.apply_preprocessing_operation(params, img)
+        operation = create_preprocess_operation(result_image, process_name, params)
+
+        insert_operation_at_index(index, operation)
+
+        # Refresh data and display processed image
+        self.refresh_data_in_operations_listbox()
+        operations_index = self.operations_listbox.size() - 1
+        self.display_processed_image(operations_index)
+
+        # Set focus and selection on operations listbox
+        self.operations_listbox.focus()
+        self.operations_listbox.selection_set(tk.END)
+
+    def apply_preprocessing_operation(self, params, img):
+        preprocess_operations = {
+            "GaussianBlur": perform_gaussian_blur,
+            "Non-local Mean Denoising": perform_non_local_denoising,
+            "GaussianFilter": perform_gaussian_filter,
+        }
+
+        if self.selected_preprocess_option in preprocess_operations:
+            process_function = preprocess_operations[self.selected_preprocess_option]
+            process_name, result_image = process_function(params, img)
+        else:
+            msg = f"Invalid preprocessing option: {self.selected_preprocess_option}"
+            logger.error(msg)
+            raise ValueError(msg)
+            
+        return result_image, process_name
+
+    def get_values_from_preprocess_menu_items(self, params):
+        for param_name, entry in self.parameter_preprocess_entries.items():
+            try:
+                params[param_name] = int(entry.get())
+            except ValueError:
+                params[param_name] = entry.get()
+
+    def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
+        img = None
+        if focuse_widget == self.data_listbox_preprocessing:
+            img = get_greyscale_image_at_index(index)
+        elif focuse_widget == self.operations_listbox:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+            img = Image.fromarray(get_preprocessed_image_data_at_index(index, operations_index))
+        return img
+
+    def show_operations_image_listboxOnSelect(self, event=None):
+        try:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+
+            self.display_processed_image(operations_index)
+        except IndexError:
+            pass
 
 
     def create_data_for_header_labels_based_on_file_ext(self, index, file_ext):
@@ -339,57 +522,18 @@ class PreprocessingTab:
             raise
 
     def get_header_labels_from_stp_file(self, index):
-        """
-        Retrieve header labels for an STP file based on the index.
-
-        Args:
-            index (int): Index of the data.
-
-        Returns:
-            list: List of header labels for the STP file.
-
-        Notes:
-            - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
-            - Constructs a list of formatted strings with relevant header information.
-        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         stp_labels = get_stp_labels(header_info, filename)
         return stp_labels
     
     def get_header_labels_from_s94_file(self, index):
-        """
-        Retrieve header labels for an S94 file based on the index.
-
-        Args:
-            index (int): Index of the data.
-
-        Returns:
-            list: List of header labels for the S94 file.
-
-        Notes:
-            - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
-            - Constructs a list of formatted strings with relevant header information.
-        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         s94_labels = get_s94_labels(header_info, filename)
         return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
-        """
-        Retrieve header labels for an MPP file based on the index.
-
-        Args:
-            index (int): Index of the data.
-
-        Returns:
-            list: List of header labels for the MPP file.
-
-        Notes:
-            - Retrieves header information using helper functions `get_header_info_at_index`, `get_filename_at_index`, and `get_framenumber_at_index`.
-            - Constructs a list of formatted strings with relevant header information.
-        """
         header_info = get_header_info_at_index(index)
         filename = get_filename_at_index(index)
         framenumber = get_framenumber_at_index(index)

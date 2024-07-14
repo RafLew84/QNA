@@ -72,3 +72,48 @@ def get_framenumber_at_index(index):
     if 'frame_number' in data_for_preprocessing[index]:
         framenumber = str(data_for_preprocessing[index]['frame_number'])
     return framenumber
+
+def clear_preprocessing_data():
+    data_for_preprocessing.clear()
+
+def insert_data(file_ext, item):
+    data_name = []
+    if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+        filename_only = os.path.basename(item['file_name'])
+        data_name.append(filename_only)
+        data_for_preprocessing.append({
+                "file_name": item['file_name'],
+                "header_info": item['header_info'],
+                "original_data": item['data'],
+                "greyscale_image": convert_data_to_greyscale_image(item['data']),
+                "operations": []
+            })
+    elif file_ext.lower() == "mpp":
+        filename_only = os.path.basename(item['file_name'])
+        for i, frame in enumerate(item['data'], start=1):
+            frame_name = f"{filename_only}: frame {i}"
+            data_name.append(frame_name)
+            data_for_preprocessing.append({
+                "file_name": item['file_name'],
+                "frame_number": i,
+                "header_info": item['header_info'],
+                "original_data": frame,
+                "greyscale_image": convert_data_to_greyscale_image(frame),
+                "operations": []
+                })
+    return data_name 
+
+def get_greyscale_image_at_index(index):
+    img = data_for_preprocessing[index]['greyscale_image']
+    return img
+
+def get_all_operations(index):
+    operations = [item["process_name"] for item in data_for_preprocessing[index]['operations']]
+    return operations
+
+def get_preprocessed_image_data_at_index(img_index, operation_index):
+    img = data_for_preprocessing[img_index]['operations'][operation_index]['processed_image']
+    return img
+
+def insert_operation_at_index(index, operation):
+    data_for_preprocessing[index]['operations'].append(operation)
