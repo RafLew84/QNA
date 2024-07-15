@@ -307,7 +307,7 @@ class PreprocessingTab:
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-    def update_image_on_rescale_slider_change(self):
+    def update_image_on_rescale_slider_change(self, event=None):
         selected_index = self.data_listbox_preprocessing.curselection()
         if selected_index:
             index = int(selected_index[0])
