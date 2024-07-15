@@ -35,8 +35,7 @@ from data.processing.file_process import (
 
 from ui.main_window.tabs.detection.params_default_values import (
     detection_params,
-    filter_params,
-    preprocess_params
+    filter_params
 )
 
 from ui.main_window.tabs.detection.detection_data import (
@@ -69,10 +68,7 @@ from ui.main_window.tabs.detection.contours_data import (
 from ui.main_window.tabs.detection.canvas_operations import (
     get_mouse_position_in_canvas,
     get_contour_info_at_position,
-    scale_factor_resize_image,
-    perform_gaussian_blur,
-    perform_non_local_denoising,
-    perform_gaussian_filter
+    scale_factor_resize_image
 )
 
 from ui.main_window.tabs.detection.save_data import (
@@ -337,7 +333,6 @@ class SpotsDetectionTab:
             detection_params (dict): Parameters for spot detection methods.
             filter_params (dict): Parameters for filtering methods.
         """
-        self.preprocess_params = preprocess_params
         self.detection_params = detection_params
         self.filter_params = filter_params
     
@@ -407,56 +402,6 @@ class SpotsDetectionTab:
         else:
             pass
 
-    def display_preprocess_options_menu(self):
-        """
-        Display the preprocess options menu.
-
-        This method creates and places dropdown menus for selecting preprocessing options.
-
-        Raises:
-            ValueError: If there is an issue creating the preprocess options menu.
-        """
-        try:
-            # Preprocess Dropdown menu options
-            preprocessing_options = list(self.preprocess_params.keys())
-
-            self.image_show_options = {
-                "Preprocess": ["processed", "both", "original"]
-            }
-
-            # Create and place dropdown menu
-            choose_preprocess_option_dropdown_var = tk.StringVar()
-            choose_preprocess_option_dropdown_var.set("")  # Set default option
-            choose_preprocess_option_dropdown = tk.OptionMenu(
-                self.detection_section_menu, 
-                choose_preprocess_option_dropdown_var, 
-                *preprocessing_options, 
-                command=self.choose_preprocess_options_dropdownOnChange
-                )
-            choose_preprocess_option_dropdown.config(width=10)
-            choose_preprocess_option_dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
-
-            # Create and place second dropdown menu
-            self.choose_display_image_option_dropdown_var = tk.StringVar()
-            self.choose_display_image_option_dropdown_var.set("")  # Set default option
-            self.choose_display_image_option_dropdown = tk.OptionMenu(
-                self.detection_section_menu, 
-                self.choose_display_image_option_dropdown_var, 
-                *self.image_show_options["Preprocess"], 
-                command=self.choose_image_display_option_dropdownOnChange
-                )
-            self.choose_display_image_option_dropdown.config(width=10)
-            # self.choose_display_image_option_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
-
-            # Labels for function parameters
-            self.parameter_preprocess_entries = {}
-            self.parameter_preprocess_labels = {}
-            self.parameter_preprocess_buttons = []
-        except Exception as e:
-            error_msg = f"Error displaying preprocess options menu: {e}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
     def display_detection_options_menu(self):
         """
         Display the dropdown menu for selecting detection options.
@@ -524,7 +469,6 @@ class SpotsDetectionTab:
             self.operation_menu_dropdown.config(width=10)
             # self.operation_menu_dropdown.grid(row=0, column=0, padx=5, pady=1, sticky="n")
 
-            self.display_preprocess_options_menu()
             self.display_detection_options_menu()
 
             # Listbox to show all operations
@@ -1101,125 +1045,6 @@ class SpotsDetectionTab:
             option= selected_option
         )
     
-    def choose_preprocess_options_dropdownOnChange(self, selected_option):
-        """
-        Handle the event when an option is selected from the preprocess options dropdown menu.
-
-        This method updates the parameter labels and entries based on the selected preprocessing option.
-
-        Args:
-            selected_option (str): The selected preprocessing option from the dropdown menu.
-        """
-        self.selected_preprocess_option = selected_option
-        for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
-                       *self.parameter_preprocess_buttons]:
-            widget.destroy()
-        self.parameter_preprocess_entries.clear()
-        self.parameter_preprocess_labels.clear()
-        self.parameter_preprocess_buttons.clear()
-        # # Update labels with function parameters based on selected option
-        row = 3
-        for param_name, param_value in self.preprocess_params[selected_option].items():
-            self.create_preprocess_menu_items(row, param_name, param_value)
-            row += 2
-        # Apply button
-        apply_button = tk.Button(self.detection_section_menu, text="Apply", command=self.apply_preprocessing_onClick)
-        apply_button.grid(row=row, column=0, padx=5, pady=5)
-        self.parameter_preprocess_buttons.append(apply_button)
-
-    def create_preprocess_menu_items(self, row, param_name, param_value):
-        """
-        Create GUI elements for displaying a preprocessing parameter.
-
-        This method creates a label and an entry field for a preprocessing parameter.
-
-        Args:
-            row (int): The row index where the GUI elements should be placed.
-            param_name (str): The name of the preprocessing parameter.
-            param_value: The value of the preprocessing parameter.
-        """
-        label = tk.Label(self.detection_section_menu, text=param_name, width=15)
-        label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-        entry = tk.Entry(self.detection_section_menu)
-        entry.grid(row=row + 1, column=0, padx=5, pady=1, sticky="w")
-        entry.insert(0, str(param_value))
-        self.parameter_preprocess_entries[param_name] = entry
-        self.parameter_preprocess_labels[param_name] = label
-
-    def apply_preprocessing_onClick(self):
-        """
-        Apply preprocessing operation based on the selected option and parameters.
-        """
-        if self.selected_preprocess_option is None:
-            return  # No option selected
-        params = {}
-        index = self.current_operation.raw_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        result_image = None
-        process_name = None
-
-        self.get_values_from_preprocess_menu_items(params)
-        # Apply preprocessing based on selected option and parameters
-        result_image, process_name = self.apply_preprocessing_operation(params, img)
-        operation = create_preprocess_operation(result_image, process_name, params)
-
-        insert_operation_at_index(index, operation)
-
-        # Refresh data and display processed image
-        self.refresh_data_in_operations_listbox()
-        operations_index = self.operations_listbox.size() - 1
-        self.display_processed_image(operations_index, "Preprocess", "both")
-        self.choose_display_image_option_dropdown_var.set("both")
-
-        # Set focus and selection on operations listbox
-        self.operations_listbox.focus()
-        self.operations_listbox.selection_set(tk.END)
-
-    def apply_preprocessing_operation(self, params, img):
-        """
-        Apply the selected preprocessing operation to the image based on the provided parameters.
-
-        Args:
-            params (dict): Dictionary containing parameter names and values for the selected preprocessing operation.
-            img (PIL.Image.Image): Input image.
-
-        Returns:
-            tuple: A tuple containing the processed image and the name of the applied preprocessing operation.
-        """
-        preprocess_operations = {
-            "GaussianBlur": perform_gaussian_blur,
-            "Non-local Mean Denoising": perform_non_local_denoising,
-            "GaussianFilter": perform_gaussian_filter,
-        }
-
-        if self.selected_preprocess_option in preprocess_operations:
-            process_function = preprocess_operations[self.selected_preprocess_option]
-            process_name, result_image = process_function(params, img)
-        else:
-            msg = f"Invalid preprocessing option: {self.selected_preprocess_option}"
-            logger.error(msg)
-            raise ValueError(msg)
-            
-        return result_image, process_name
-
-    def get_values_from_preprocess_menu_items(self, params):
-        """
-        Get parameter values from the preprocess menu entries and store them in a dictionary.
-
-        Args:
-            params (dict): Dictionary to store parameter values.
-
-        Returns:
-            None
-        """
-        for param_name, entry in self.parameter_preprocess_entries.items():
-            try:
-                params[param_name] = int(entry.get())
-            except ValueError:
-                params[param_name] = entry.get()
-    
     def show_operations_image_listboxOnSelect(self, event):
         """
         Display the processed image corresponding to the selected operation in the operations listbox.
@@ -1279,21 +1104,11 @@ class SpotsDetectionTab:
 
         img = None
         try:
-            if option_section in self.image_show_options:
-                options = self.image_show_options[option_section]
-                if option in options:
-                    # Perform operations for each option
-                    if option == "processed":
-                        img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
-                        img = Image.fromarray(img_data)
-                    elif option == "original":
-                        img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
-                    elif option == "both":
-                        img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
-                        processed_img = Image.fromarray(img_data)
-                        original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
-                        # Concatenate the images horizontally
-                        img = concatenate_two_images(processed_img, original_img)
+            img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
+            processed_img = Image.fromarray(img_data)
+            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
+            # Concatenate the images horizontally
+            img = concatenate_two_images(processed_img, original_img)
         except Exception as e:
             # Handle any unexpected errors and log them
             error_msg = f"Error retrieving image based on selected option: {e}"
