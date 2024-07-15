@@ -56,7 +56,8 @@ from ui.main_window.tabs.detection.detection_data import (
     insert_data,
     insert_formatted_data,
     clear_detection_data,
-    calculate_min_max_coeff_for_filters
+    calculate_min_max_coeff_for_filters,
+    get_path_at_index
 )
 
 from ui.main_window.tabs.detection.contours_data import (

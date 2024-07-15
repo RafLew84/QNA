@@ -68,3 +68,7 @@ def calculate_min_max_coeff_for_filters(x, y):
     min_pixels = (x * min_size_coeff) * ( min_size_coeff * y)
     max_pixels = (x * max_size_coeff) * ( max_size_coeff * y)
     return min_pixels,max_pixels
+
+def get_path_at_index(index):
+    path = data_for_detection[index]['file_name']
+    return path
