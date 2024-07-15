@@ -18,18 +18,21 @@ from ui.main_window.tabs.detection.preprocess_operations import create_preproces
 
 from ui.main_window.tabs.preprocessing.preprocessing_data import (
     data_for_preprocessing,
-    get_file_extension,
+    insert_data,
+    clear_preprocessing_data
+)
+
+from ui.main_window.tabs.tabs_data import (
     get_filename_at_index,
-    get_header_info_at_index,
+    get_all_operations,
+    get_file_extension,
     get_framenumber_at_index,
     get_greyscale_image_at_index,
-    get_all_operations,
+    get_header_info_at_index,
     get_mpp_labels,
+    get_preprocessed_image_data_at_index,
     get_s94_labels,
     get_stp_labels,
-    get_preprocessed_image_data_at_index,
-    insert_data,
-    clear_preprocessing_data,
     insert_operation_at_index
 )
 
@@ -181,13 +184,13 @@ class PreprocessingTab:
         self.display_header_info_labels()
 
         # Load greyscale image
-        img = get_greyscale_image_at_index(index)
+        img = get_greyscale_image_at_index(data_for_preprocessing, index)
         self.handle_displaying_image_on_canvas(img)
 
     def refresh_data_in_operations_listbox(self):
         self.operations_listbox.delete(0, tk.END)
         index = self.current_data_index      
-        operations = get_all_operations(index)
+        operations = get_all_operations(data_for_preprocessing, index)
         self.operations_listbox.insert(tk.END, *operations)
 
     def handle_displaying_image_on_canvas(self, img):
@@ -325,9 +328,9 @@ class PreprocessingTab:
             self.data_canvas_preprocessing.delete("all")
             img = None
             index = self.current_data_index
-            img_data = get_preprocessed_image_data_at_index(index, operation_index)
+            img_data = get_preprocessed_image_data_at_index(data_for_preprocessing, index, operation_index)
             processed_img = Image.fromarray(img_data)
-            original_img = get_greyscale_image_at_index(index)
+            original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
             # Concatenate the images horizontally
             img = concatenate_two_images(processed_img, original_img)
             self.handle_displaying_image_on_canvas(img)
@@ -350,7 +353,7 @@ class PreprocessingTab:
             selected_index = self.data_listbox_preprocessing.curselection()
             if selected_index:
                 index = int(selected_index[0])
-                file_ext = get_file_extension()
+                file_ext = get_file_extension(data_for_preprocessing)
                 header_labels = self.create_data_for_header_labels_based_on_file_ext(index, file_ext)
                 # Create labels and grid them
                 self.create_header_labels(header_labels)
@@ -455,7 +458,7 @@ class PreprocessingTab:
         result_image, process_name = self.apply_preprocessing_operation(params, img)
         operation = create_preprocess_operation(result_image, process_name, params)
 
-        insert_operation_at_index(index, operation)
+        insert_operation_at_index(data_for_preprocessing, index, operation)
 
         # Refresh data and display processed image
         self.refresh_data_in_operations_listbox()
@@ -493,11 +496,11 @@ class PreprocessingTab:
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
         if focuse_widget == self.data_listbox_preprocessing:
-            img = get_greyscale_image_at_index(index)
+            img = get_greyscale_image_at_index(data_for_preprocessing, index)
         elif focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            img = Image.fromarray(get_preprocessed_image_data_at_index(index, operations_index))
+            img = Image.fromarray(get_preprocessed_image_data_at_index(data_for_preprocessing, index, operations_index))
         return img
 
     def show_operations_image_listboxOnSelect(self, event=None):
@@ -529,21 +532,21 @@ class PreprocessingTab:
             raise
 
     def get_header_labels_from_stp_file(self, index):
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
+        header_info = get_header_info_at_index(data_for_preprocessing, index)
+        filename = get_filename_at_index(index, data_for_preprocessing)
         stp_labels = get_stp_labels(header_info, filename)
         return stp_labels
     
     def get_header_labels_from_s94_file(self, index):
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
+        header_info = get_header_info_at_index(data_for_preprocessing, index)
+        filename = get_filename_at_index(index, data_for_preprocessing)
         s94_labels = get_s94_labels(header_info, filename)
         return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
-        framenumber = get_framenumber_at_index(index)
+        header_info = get_header_info_at_index(data_for_preprocessing, index)
+        filename = get_filename_at_index(index, data_for_preprocessing)
+        framenumber = get_framenumber_at_index(data_for_preprocessing, index)
         mpp_labels = get_mpp_labels(header_info, filename, framenumber)
         return mpp_labels
     

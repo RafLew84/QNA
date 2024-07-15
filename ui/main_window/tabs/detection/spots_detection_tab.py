@@ -33,6 +33,19 @@ from data.processing.file_process import (
     get_image_sizes
 )
 
+from ui.main_window.tabs.tabs_data import (
+    get_filename_at_index,
+    get_all_operations,
+    get_file_extension,
+    get_framenumber_at_index,
+    get_greyscale_image_at_index,
+    get_header_info_at_index,
+    get_mpp_labels,
+    get_preprocessed_image_data_at_index,
+    get_s94_labels,
+    get_stp_labels
+)
+
 from ui.main_window.tabs.detection.params_default_values import (
     detection_params,
     filter_params
@@ -40,21 +53,9 @@ from ui.main_window.tabs.detection.params_default_values import (
 
 from ui.main_window.tabs.detection.detection_data import (
     data_for_detection,
-    get_filename_at_index,
-    get_framenumber_at_index,
-    get_header_info_at_index,
-    get_path_at_index,
-    get_greyscale_image_at_index,
-    get_preprocessed_image_data_at_index,
-    get_all_operations,
-    get_file_extension,
     insert_data,
     insert_formatted_data,
-    insert_operation_at_index,
     clear_detection_data,
-    get_s94_labels,
-    get_mpp_labels,
-    get_stp_labels,
     calculate_min_max_coeff_for_filters
 )
 
@@ -807,8 +808,8 @@ class SpotsDetectionTab:
         saved contours list, and refreshes the saved contours listbox data.
         """
         index = self.current_operation.raw_data_index
-        filename = get_filename_at_index(index)
-        framenumber = get_framenumber_at_index(index)
+        filename = get_filename_at_index(data_for_detection, index)
+        framenumber = get_framenumber_at_index(data_for_detection, index)
 
         data_to_save = create_contour_data(
             filename= filename,
@@ -880,8 +881,8 @@ class SpotsDetectionTab:
         """
         index = self.current_operation.raw_data_index
         path = get_path_at_index(index)
-        filename = get_filename_at_index(index)
-        framenumber = get_framenumber_at_index(index)
+        filename = get_filename_at_index(data_for_detection, index)
+        framenumber = get_framenumber_at_index(data_for_detection, index)
 
         return save_labeled_image(labeled_image, path, filename, framenumber)
         
@@ -978,12 +979,12 @@ class SpotsDetectionTab:
         """
         img = None
         if focuse_widget == self.data_listbox_detection:
-            img = get_greyscale_image_at_index(index)
+            img = get_greyscale_image_at_index(data_for_detection, index)
             self.current_operation.image_to_process = img
         elif focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            img = Image.fromarray(get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operations_index))
+            img = Image.fromarray(get_preprocessed_image_data_at_index(data_for_detection, self.current_operation.raw_data_index, operations_index))
             self.current_operation.image_to_process = img
         elif focuse_widget == self.contours_listbox:
             img = self.current_operation.image_to_process
@@ -1024,7 +1025,7 @@ class SpotsDetectionTab:
 
         selected_index = self.current_operation.raw_data_index
 
-        operations = get_all_operations(selected_index)
+        operations = get_all_operations(data_for_detection, selected_index)
         self.operations_listbox.insert(tk.END, *operations)
 
     def choose_image_display_option_dropdownOnChange(self, selected_option):
@@ -1104,9 +1105,9 @@ class SpotsDetectionTab:
 
         img = None
         try:
-            img_data = get_preprocessed_image_data_at_index(self.current_operation.raw_data_index, operation_index)
+            img_data = get_preprocessed_image_data_at_index(data_for_detection, self.current_operation.raw_data_index, operation_index)
             processed_img = Image.fromarray(img_data)
-            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
+            original_img = get_greyscale_image_at_index(data_for_detection, self.current_operation.raw_data_index)
             # Concatenate the images horizontally
             img = concatenate_two_images(processed_img, original_img)
         except Exception as e:
@@ -1131,7 +1132,7 @@ class SpotsDetectionTab:
             selected_index = self.data_listbox_detection.curselection()
             if selected_index:
                 index = int(selected_index[0])
-                file_ext = get_file_extension()
+                file_ext = get_file_extension(data_for_detection)
                 header_labels = self.create_data_for_header_labels_based_on_file_ext(index, file_ext)
                 # Create labels and grid them
                 self.create_header_labels(header_labels)
@@ -1205,8 +1206,8 @@ class SpotsDetectionTab:
             - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
             - Constructs a list of formatted strings with relevant header information.
         """
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
+        header_info = get_header_info_at_index(data_for_detection, index)
+        filename = get_filename_at_index(data_for_detection, index)
         stp_labels = get_stp_labels(header_info, filename)
         return stp_labels
     
@@ -1224,8 +1225,8 @@ class SpotsDetectionTab:
             - Retrieves header information using helper functions `get_header_info_at_index` and `get_filename_at_index`.
             - Constructs a list of formatted strings with relevant header information.
         """
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
+        header_info = get_header_info_at_index(data_for_detection, index)
+        filename = get_filename_at_index(data_for_detection, index)
         s94_labels = get_s94_labels(header_info, filename)
         return s94_labels
 
@@ -1243,9 +1244,9 @@ class SpotsDetectionTab:
             - Retrieves header information using helper functions `get_header_info_at_index`, `get_filename_at_index`, and `get_framenumber_at_index`.
             - Constructs a list of formatted strings with relevant header information.
         """
-        header_info = get_header_info_at_index(index)
-        filename = get_filename_at_index(index)
-        framenumber = get_framenumber_at_index(index)
+        header_info = get_header_info_at_index(data_for_detection, index)
+        filename = get_filename_at_index(data_for_detection, index)
+        framenumber = get_framenumber_at_index(data_for_detection, index)
         mpp_labels = get_mpp_labels(header_info, filename, framenumber)
         return mpp_labels
 
@@ -1326,7 +1327,7 @@ class SpotsDetectionTab:
         """
         filter_params = {}
         if self.current_operation.edge_image is not None:
-            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
+            original_img = get_greyscale_image_at_index(data_for_detection, self.current_operation.raw_data_index)
             previous_processed_img = self.current_operation.processed_image
             edge_img = self.current_operation.edge_image
             contours = self.current_operation.contours
@@ -1385,7 +1386,7 @@ class SpotsDetectionTab:
             - Updates attributes in the current operation object with the processed data.
             - Concatenates multiple images and displays the result on a canvas.
         """
-        original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
+        original_img = get_greyscale_image_at_index(data_for_detection, self.current_operation.raw_data_index)
         previous_processed_img = self.current_operation.processed_image
         edge_img = self.current_operation.edge_image
         labeled_image = self.current_operation.labeled_image
@@ -1573,7 +1574,7 @@ class SpotsDetectionTab:
             preprocess_img = self.current_operation.processed_image
             edge_img = self.current_operation.edge_image
             labeled_image = self.current_operation.labeled_image
-            original_img = get_greyscale_image_at_index(self.current_operation.raw_data_index)
+            original_img = get_greyscale_image_at_index(data_for_detection, self.current_operation.raw_data_index)
             filtered_img = self.current_operation.filtered_contours_img
             img = None
             if isinstance(labeled_image, np.ndarray):
@@ -1597,7 +1598,7 @@ class SpotsDetectionTab:
         self.display_header_info_labels()
 
         # Load greyscale image
-        img = get_greyscale_image_at_index(index)
+        img = get_greyscale_image_at_index(data_for_detection, index)
 
         self.current_operation.raw_data_index = index
 
@@ -1645,12 +1646,12 @@ class SpotsDetectionTab:
             event: The event triggered by selecting an item in the listbox.
 
         """
-        file_ext = get_file_extension()
+        file_ext = get_file_extension(data_for_detection)
         # Get the index of the selected filename
         selected_index = self.data_listbox_detection.curselection()
         if selected_index:
             index = int(selected_index[0])
-            header_info = get_header_info_at_index(index)
+            header_info = get_header_info_at_index(data_for_detection, index)
             self.current_size_x_coefficient, self.current_size_y_coefficient = calculate_pixel_to_nm_coefficients(
                 header_info= header_info,
                 file_ext= file_ext
