@@ -446,7 +446,7 @@ class SpotsDetectionTab:
                 command=self.choose_image_display_option_dropdownOnChange
                 )
             self.choose_display_image_option_dropdown.config(width=10)
-            self.choose_display_image_option_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
+            # self.choose_display_image_option_dropdown.grid(row=2, column=0, padx=5, pady=1, sticky="n")
 
             # Labels for function parameters
             self.parameter_preprocess_entries = {}
@@ -522,9 +522,10 @@ class SpotsDetectionTab:
                 command=self.display_menu_dropdownOnChange
                 )
             self.operation_menu_dropdown.config(width=10)
-            self.operation_menu_dropdown.grid(row=0, column=0, padx=5, pady=1, sticky="n")
+            # self.operation_menu_dropdown.grid(row=0, column=0, padx=5, pady=1, sticky="n")
 
             self.display_preprocess_options_menu()
+            self.display_detection_options_menu()
 
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.detection_section_menu)
