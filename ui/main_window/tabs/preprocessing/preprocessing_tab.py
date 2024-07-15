@@ -155,7 +155,6 @@ class PreprocessingTab:
         self.update_navigation_slider_range()
 
     def show_data_onDataListboxSelect(self, event):
-        file_ext = get_file_extension()
         # Get the index of the selected filename
         selected_index = self.data_listbox_preprocessing.curselection()
         if selected_index:
@@ -177,11 +176,12 @@ class PreprocessingTab:
 
     def refresh_data_in_operations_listbox(self):
         self.operations_listbox.delete(0, tk.END)
-        selected_index = self.data_listbox_preprocessing.curselection()
-        if selected_index:
-            index = int(selected_index[0])        
-            operations = get_all_operations(index)
-            self.operations_listbox.insert(tk.END, *operations)
+        index = self.current_data_index
+        # selected_index = self.data_listbox_preprocessing.curselection()
+        # if selected_index:
+        #     index = int(selected_index[0])        
+        operations = get_all_operations(index)
+        self.operations_listbox.insert(tk.END, *operations)
 
     def handle_displaying_image_on_canvas(self, img):
         # Retrieve the scale factor
