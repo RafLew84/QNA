@@ -134,6 +134,16 @@ class PreprocessingTab:
         self.data_listbox_preprocessing.config(yscrollcommand=self.listbox_scrollbar_preprocessing.set)
         self.data_listbox_preprocessing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
+        self.save_data_button = tk.Button(
+            self.preprocessing_tab, 
+            text="Save Data", 
+            command=self.save_data_onClick
+        )
+        self.save_data_button.grid(row=3, column=0, padx=5, pady=5)
+    
+    def save_data_onClick(self):
+        self.app.update_data(data_for_preprocessing)
+
     def load_data_onClick(self):
         try:
             # self.data_for_detection = self.app.get_data()
@@ -176,10 +186,7 @@ class PreprocessingTab:
 
     def refresh_data_in_operations_listbox(self):
         self.operations_listbox.delete(0, tk.END)
-        index = self.current_data_index
-        # selected_index = self.data_listbox_preprocessing.curselection()
-        # if selected_index:
-        #     index = int(selected_index[0])        
+        index = self.current_data_index      
         operations = get_all_operations(index)
         self.operations_listbox.insert(tk.END, *operations)
 

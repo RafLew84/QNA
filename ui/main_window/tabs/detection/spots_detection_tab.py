@@ -50,6 +50,7 @@ from ui.main_window.tabs.detection.detection_data import (
     get_all_operations,
     get_file_extension,
     insert_data,
+    insert_formatted_data,
     insert_operation_at_index,
     clear_detection_data,
     get_s94_labels,
@@ -1808,10 +1809,16 @@ class SpotsDetectionTab:
         self.data_listbox_detection.delete(0, tk.END)
 
         data = self.app.get_data()
-        file_ext = data[0]['file_name'][-3:]
-        for item in data:
-            data_name = insert_data(file_ext, item)
+        # print(data)
+        if 'operations' in data[0]:
+            file_ext = data[0]['file_name'][-3:]
+            data_name = insert_formatted_data(file_ext, data)
             self.data_listbox_detection.insert(tk.END, *data_name)
+        else:
+            file_ext = data[0]['file_name'][-3:]
+            for item in data:
+                data_name = insert_data(file_ext, item)
+                self.data_listbox_detection.insert(tk.END, *data_name)
         self.update_navigation_slider_range()
 
     def show_data_onDataListboxSelect(self, event):
