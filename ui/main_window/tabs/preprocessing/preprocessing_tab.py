@@ -448,7 +448,7 @@ class PreprocessingTab:
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
-                row += 1
+                row += 2
         # Apply button
         apply_button = tk.Button(self.preprocess_section_menu, text="Apply", command=self.apply_preprocessing_onClick)
         apply_button.grid(row=row + 1, column=0, padx=5, pady=5)
