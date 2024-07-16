@@ -11,6 +11,7 @@ import os, sys
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import tkinter as tk
+import numpy as np
 from tkinter import ttk
 from PIL import Image, ImageTk
 
@@ -405,6 +406,7 @@ class PreprocessingTab:
             self.parameter_preprocess_entries = {}
             self.parameter_preprocess_labels = {}
             self.parameter_preprocess_buttons = []
+            self.parameter_preprocess_sliders = []
         except Exception as e:
             error_msg = f"Error displaying preprocess options menu: {e}"
             logger.error(error_msg)
@@ -421,19 +423,35 @@ class PreprocessingTab:
         """
         self.selected_preprocess_option = selected_option
         for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
-                       *self.parameter_preprocess_buttons]:
+                       *self.parameter_preprocess_buttons, *self.parameter_preprocess_sliders]:
             widget.destroy()
         self.parameter_preprocess_entries.clear()
         self.parameter_preprocess_labels.clear()
         self.parameter_preprocess_buttons.clear()
-        # # Update labels with function parameters based on selected option
-        row = 3
-        for param_name, param_value in self.preprocess_params[selected_option].items():
-            self.create_preprocess_menu_items(row, param_name, param_value)
-            row += 2
+        self.parameter_preprocess_sliders.clear()
+        # Update labels with function parameters based on selected option
+        row = 2
+        if selected_option == "GaussianFilter":
+            self.gaussian_filter_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.1,
+                to=4.0,
+                resolution=0.05,
+                orient=tk.HORIZONTAL,
+                command=self.update_gaussian_filter_slider_onChange
+            )
+            default_value = preprocess_params["GaussianFilter"]["sigma"]
+            self.gaussian_filter_slider.set(default_value)
+            self.gaussian_filter_slider.grid(row=row, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.gaussian_filter_slider)
+        else:
+            for param_name, param_value in self.preprocess_params[selected_option].items():
+                self.create_preprocess_menu_items(row, param_name, param_value)
+                row += 1
         # Apply button
         apply_button = tk.Button(self.preprocess_section_menu, text="Apply", command=self.apply_preprocessing_onClick)
-        apply_button.grid(row=row, column=0, padx=5, pady=5)
+        apply_button.grid(row=row + 1, column=0, padx=5, pady=5)
         self.parameter_preprocess_buttons.append(apply_button)
 
     def create_preprocess_menu_items(self, row, param_name, param_value):
@@ -490,6 +508,8 @@ class PreprocessingTab:
         return result_image, process_name
 
     def get_values_from_preprocess_menu_items(self, params):
+        if self.selected_preprocess_option == "GaussianFilter":
+            params['sigma'] = self.gaussian_filter_slider.get()
         for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
@@ -566,3 +586,18 @@ class PreprocessingTab:
             # Handle any unexpected errors and log them
             error_msg = f"Error creating header labels: {e}"
             logger.error(error_msg)
+
+    def update_gaussian_filter_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
