@@ -22,7 +22,8 @@ from data.processing.detection.edge_detection import (
 
 from data.processing.contours.contour_detection import (
     ContourFinder,
-    GetContourData
+    GetContourData,
+    calculate_contour_avg_area
 )
 
 from data.processing.img_process import (
