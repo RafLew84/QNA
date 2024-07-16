@@ -16,14 +16,19 @@ from PIL import Image, ImageTk
 import numpy as np
 import copy
 
+from data.processing.detection.edge_detection import (
+    EdgeDetection
+)
+
+from data.processing.contours.contour_detection import (
+    ContourFinder,
+    GetContourData
+)
+
 from data.processing.img_process import (
-    EdgeDetection, 
     concatenate_two_images,
-    ContourFinder, 
     concatenate_four_images,
-    GetContourData, 
     DrawLabels,
-    calculate_contour_avg_area,
     process_contours_filters
 )
 
@@ -67,9 +72,12 @@ from ui.main_window.tabs.detection.contours_data import (
     insert_contour
 )
 
-from ui.main_window.tabs.detection.canvas_operations import (
+from ui.main_window.tabs.detection.detection_operations import (
     get_mouse_position_in_canvas,
-    get_contour_info_at_position,
+    get_contour_info_at_position
+)
+
+from ui.main_window.tabs.canvas_operations import (
     scale_factor_resize_image
 )
 
@@ -81,7 +89,6 @@ from ui.main_window.tabs.detection.save_data import (
 
 from ui.main_window.tabs.detection.current_operation_model import CurrentOperation
 
-from ui.main_window.tabs.detection.preprocess_operations import create_preprocess_operation
 from ui.main_window.tabs.detection.contours import create_contour_data
 
 from ui.main_window.tabs.detection.iou_window import IntersectionOverUnionWindow

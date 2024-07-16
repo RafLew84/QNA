@@ -40,11 +40,14 @@ from data.processing.img_process import (
     concatenate_two_images
 )
 
-from ui.main_window.tabs.detection.canvas_operations import (
-    scale_factor_resize_image,
+from ui.main_window.tabs.canvas_operations import (
+    scale_factor_resize_image
+)
+
+from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_gaussian_blur,
-    perform_non_local_denoising,
-    perform_gaussian_filter
+    perform_gaussian_filter,
+    perform_non_local_denoising
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (

@@ -14,12 +14,6 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 
-from data.processing.img_process import (
-    NlMeansDenois, 
-    GaussianBlur,
-    GaussianFilter
-)
-
 def get_mouse_position_in_canvas(scale_factor, x_canvas, y_canvas, event):
     """
     Calculate the mouse position on the canvas accounting for a given scale factor.
@@ -80,75 +74,3 @@ def is_point_inside_contour(point, contour):
     distance = cv2.pointPolygonTest(contour_np, point_tuple, False)
     # If distance is positive, point is inside the contour
     return distance >= 0
-
-def scale_factor_resize_image(img, scale_factor):
-    """
-    Resize an image by a given scale factor.
-
-    Args:
-        img (PIL.Image.Image): The input image.
-        scale_factor (float): The scale factor to resize the image.
-
-    Returns:
-        PIL.Image.Image: The resized image.
-    """
-    return img.resize((int(img.width * scale_factor), int(img.height * scale_factor)), Image.LANCZOS)
-
-def perform_gaussian_blur(params, img):
-    """
-    Apply Gaussian blur to an image.
-
-    Args:
-        params (dict): Parameters for Gaussian blur, should include 'sigmaX' and 'sigmaY'.
-        img (PIL.Image.Image): The input image.
-
-    Returns:
-        tuple: Process name and the resulting image.
-    """
-    process_name = "GaussianBlur"
-    result_image = GaussianBlur(
-            img=np.array(img), 
-            sigmaX=params['sigmaX'],
-            sigmaY=params['sigmaY']
-            )
-    
-    return process_name, result_image
-
-def perform_non_local_denoising(params, img):
-    """
-    Apply Non-local Means denoising to an image.
-
-    Args:
-        params (dict): Parameters for Non-local Means denoising, should include 'h', 'searchWindowSize', and 'templateWindowSize'.
-        img (PIL.Image.Image): The input image.
-
-    Returns:
-        tuple: Process name and the resulting image.
-    """
-    process_name = "Non-local Mean Denoising"
-    result_image = NlMeansDenois(
-            img=np.array(img),
-            h=params['h'],
-            searchWinwowSize=params['searchWindowSize'],
-            templateWindowSize=params['templateWindowSize']
-            )
-    return process_name, result_image
-
-def perform_gaussian_filter(params, img):
-    """
-    Apply a Gaussian filter to an image.
-
-    Args:
-        params (dict): Parameters for the Gaussian filter, should include 'sigma'.
-        img (PIL.Image.Image): The input image.
-
-    Returns:
-        tuple: Process name and the resulting image.
-    """
-    process_name = "GaussianFilter"
-    result_image = GaussianFilter(
-            img=np.array(img),
-            sigma=params['sigma']
-        )
-    
-    return process_name,result_image
