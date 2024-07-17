@@ -462,9 +462,9 @@ class PreprocessingTab:
 
             self.nl_mean_denois_h_slider = tk.Scale(
                 self.preprocess_section_menu,
-                from_=1,
-                to=30,
-                resolution=1,
+                from_=0.1,
+                to=10.0,
+                resolution=0.1,
                 orient=tk.HORIZONTAL,
                 length=150,
                 command=self.update_nl_mean_denois_param_slider_onChange
