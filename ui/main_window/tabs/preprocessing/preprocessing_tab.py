@@ -399,7 +399,7 @@ class PreprocessingTab:
                 *preprocessing_options, 
                 command=self.choose_preprocess_options_dropdownOnChange
                 )
-            choose_preprocess_option_dropdown.config(width=10)
+            choose_preprocess_option_dropdown.config(width=20)
             choose_preprocess_option_dropdown.grid(row=1, column=0, padx=5, pady=1, sticky="n")
 
             # Labels for function parameters
@@ -432,6 +432,8 @@ class PreprocessingTab:
         # Update labels with function parameters based on selected option
         row = 2
         if selected_option == "GaussianFilter":
+            label = tk.Label(self.preprocess_section_menu, text="sigma", width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
             self.gaussian_filter_slider = tk.Scale(
                 self.preprocess_section_menu,
                 from_=0.1,
@@ -442,16 +444,86 @@ class PreprocessingTab:
             )
             default_value = preprocess_params["GaussianFilter"]["sigma"]
             self.gaussian_filter_slider.set(default_value)
-            self.gaussian_filter_slider.grid(row=row, column=0, padx=5, pady=2, sticky="w")
+            self.gaussian_filter_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
 
             self.parameter_preprocess_sliders.append(self.gaussian_filter_slider)
+
+            row += 1
+
+        elif selected_option == "Non-local Mean Denoising":
+            default_value_h = preprocess_params["Non-local Mean Denoising"]["h"]
+            default_value_templateWindowSize = preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]
+            default_value_searchWindowSize = preprocess_params["Non-local Mean Denoising"]["searchWindowSize"]
+
+            label = tk.Label(self.preprocess_section_menu, text="h", width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["h"] = label
+
+            self.nl_mean_denois_h_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=1,
+                to=30,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_nl_mean_denois_param_slider_onChange
+            )
+
+            self.nl_mean_denois_h_slider.set(default_value_h)
+            self.nl_mean_denois_h_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
+
+            label = tk.Label(self.preprocess_section_menu, text="Template Window Size", width=20)
+            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["templateWindowSize"] = label
+
+            self.nl_mean_denois_templateWindowSize_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=21,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_nl_mean_denois_param_slider_onChange
+            )
+
+            self.nl_mean_denois_templateWindowSize_slider.set(default_value_templateWindowSize)
+            self.nl_mean_denois_templateWindowSize_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
+
+            label = tk.Label(self.preprocess_section_menu, text="Search Window Size", width=20)
+            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["searchWindowSize"] = label
+
+            self.nl_mean_denois_searchWindowSize_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=51,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_nl_mean_denois_param_slider_onChange
+            )
+
+            self.nl_mean_denois_searchWindowSize_slider.set(default_value_searchWindowSize)
+            self.nl_mean_denois_searchWindowSize_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.nl_mean_denois_h_slider)
+            self.parameter_preprocess_sliders.append(self.nl_mean_denois_searchWindowSize_slider)
+            self.parameter_preprocess_sliders.append(self.nl_mean_denois_templateWindowSize_slider)
+
+            self.parameter_preprocess_labels
+
+            row += 5
+
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
                 row += 2
         # Apply button
         apply_button = tk.Button(self.preprocess_section_menu, text="Apply", command=self.apply_preprocessing_onClick)
-        apply_button.grid(row=row + 1, column=0, padx=5, pady=5)
+        apply_button.grid(row=row + 2, column=0, padx=5, pady=5)
         self.parameter_preprocess_buttons.append(apply_button)
 
     def create_preprocess_menu_items(self, row, param_name, param_value):
@@ -510,6 +582,13 @@ class PreprocessingTab:
     def get_values_from_preprocess_menu_items(self, params):
         if self.selected_preprocess_option == "GaussianFilter":
             params['sigma'] = self.gaussian_filter_slider.get()
+        elif self.selected_preprocess_option == "Non-local Mean Denoising":
+            params['h'] = self.nl_mean_denois_h_slider.get()
+            params['templateWindowSize'] = self.nl_mean_denois_templateWindowSize_slider.get()
+            searchWindowSize = self.nl_mean_denois_searchWindowSize_slider.get()
+            if searchWindowSize % 2 == 0:
+                searchWindowSize += 1
+            params['searchWindowSize'] = searchWindowSize
         for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
@@ -588,6 +667,21 @@ class PreprocessingTab:
             logger.error(error_msg)
 
     def update_gaussian_filter_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+
+    def update_nl_mean_denois_param_slider_onChange(self, enevt=None):
         params = {}
         index = self.current_data_index
         focuse_widget = self.root.focus_get()
