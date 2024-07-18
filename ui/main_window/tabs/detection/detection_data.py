@@ -27,7 +27,7 @@ def insert_formatted_data(file_ext, data):
         for item in data:
             filename_only = os.path.basename(item['file_name'])
             data_for_detection.append(item)
-            i = item['frame_umber']
+            i = item['frame_number']
             frame_name = f"{filename_only}: frame {i}"
             data_name.append(frame_name)
     return data_name
