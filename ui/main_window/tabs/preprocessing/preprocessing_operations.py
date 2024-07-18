@@ -23,6 +23,10 @@ from data.processing.preprocessing.noise_reduction import (
     NlMeansDenois
 )
 
+from data.processing.preprocessing.morphology import (
+    Erosion
+)
+
 def perform_gaussian_blur(params, img):
     """
     Apply Gaussian blur to an image.
@@ -78,6 +82,27 @@ def perform_gaussian_filter(params, img):
     result_image = GaussianFilter(
             img=np.array(img),
             sigma=params['sigma']
+        )
+    
+    return process_name,result_image
+
+def perform_erosion(params, img):
+    """
+    Apply a Erosion to an image.
+
+    Args:
+        params (dict): Parameters for the Erosion.
+        img (PIL.Image.Image): The input image.
+
+    Returns:
+        tuple: Process name and the resulting image.
+    """
+    process_name = "Erosion"
+    result_image = Erosion(
+            img=np.array(img),
+            kernel_type=params['kernel_type'],
+            kernel_size=params['kernel_size'],
+            iterations=params['iterations']
         )
     
     return process_name,result_image

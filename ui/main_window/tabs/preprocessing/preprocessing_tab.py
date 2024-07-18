@@ -48,7 +48,8 @@ from ui.main_window.tabs.canvas_operations import (
 from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_gaussian_blur,
     perform_gaussian_filter,
-    perform_non_local_denoising
+    perform_non_local_denoising,
+    perform_erosion
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -407,6 +408,7 @@ class PreprocessingTab:
             self.parameter_preprocess_labels = {}
             self.parameter_preprocess_buttons = []
             self.parameter_preprocess_sliders = []
+            self.parameter_preprocess_radio = []
         except Exception as e:
             error_msg = f"Error displaying preprocess options menu: {e}"
             logger.error(error_msg)
@@ -423,12 +425,14 @@ class PreprocessingTab:
         """
         self.selected_preprocess_option = selected_option
         for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
-                       *self.parameter_preprocess_buttons, *self.parameter_preprocess_sliders]:
+                       *self.parameter_preprocess_buttons, *self.parameter_preprocess_sliders,
+                       *self.parameter_preprocess_radio]:
             widget.destroy()
         self.parameter_preprocess_entries.clear()
         self.parameter_preprocess_labels.clear()
         self.parameter_preprocess_buttons.clear()
         self.parameter_preprocess_sliders.clear()
+        self.parameter_preprocess_radio.clear()
         # Update labels with function parameters based on selected option
         row = 2
         if selected_option == "GaussianFilter":
@@ -516,7 +520,81 @@ class PreprocessingTab:
             self.parameter_preprocess_labels
 
             row += 5
+        elif selected_option == "Erosion":
+            default_value_kernel_size = preprocess_params["Erosion"]["kernel_size"]
+            default_value_iterations = preprocess_params["Erosion"]["iterations"]
+            self.selected_kernel = tk.StringVar()
+            self.selected_kernel.set("re")  # Set default value
 
+            def on_select():
+                params = {}
+                index = self.current_data_index
+                focuse_widget = self.root.focus_get()
+                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+                self.get_values_from_preprocess_menu_items(params)
+                result_image, _ = self.apply_preprocessing_operation(params, img)
+                if isinstance(result_image, np.ndarray):
+                    result_image = Image.fromarray(result_image)
+                img = concatenate_two_images(result_image, original_img)
+                self.handle_displaying_image_on_canvas(img)
+
+            
+            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_kernel, value="re", command=on_select)
+            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_kernel, value="el", command=on_select)
+            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_kernel, value="cr", command=on_select)
+
+            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_radio.append(self.radio1)
+            self.parameter_preprocess_radio.append(self.radio2)
+            self.parameter_preprocess_radio.append(self.radio3)
+
+            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
+            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["kernel_size"] = label
+
+            self.erosion_kernel_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=21,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_erosion_kernel_size_slider_onChange
+            )
+
+            self.erosion_kernel_size_slider.set(default_value_kernel_size)
+            self.erosion_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.erosion_kernel_size_slider)
+
+            label = tk.Label(self.preprocess_section_menu, text="Iterations", width=20)
+            label.grid(row=row+5, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["iterations"] = label
+
+            self.erosion_iterations_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=1,
+                to=5,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_erosion_iterations_slider_onChange
+            )
+
+            self.erosion_iterations_slider.set(default_value_iterations)
+            self.erosion_iterations_slider.grid(row=row + 6, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.erosion_iterations_slider)
+
+            row += 6
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
@@ -567,6 +645,7 @@ class PreprocessingTab:
             "GaussianBlur": perform_gaussian_blur,
             "Non-local Mean Denoising": perform_non_local_denoising,
             "GaussianFilter": perform_gaussian_filter,
+            "Erosion": perform_erosion
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -589,6 +668,13 @@ class PreprocessingTab:
             if searchWindowSize % 2 == 0:
                 searchWindowSize += 1
             params['searchWindowSize'] = searchWindowSize
+        elif self.selected_preprocess_option == "Erosion":
+            params['kernel_type'] = self.selected_kernel.get()
+            params['iterations'] = self.erosion_iterations_slider.get()
+            kernel_size = self.erosion_kernel_size_slider.get()
+            if kernel_size % 2 == 0:
+                kernel_size += 1
+            params['kernel_size'] = kernel_size
         for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
@@ -682,6 +768,36 @@ class PreprocessingTab:
         self.handle_displaying_image_on_canvas(img)
 
     def update_nl_mean_denois_param_slider_onChange(self, enevt=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+    
+    def update_erosion_kernel_size_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+
+    def update_erosion_iterations_slider_onChange(self, event=None):
         params = {}
         index = self.current_data_index
         focuse_widget = self.root.focus_get()
