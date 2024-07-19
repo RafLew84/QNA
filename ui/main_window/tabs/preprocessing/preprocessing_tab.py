@@ -1101,79 +1101,71 @@ class PreprocessingTab:
             raise ValueError(msg)
             
         return result_image, process_name
-
+    
     def get_values_from_preprocess_menu_items(self, params):
-        if self.selected_preprocess_option == "GaussianFilter":
-            params['sigma'] = self.gaussian_filter_slider.get()
-        elif self.selected_preprocess_option == "Non-local Mean Denoising":
-            params['h'] = self.nl_mean_denois_h_slider.get()
-            params['templateWindowSize'] = self.nl_mean_denois_templateWindowSize_slider.get()
-            searchWindowSize = self.nl_mean_denois_searchWindowSize_slider.get()
-            if searchWindowSize % 2 == 0:
-                searchWindowSize += 1
-            params['searchWindowSize'] = searchWindowSize
-        elif self.selected_preprocess_option == "Gamma Adjustment":
-            params['gamma'] = self.gamma_slider.get()
-        elif self.selected_preprocess_option == "Adaptive Equalization":
-            params['limit'] = self.limit_slider.get()
-        elif self.selected_preprocess_option == "Contrast Stretching":
-            params['min'] = self.contrast_stretching_min_slider.get()
-            params['max'] = self.contrast_stretching_max_slider.get()
-        elif self.selected_preprocess_option == "Erosion":
-            params['kernel_type'] = self.selected_kernel.get()
-            params['iterations'] = self.erosion_iterations_slider.get()
-            kernel_size = self.erosion_kernel_size_slider.get()
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-            params['kernel_size'] = kernel_size
-        elif self.selected_preprocess_option == "Binary Greyscale Erosion":
-            params['kernel_type'] = self.selected_binary_grayscale_erosion_kernel.get()
-            kernel_size = self.binary_greyscale_erosion_kernel_size_slider.get()
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-            params['kernel_size'] = kernel_size
-        elif self.selected_preprocess_option == "Gaussian Greyscale Erosion":
-            mask_size = self.gaussian_greyscale_erosion_mask_size_slider.get()
-            if mask_size % 2 == 0:
-                mask_size += 1
-            params['mask_size'] = mask_size
-            params['sigma'] = self.gaussian_greyscale_erosion_sigma_slider.get()
-        elif self.selected_preprocess_option == "Binary Greyscale Dilation":
-            params['kernel_type'] = self.selected_binary_grayscale_dilation_kernel.get()
-            kernel_size = self.binary_greyscale_dilation_kernel_size_slider.get()
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-            params['kernel_size'] = kernel_size
-        elif self.selected_preprocess_option == "Gaussian Greyscale Dilation":
-            mask_size = self.gaussian_greyscale_dilation_mask_size_slider.get()
-            if mask_size % 2 == 0:
-                mask_size += 1
-            params['mask_size'] = mask_size
-            params['sigma'] = self.gaussian_greyscale_dilation_sigma_slider.get()
-        elif self.selected_preprocess_option == "Binary Greyscale Opening":
-            params['kernel_type'] = self.selected_binary_grayscale_opening_kernel.get()
-            kernel_size = self.binary_greyscale_opening_kernel_size_slider.get()
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-            params['kernel_size'] = kernel_size
-        elif self.selected_preprocess_option == "Gaussian Greyscale Opening":
-            mask_size = self.gaussian_greyscale_opening_mask_size_slider.get()
-            if mask_size % 2 == 0:
-                mask_size += 1
-            params['mask_size'] = mask_size
-            params['sigma'] = self.gaussian_greyscale_opening_sigma_slider.get()
-        elif self.selected_preprocess_option == "Binary Greyscale Closing":
-            params['kernel_type'] = self.selected_binary_grayscale_closing_kernel.get()
-            kernel_size = self.binary_greyscale_closing_kernel_size_slider.get()
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-            params['kernel_size'] = kernel_size
-        elif self.selected_preprocess_option == "Gaussian Greyscale Closing":
-            mask_size = self.gaussian_greyscale_closing_mask_size_slider.get()
-            if mask_size % 2 == 0:
-                mask_size += 1
-            params['mask_size'] = mask_size
-            params['sigma'] = self.gaussian_greyscale_closing_sigma_slider.get()
+        option = self.selected_preprocess_option
+
+        def add_odd_value(slider):
+            value = slider.get()
+            return value + 1 if value % 2 == 0 else value
+
+        preprocess_map = {
+            "GaussianFilter": lambda: params.update({'sigma': self.gaussian_filter_slider.get()}),
+            "Non-local Mean Denoising": lambda: params.update({
+                'h': self.nl_mean_denois_h_slider.get(),
+                'templateWindowSize': self.nl_mean_denois_templateWindowSize_slider.get(),
+                'searchWindowSize': add_odd_value(self.nl_mean_denois_searchWindowSize_slider)
+            }),
+            "Gamma Adjustment": lambda: params.update({'gamma': self.gamma_slider.get()}),
+            "Adaptive Equalization": lambda: params.update({'limit': self.limit_slider.get()}),
+            "Contrast Stretching": lambda: params.update({
+                'min': self.contrast_stretching_min_slider.get(),
+                'max': self.contrast_stretching_max_slider.get()
+            }),
+            "Erosion": lambda: params.update({
+                'kernel_type': self.selected_kernel.get(),
+                'iterations': self.erosion_iterations_slider.get(),
+                'kernel_size': add_odd_value(self.erosion_kernel_size_slider)
+            }),
+            "Binary Greyscale Erosion": lambda: params.update({
+                'kernel_type': self.selected_binary_grayscale_erosion_kernel.get(),
+                'kernel_size': add_odd_value(self.binary_greyscale_erosion_kernel_size_slider)
+            }),
+            "Gaussian Greyscale Erosion": lambda: params.update({
+                'mask_size': add_odd_value(self.gaussian_greyscale_erosion_mask_size_slider),
+                'sigma': self.gaussian_greyscale_erosion_sigma_slider.get()
+            }),
+            "Binary Greyscale Dilation": lambda: params.update({
+                'kernel_type': self.selected_binary_grayscale_dilation_kernel.get(),
+                'kernel_size': add_odd_value(self.binary_greyscale_dilation_kernel_size_slider)
+            }),
+            "Gaussian Greyscale Dilation": lambda: params.update({
+                'mask_size': add_odd_value(self.gaussian_greyscale_dilation_mask_size_slider),
+                'sigma': self.gaussian_greyscale_dilation_sigma_slider.get()
+            }),
+            "Binary Greyscale Opening": lambda: params.update({
+                'kernel_type': self.selected_binary_grayscale_opening_kernel.get(),
+                'kernel_size': add_odd_value(self.binary_greyscale_opening_kernel_size_slider)
+            }),
+            "Gaussian Greyscale Opening": lambda: params.update({
+                'mask_size': add_odd_value(self.gaussian_greyscale_opening_mask_size_slider),
+                'sigma': self.gaussian_greyscale_opening_sigma_slider.get()
+            }),
+            "Binary Greyscale Closing": lambda: params.update({
+                'kernel_type': self.selected_binary_grayscale_closing_kernel.get(),
+                'kernel_size': add_odd_value(self.binary_greyscale_closing_kernel_size_slider)
+            }),
+            "Gaussian Greyscale Closing": lambda: params.update({
+                'mask_size': add_odd_value(self.gaussian_greyscale_closing_mask_size_slider),
+                'sigma': self.gaussian_greyscale_closing_sigma_slider.get()
+            })
+        }
+
+        # Apply the corresponding function based on the selected preprocess option
+        if option in preprocess_map:
+            preprocess_map[option]()
+
+        # Handle any additional parameters from preprocess menu items
         for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
