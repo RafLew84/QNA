@@ -14,37 +14,39 @@ import cv2
 from scipy import ndimage
 
 def Erosion(img, kernel_type="re", kernel_size=(5,5), iterations=1):
-    kernel = None
-    if kernel_type == "re":
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
-    if kernel_type == "el":
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
-    elif kernel_type == "cr":
-        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (kernel_size,kernel_size))
-
-    print(kernel)
+    kernel = binary_kernel(kernel_type, kernel_size)
     eroded_image = cv2.erode(img, kernel, iterations)
-
     return eroded_image
 
 def BinaryGreyscaleErosion(img, kernel_type="re", kernel_size=(3,3)):
-    kernel = None
-    if kernel_type == "re":
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
-    if kernel_type == "el":
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
-    elif kernel_type == "cr":
-        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (kernel_size,kernel_size))
-
+    kernel = binary_kernel(kernel_type, kernel_size)
     eroded_image = ndimage.grey_erosion(img, footprint=kernel)
-
     return eroded_image
 
 def GaussianGreyscaleErosion(img, mask_size, sigma):
     gm = gaussian_mask(mask_size, sigma)
-
     eroded_image_gaussian = ndimage.grey_erosion(img, structure=gm)
     return eroded_image_gaussian
+
+def BinaryGreyscaleDilation(img, kernel_type="re", kernel_size=(3,3)):
+    kernel = binary_kernel(kernel_type, kernel_size)
+    eroded_image = ndimage.grey_dilation(img, footprint=kernel)
+    return eroded_image
+
+def GaussianGreyscaleDilation(img, mask_size, sigma):
+    gm = gaussian_mask(mask_size, sigma)
+    eroded_image_gaussian = ndimage.grey_dilation(img, structure=gm)
+    return eroded_image_gaussian
+
+def binary_kernel(kernel_type, kernel_size):
+    kernel = None
+    if kernel_type == "re":
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
+    if kernel_type == "el":
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size,kernel_size))
+    elif kernel_type == "cr":
+        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (kernel_size,kernel_size))
+    return kernel
 
 def gaussian_kernel(size, sigma=1):
     ax = np.linspace(-(size - 1) / 2., (size - 1) / 2., size)

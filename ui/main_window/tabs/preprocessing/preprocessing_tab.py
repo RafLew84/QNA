@@ -51,7 +51,9 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_non_local_denoising,
     perform_erosion,
     perform_gaussian_greyscale_erosion,
-    perform_binary_greyscale_erosion
+    perform_binary_greyscale_erosion,
+    perform_binary_greyscale_dilation,
+    perform_gaussian_greyscale_dilation
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -697,6 +699,107 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gaussian_greyscale_erosion_sigma_slider)
 
             row += 4
+
+        elif selected_option == "Binary Greyscale Dilation":
+            default_value_kernel_size = preprocess_params["Binary Greyscale Dilation"]["kernel_size"]
+            self.selected_binary_grayscale_dilation_kernel = tk.StringVar()
+            self.selected_binary_grayscale_dilation_kernel.set("re")  # Set default value
+
+            def on_select():
+                params = {}
+                index = self.current_data_index
+                focuse_widget = self.root.focus_get()
+                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+                self.get_values_from_preprocess_menu_items(params)
+                result_image, _ = self.apply_preprocessing_operation(params, img)
+                if isinstance(result_image, np.ndarray):
+                    result_image = Image.fromarray(result_image)
+                img = concatenate_two_images(result_image, original_img)
+                self.handle_displaying_image_on_canvas(img)
+
+            
+            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_dilation_kernel, value="re", command=on_select)
+            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_binary_grayscale_dilation_kernel, value="el", command=on_select)
+            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_binary_grayscale_dilation_kernel, value="cr", command=on_select)
+
+            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_radio.append(self.radio1)
+            self.parameter_preprocess_radio.append(self.radio2)
+            self.parameter_preprocess_radio.append(self.radio3)
+
+            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
+            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["kernel_size"] = label
+
+            self.binary_greyscale_dilation_kernel_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=21,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_binary_greyscale_dilation_kernel_size_slider_onChange
+            )
+
+            self.binary_greyscale_dilation_kernel_size_slider.set(default_value_kernel_size)
+            self.binary_greyscale_dilation_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.binary_greyscale_dilation_kernel_size_slider)
+
+            row += 4
+
+        elif selected_option == "Gaussian Greyscale Dilation":
+            default_value_mask_size = preprocess_params["Gaussian Greyscale Dilation"]["mask_size"]
+            default_value_sigma = preprocess_params["Gaussian Greyscale Dilation"]["sigma"]
+
+            label = tk.Label(self.preprocess_section_menu, text="Mask Size", width=20)
+            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["mask_size"] = label
+
+            self.gaussian_greyscale_dilation_mask_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=21,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_gaussian_greyscale_dilation_mask_size_slider_onChange
+            )
+
+            self.gaussian_greyscale_dilation_mask_size_slider.set(default_value_mask_size)
+            self.gaussian_greyscale_dilation_mask_size_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_dilation_mask_size_slider)
+
+            label = tk.Label(self.preprocess_section_menu, text="Sigma", width=20)
+            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["sigma"] = label
+
+            self.gaussian_greyscale_dilation_sigma_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.1,
+                to=10,
+                resolution=0.05,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_gaussian_greyscale_dilation_sigma_slider_onChange
+            )
+
+            self.gaussian_greyscale_dilation_sigma_slider.set(default_value_sigma)
+            self.gaussian_greyscale_dilation_sigma_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_dilation_sigma_slider)
+
+            row += 4
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
@@ -749,7 +852,9 @@ class PreprocessingTab:
             "GaussianFilter": perform_gaussian_filter,
             "Erosion": perform_erosion,
             "Binary Greyscale Erosion": perform_binary_greyscale_erosion,
-            "Gaussian Greyscale Erosion": perform_gaussian_greyscale_erosion
+            "Gaussian Greyscale Erosion": perform_gaussian_greyscale_erosion,
+            "Binary Greyscale Dilation": perform_binary_greyscale_dilation,
+            "Gaussian Greyscale Dilation": perform_gaussian_greyscale_dilation
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -791,6 +896,18 @@ class PreprocessingTab:
                 mask_size += 1
             params['mask_size'] = mask_size
             params['sigma'] = self.gaussian_greyscale_erosion_sigma_slider.get()
+        elif self.selected_preprocess_option == "Binary Greyscale Dilation":
+            params['kernel_type'] = self.selected_binary_grayscale_dilation_kernel.get()
+            kernel_size = self.binary_greyscale_dilation_kernel_size_slider.get()
+            if kernel_size % 2 == 0:
+                kernel_size += 1
+            params['kernel_size'] = kernel_size
+        elif self.selected_preprocess_option == "Gaussian Greyscale Dilation":
+            mask_size = self.gaussian_greyscale_dilation_mask_size_slider.get()
+            if mask_size % 2 == 0:
+                mask_size += 1
+            params['mask_size'] = mask_size
+            params['sigma'] = self.gaussian_greyscale_dilation_sigma_slider.get()
         for param_name, entry in self.parameter_preprocess_entries.items():
             try:
                 params[param_name] = int(entry.get())
@@ -959,6 +1076,51 @@ class PreprocessingTab:
         self.handle_displaying_image_on_canvas(img)
 
     def update_gaussian_greyscale_erosion_sigma_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+
+    def update_binary_greyscale_dilation_kernel_size_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+
+    def update_gaussian_greyscale_dilation_mask_size_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)
+
+    def update_gaussian_greyscale_dilation_sigma_slider_onChange(self, event=None):
         params = {}
         index = self.current_data_index
         focuse_widget = self.root.focus_get()

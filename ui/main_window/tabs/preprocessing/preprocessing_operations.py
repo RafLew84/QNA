@@ -26,7 +26,9 @@ from data.processing.preprocessing.noise_reduction import (
 from data.processing.preprocessing.morphology import (
     Erosion,
     BinaryGreyscaleErosion,
-    GaussianGreyscaleErosion
+    GaussianGreyscaleErosion,
+    BinaryGreyscaleDilation,
+    GaussianGreyscaleDilation
 )
 
 def perform_gaussian_blur(params, img):
@@ -122,6 +124,26 @@ def perform_binary_greyscale_erosion(params, img):
 def perform_gaussian_greyscale_erosion(params, img):
     process_name = "Gaussian Greyscale Erosion"
     result_image = GaussianGreyscaleErosion(
+        img=np.array(img),
+        mask_size=params['mask_size'],
+        sigma=params['sigma']
+    )
+
+    return process_name, result_image
+
+def perform_binary_greyscale_dilation(params, img):
+    process_name = "Binary Greyscale Dilation"
+    result_image = BinaryGreyscaleDilation(
+        img=np.array(img),
+        kernel_type=params['kernel_type'],
+        kernel_size=params['kernel_size']
+    )
+
+    return process_name, result_image
+
+def perform_gaussian_greyscale_dilation(params, img):
+    process_name = "Gaussian Greyscale Dilation"
+    result_image = GaussianGreyscaleDilation(
         img=np.array(img),
         mask_size=params['mask_size'],
         sigma=params['sigma']

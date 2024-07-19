@@ -17,5 +17,7 @@ preprocess_params = {
     "GaussianFilter": {"sigma": 4},
     "Erosion": {"kernel_type": "re", "kernel_size": 5, "iterations": 1},
     "Binary Greyscale Erosion": {"kernel_type": "re", "kernel_size": 3},
-    "Gaussian Greyscale Erosion": {"mask_size": 3, "sigma": 1.0}
+    "Gaussian Greyscale Erosion": {"mask_size": 3, "sigma": 1.0},
+    "Binary Greyscale Dilation": {"kernel_type": "re", "kernel_size": 3},
+    "Gaussian Greyscale Dilation": {"mask_size": 3, "sigma": 1.0}
 }
