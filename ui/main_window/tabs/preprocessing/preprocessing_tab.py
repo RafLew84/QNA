@@ -58,7 +58,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_gaussian_greyscale_opening,
     perform_gaussian_greyscale_closing,
     perform_binary_greyscale_closing,
-    perform_gamma_adjustment
+    perform_gamma_adjustment,
+    perform_contrast_stretching
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -480,6 +481,50 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gamma_slider)
 
             row += 1
+        elif selected_option == "Contrast Stretching":
+            default_value_min = preprocess_params["Contrast Stretching"]["min"]
+            default_value_max = preprocess_params["Contrast Stretching"]["max"]
+
+            label = tk.Label(self.preprocess_section_menu, text="min", width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["min"] = label
+
+            self.contrast_stretching_min_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=1,
+                to=99,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_contrast_stretching_min_slider_onChange
+            )
+
+            self.contrast_stretching_min_slider.set(default_value_min)
+            self.contrast_stretching_min_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
+
+            label = tk.Label(self.preprocess_section_menu, text="max", width=20)
+            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["max"] = label
+
+            self.contrast_stretching_max_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=1,
+                to=99,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_contrast_stretching_max_slider_onChange
+            )
+
+            self.contrast_stretching_max_slider.set(default_value_max)
+            self.contrast_stretching_max_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.contrast_stretching_min_slider)
+            self.parameter_preprocess_sliders.append(self.contrast_stretching_max_slider)
+
+            row += 3
         elif selected_option == "Non-local Mean Denoising":
             default_value_h = preprocess_params["Non-local Mean Denoising"]["h"]
             default_value_templateWindowSize = preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]
@@ -1082,7 +1127,8 @@ class PreprocessingTab:
             "Gaussian Greyscale Opening": perform_gaussian_greyscale_opening,
             "Binary Greyscale Closing": perform_binary_greyscale_closing,
             "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing,
-            "Gamma Adjustment": perform_gamma_adjustment
+            "Gamma Adjustment": perform_gamma_adjustment,
+            "Contrast Stretching": perform_contrast_stretching
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1107,6 +1153,9 @@ class PreprocessingTab:
             params['searchWindowSize'] = searchWindowSize
         elif self.selected_preprocess_option == "Gamma Adjustment":
             params['gamma'] = self.gamma_slider.get()
+        elif self.selected_preprocess_option == "Contrast Stretching":
+            params['min'] = self.contrast_stretching_min_slider.get()
+            params['max'] = self.contrast_stretching_max_slider.get()
         elif self.selected_preprocess_option == "Erosion":
             params['kernel_type'] = self.selected_kernel.get()
             params['iterations'] = self.erosion_iterations_slider.get()
@@ -1492,4 +1541,34 @@ class PreprocessingTab:
         if isinstance(result_image, np.ndarray):
             result_image = Image.fromarray(result_image)
         img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)       
+        self.handle_displaying_image_on_canvas(img)    
+
+    def update_contrast_stretching_min_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)  
+
+    def update_contrast_stretching_max_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)  

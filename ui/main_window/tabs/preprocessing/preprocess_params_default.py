@@ -24,5 +24,6 @@ preprocess_params = {
     "Gaussian Greyscale Opening": {"mask_size": 3, "sigma": 1.0},
     "Binary Greyscale Closing": {"kernel_type": "re", "kernel_size": 3},
     "Gaussian Greyscale Closing": {"mask_size": 3, "sigma": 1.0},
-    "Gamma Adjustment": {"gamma": 3.5}
+    "Gamma Adjustment": {"gamma": 3.5},
+    "Contrast Stretching": {"min": 2, "max": 98}
 }

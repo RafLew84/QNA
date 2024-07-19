@@ -36,7 +36,8 @@ from data.processing.preprocessing.morphology import (
 )
 
 from data.processing.preprocessing.intensity import (
-    GammaAdjustment
+    GammaAdjustment,
+    ContrastStretching
 )
 
 def perform_gaussian_blur(params, img):
@@ -206,4 +207,13 @@ def perform_gamma_adjustment(params, img):
         gamma=params['gamma']
     )
 
+    return process_name, result_image
+
+def perform_contrast_stretching(params, img):
+    process_name = "Contrast Stretching"
+    result_image = ContrastStretching(
+        img=np.array(img),
+        min=params['min'],
+        max=params['max']
+    )
     return process_name, result_image
