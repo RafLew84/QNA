@@ -37,7 +37,8 @@ from data.processing.preprocessing.morphology import (
 
 from data.processing.preprocessing.intensity import (
     GammaAdjustment,
-    ContrastStretching
+    ContrastStretching,
+    AdaptiveEqualization
 )
 
 def perform_gaussian_blur(params, img):
@@ -217,3 +218,12 @@ def perform_contrast_stretching(params, img):
         max=params['max']
     )
     return process_name, result_image
+
+def perform_adaptive_equalization(params, img):
+    process_name = "Adaptive Equalization"
+    result_image = AdaptiveEqualization(
+        img=np.array(img),
+        limit=params['limit']
+    )
+    image_uint8 = (result_image * 255).astype(np.uint8)
+    return process_name, image_uint8

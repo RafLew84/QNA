@@ -7,6 +7,7 @@ rlewandkow
 """
 
 import os, sys
+import cv2
 
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
@@ -59,7 +60,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_gaussian_greyscale_closing,
     perform_binary_greyscale_closing,
     perform_gamma_adjustment,
-    perform_contrast_stretching
+    perform_contrast_stretching,
+    perform_adaptive_equalization
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -479,6 +481,24 @@ class PreprocessingTab:
             self.gamma_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
 
             self.parameter_preprocess_sliders.append(self.gamma_slider)
+
+            row += 1
+        elif selected_option == "Adaptive Equalization":
+            label = tk.Label(self.preprocess_section_menu, text="limit", width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.limit_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.01,
+                to=0.20,
+                resolution=0.005,
+                orient=tk.HORIZONTAL,
+                command=self.update_limit_slider_onChange
+            )
+            default_value = preprocess_params["Adaptive Equalization"]["limit"]
+            self.limit_slider.set(default_value)
+            self.limit_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.limit_slider)
 
             row += 1
         elif selected_option == "Contrast Stretching":
@@ -1128,7 +1148,8 @@ class PreprocessingTab:
             "Binary Greyscale Closing": perform_binary_greyscale_closing,
             "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing,
             "Gamma Adjustment": perform_gamma_adjustment,
-            "Contrast Stretching": perform_contrast_stretching
+            "Contrast Stretching": perform_contrast_stretching,
+            "Adaptive Equalization": perform_adaptive_equalization
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1153,6 +1174,8 @@ class PreprocessingTab:
             params['searchWindowSize'] = searchWindowSize
         elif self.selected_preprocess_option == "Gamma Adjustment":
             params['gamma'] = self.gamma_slider.get()
+        elif self.selected_preprocess_option == "Adaptive Equalization":
+            params['limit'] = self.limit_slider.get()
         elif self.selected_preprocess_option == "Contrast Stretching":
             params['min'] = self.contrast_stretching_min_slider.get()
             params['max'] = self.contrast_stretching_max_slider.get()
@@ -1572,3 +1595,18 @@ class PreprocessingTab:
             result_image = Image.fromarray(result_image)
         img = concatenate_two_images(result_image, original_img)
         self.handle_displaying_image_on_canvas(img)  
+
+    def update_limit_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img) 
