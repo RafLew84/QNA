@@ -15,5 +15,7 @@ preprocess_params = {
     "GaussianBlur": {"sigmaX": 5, "sigmaY": 5},
     "Non-local Mean Denoising": {"h": 3, "searchWindowSize": 21, "templateWindowSize": 7},
     "GaussianFilter": {"sigma": 4},
-    "Erosion": {"kernel_type": "re", "kernel_size": 5, "iterations": 1}
+    "Erosion": {"kernel_type": "re", "kernel_size": 5, "iterations": 1},
+    "Binary Greyscale Erosion": {"kernel_type": "re", "kernel_size": 3},
+    "Gaussian Greyscale Erosion": {"mask_size": 3, "sigma": 1.0}
 }
