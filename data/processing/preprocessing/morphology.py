@@ -30,23 +30,33 @@ def GaussianGreyscaleErosion(img, mask_size, sigma):
 
 def BinaryGreyscaleDilation(img, kernel_type="re", kernel_size=(3,3)):
     kernel = binary_kernel(kernel_type, kernel_size)
-    eroded_image = ndimage.grey_dilation(img, footprint=kernel)
-    return eroded_image
+    dilated_image = ndimage.grey_dilation(img, footprint=kernel)
+    return dilated_image
 
 def GaussianGreyscaleDilation(img, mask_size, sigma):
     gm = gaussian_mask(mask_size, sigma)
-    eroded_image_gaussian = ndimage.grey_dilation(img, structure=gm)
-    return eroded_image_gaussian
+    dilated_image_gaussian = ndimage.grey_dilation(img, structure=gm)
+    return dilated_image_gaussian
 
 def BinaryGreyscaleOpening(img, kernel_type="re", kernel_size=(3,3)):
     kernel = binary_kernel(kernel_type, kernel_size)
-    eroded_image = ndimage.grey_opening(img, footprint=kernel)
-    return eroded_image
+    opened_image = ndimage.grey_opening(img, footprint=kernel)
+    return opened_image
 
 def GaussianGreyscaleOpening(img, mask_size, sigma):
     gm = gaussian_mask(mask_size, sigma)
-    eroded_image_gaussian = ndimage.grey_opening(img, structure=gm)
-    return eroded_image_gaussian
+    opened_image_gaussian = ndimage.grey_opening(img, structure=gm)
+    return opened_image_gaussian
+
+def BinaryGreyscaleClosing(img, kernel_type="re", kernel_size=(3,3)):
+    kernel = binary_kernel(kernel_type, kernel_size)
+    closed_image = ndimage.grey_closing(img, footprint=kernel)
+    return closed_image
+
+def GaussianGreyscaleClosing(img, mask_size, sigma):
+    gm = gaussian_mask(mask_size, sigma)
+    closed_image_gaussian = ndimage.grey_closing(img, structure=gm)
+    return closed_image_gaussian
 
 def binary_kernel(kernel_type, kernel_size):
     kernel = None
