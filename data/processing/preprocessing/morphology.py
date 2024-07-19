@@ -38,6 +38,16 @@ def GaussianGreyscaleDilation(img, mask_size, sigma):
     eroded_image_gaussian = ndimage.grey_dilation(img, structure=gm)
     return eroded_image_gaussian
 
+def BinaryGreyscaleOpening(img, kernel_type="re", kernel_size=(3,3)):
+    kernel = binary_kernel(kernel_type, kernel_size)
+    eroded_image = ndimage.grey_opening(img, footprint=kernel)
+    return eroded_image
+
+def GaussianGreyscaleOpening(img, mask_size, sigma):
+    gm = gaussian_mask(mask_size, sigma)
+    eroded_image_gaussian = ndimage.grey_opening(img, structure=gm)
+    return eroded_image_gaussian
+
 def binary_kernel(kernel_type, kernel_size):
     kernel = None
     if kernel_type == "re":

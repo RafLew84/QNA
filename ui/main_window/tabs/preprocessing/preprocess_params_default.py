@@ -19,5 +19,7 @@ preprocess_params = {
     "Binary Greyscale Erosion": {"kernel_type": "re", "kernel_size": 3},
     "Gaussian Greyscale Erosion": {"mask_size": 3, "sigma": 1.0},
     "Binary Greyscale Dilation": {"kernel_type": "re", "kernel_size": 3},
-    "Gaussian Greyscale Dilation": {"mask_size": 3, "sigma": 1.0}
+    "Gaussian Greyscale Dilation": {"mask_size": 3, "sigma": 1.0},
+    "Binary Greyscale Opening": {"kernel_type": "re", "kernel_size": 3},
+    "Gaussian Greyscale Opening": {"mask_size": 3, "sigma": 1.0}
 }
