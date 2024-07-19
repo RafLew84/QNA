@@ -1,0 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Morphology functions
+
+@author
+"""
+
+import os, sys
+
+sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
+
+from skimage import exposure
+
+def GammaAdjustment(img, gamma):
+    exposed_image = exposure.adjust_gamma(img, gamma)
+    return exposed_image

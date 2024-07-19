@@ -12,6 +12,7 @@ sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import cv2
 from scipy import ndimage
+from skimage import exposure
 
 def Erosion(img, kernel_type="re", kernel_size=(5,5), iterations=1):
     kernel = binary_kernel(kernel_type, kernel_size)
@@ -57,6 +58,10 @@ def GaussianGreyscaleClosing(img, mask_size, sigma):
     gm = gaussian_mask(mask_size, sigma)
     closed_image_gaussian = ndimage.grey_closing(img, structure=gm)
     return closed_image_gaussian
+
+def GammaAdjustment(img, gamma):
+    exposed_image = exposure.adjust_gamma(image, gamma)
+    return exposed_image
 
 def binary_kernel(kernel_type, kernel_size):
     kernel = None

@@ -57,7 +57,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_binary_greyscale_opening,
     perform_gaussian_greyscale_opening,
     perform_gaussian_greyscale_closing,
-    perform_binary_greyscale_closing
+    perform_binary_greyscale_closing,
+    perform_gamma_adjustment
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -461,7 +462,24 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gaussian_filter_slider)
 
             row += 1
+        elif selected_option == "Gamma Adjustment":
+            label = tk.Label(self.preprocess_section_menu, text="gamma", width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.gamma_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.1,
+                to=10.0,
+                resolution=0.05,
+                orient=tk.HORIZONTAL,
+                command=self.update_gamma_slider_onChange
+            )
+            default_value = preprocess_params["Gamma Adjustment"]["gamma"]
+            self.gamma_slider.set(default_value)
+            self.gamma_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
 
+            self.parameter_preprocess_sliders.append(self.gamma_slider)
+
+            row += 1
         elif selected_option == "Non-local Mean Denoising":
             default_value_h = preprocess_params["Non-local Mean Denoising"]["h"]
             default_value_templateWindowSize = preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]
@@ -1063,7 +1081,8 @@ class PreprocessingTab:
             "Binary Greyscale Opening": perform_binary_greyscale_opening,
             "Gaussian Greyscale Opening": perform_gaussian_greyscale_opening,
             "Binary Greyscale Closing": perform_binary_greyscale_closing,
-            "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing
+            "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing,
+            "Gamma Adjustment": perform_gamma_adjustment
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1086,6 +1105,8 @@ class PreprocessingTab:
             if searchWindowSize % 2 == 0:
                 searchWindowSize += 1
             params['searchWindowSize'] = searchWindowSize
+        elif self.selected_preprocess_option == "Gamma Adjustment":
+            params['gamma'] = self.gamma_slider.get()
         elif self.selected_preprocess_option == "Erosion":
             params['kernel_type'] = self.selected_kernel.get()
             params['iterations'] = self.erosion_iterations_slider.get()
@@ -1457,3 +1478,18 @@ class PreprocessingTab:
             result_image = Image.fromarray(result_image)
         img = concatenate_two_images(result_image, original_img)
         self.handle_displaying_image_on_canvas(img)
+    
+    def update_gamma_slider_onChange(self, event=None):
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
+
+        self.get_values_from_preprocess_menu_items(params)
+        result_image, _ = self.apply_preprocessing_operation(params, img)
+        if isinstance(result_image, np.ndarray):
+            result_image = Image.fromarray(result_image)
+        img = concatenate_two_images(result_image, original_img)
+        self.handle_displaying_image_on_canvas(img)       

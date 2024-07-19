@@ -35,6 +35,10 @@ from data.processing.preprocessing.morphology import (
     GaussianGreyscaleClosing
 )
 
+from data.processing.preprocessing.intensity import (
+    GammaAdjustment
+)
+
 def perform_gaussian_blur(params, img):
     """
     Apply Gaussian blur to an image.
@@ -191,6 +195,15 @@ def perform_gaussian_greyscale_closing(params, img):
         img=np.array(img),
         mask_size=params['mask_size'],
         sigma=params['sigma']
+    )
+
+    return process_name, result_image
+
+def perform_gamma_adjustment(params, img):
+    process_name = "Gamma Adjustment"
+    result_image = GammaAdjustment(
+        img=np.array(img),
+        gamma=params['gamma']
     )
 
     return process_name, result_image
