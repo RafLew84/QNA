@@ -456,7 +456,7 @@ class PreprocessingTab:
                 to=4.0,
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
-                command=self.update_gaussian_filter_slider_onChange
+                command=self.update_sliders_onChange
             )
             default_value = preprocess_params["GaussianFilter"]["sigma"]
             self.gaussian_filter_slider.set(default_value)
@@ -474,7 +474,7 @@ class PreprocessingTab:
                 to=10.0,
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
-                command=self.update_gamma_slider_onChange
+                command=self.update_sliders_onChange
             )
             default_value = preprocess_params["Gamma Adjustment"]["gamma"]
             self.gamma_slider.set(default_value)
@@ -492,7 +492,7 @@ class PreprocessingTab:
                 to=0.20,
                 resolution=0.005,
                 orient=tk.HORIZONTAL,
-                command=self.update_limit_slider_onChange
+                command=self.update_sliders_onChange
             )
             default_value = preprocess_params["Adaptive Equalization"]["limit"]
             self.limit_slider.set(default_value)
@@ -517,7 +517,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_contrast_stretching_min_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.contrast_stretching_min_slider.set(default_value_min)
@@ -535,7 +535,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_contrast_stretching_max_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.contrast_stretching_max_slider.set(default_value_max)
@@ -562,7 +562,7 @@ class PreprocessingTab:
                 resolution=0.1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_nl_mean_denois_param_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.nl_mean_denois_h_slider.set(default_value_h)
@@ -580,7 +580,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_nl_mean_denois_param_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.nl_mean_denois_templateWindowSize_slider.set(default_value_templateWindowSize)
@@ -598,7 +598,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_nl_mean_denois_param_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.nl_mean_denois_searchWindowSize_slider.set(default_value_searchWindowSize)
@@ -618,19 +618,7 @@ class PreprocessingTab:
             self.selected_kernel.set("re")  # Set default value
 
             def on_select():
-                params = {}
-                index = self.current_data_index
-                focuse_widget = self.root.focus_get()
-                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-                self.get_values_from_preprocess_menu_items(params)
-                result_image, _ = self.apply_preprocessing_operation(params, img)
-                if isinstance(result_image, np.ndarray):
-                    result_image = Image.fromarray(result_image)
-                img = concatenate_two_images(result_image, original_img)
-                self.handle_displaying_image_on_canvas(img)
+                self.process_and_display_image()
 
             
             self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_kernel, value="re", command=on_select)
@@ -657,7 +645,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_erosion_kernel_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.erosion_kernel_size_slider.set(default_value_kernel_size)
@@ -677,7 +665,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_erosion_iterations_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.erosion_iterations_slider.set(default_value_iterations)
@@ -692,19 +680,7 @@ class PreprocessingTab:
             self.selected_binary_grayscale_erosion_kernel.set("re")  # Set default value
 
             def on_select():
-                params = {}
-                index = self.current_data_index
-                focuse_widget = self.root.focus_get()
-                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-                self.get_values_from_preprocess_menu_items(params)
-                result_image, _ = self.apply_preprocessing_operation(params, img)
-                if isinstance(result_image, np.ndarray):
-                    result_image = Image.fromarray(result_image)
-                img = concatenate_two_images(result_image, original_img)
-                self.handle_displaying_image_on_canvas(img)
+                self.process_and_display_image()
 
             
             self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_erosion_kernel, value="re", command=on_select)
@@ -731,7 +707,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_binary_greyscale_erosion_kernel_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.binary_greyscale_erosion_kernel_size_slider.set(default_value_kernel_size)
@@ -757,7 +733,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_erosion_mask_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_erosion_mask_size_slider.set(default_value_mask_size)
@@ -777,7 +753,7 @@ class PreprocessingTab:
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_erosion_sigma_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_erosion_sigma_slider.set(default_value_sigma)
@@ -793,19 +769,7 @@ class PreprocessingTab:
             self.selected_binary_grayscale_dilation_kernel.set("re")  # Set default value
 
             def on_select():
-                params = {}
-                index = self.current_data_index
-                focuse_widget = self.root.focus_get()
-                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-                self.get_values_from_preprocess_menu_items(params)
-                result_image, _ = self.apply_preprocessing_operation(params, img)
-                if isinstance(result_image, np.ndarray):
-                    result_image = Image.fromarray(result_image)
-                img = concatenate_two_images(result_image, original_img)
-                self.handle_displaying_image_on_canvas(img)
+                self.process_and_display_image()
 
             
             self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_dilation_kernel, value="re", command=on_select)
@@ -832,7 +796,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_binary_greyscale_dilation_kernel_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.binary_greyscale_dilation_kernel_size_slider.set(default_value_kernel_size)
@@ -858,7 +822,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_dilation_mask_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_dilation_mask_size_slider.set(default_value_mask_size)
@@ -878,7 +842,7 @@ class PreprocessingTab:
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_dilation_sigma_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_dilation_sigma_slider.set(default_value_sigma)
@@ -894,19 +858,7 @@ class PreprocessingTab:
             self.selected_binary_grayscale_opening_kernel.set("re")  # Set default value
 
             def on_select():
-                params = {}
-                index = self.current_data_index
-                focuse_widget = self.root.focus_get()
-                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-                self.get_values_from_preprocess_menu_items(params)
-                result_image, _ = self.apply_preprocessing_operation(params, img)
-                if isinstance(result_image, np.ndarray):
-                    result_image = Image.fromarray(result_image)
-                img = concatenate_two_images(result_image, original_img)
-                self.handle_displaying_image_on_canvas(img)
+                self.process_and_display_image()
 
             
             self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_opening_kernel, value="re", command=on_select)
@@ -933,7 +885,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_binary_greyscale_opening_kernel_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.binary_greyscale_opening_kernel_size_slider.set(default_value_kernel_size)
@@ -959,7 +911,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_opening_mask_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_opening_mask_size_slider.set(default_value_mask_size)
@@ -979,7 +931,7 @@ class PreprocessingTab:
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_opening_sigma_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_opening_sigma_slider.set(default_value_sigma)
@@ -994,19 +946,7 @@ class PreprocessingTab:
             self.selected_binary_grayscale_closing_kernel.set("re")  # Set default value
 
             def on_select():
-                params = {}
-                index = self.current_data_index
-                focuse_widget = self.root.focus_get()
-                img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-                original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-                self.get_values_from_preprocess_menu_items(params)
-                result_image, _ = self.apply_preprocessing_operation(params, img)
-                if isinstance(result_image, np.ndarray):
-                    result_image = Image.fromarray(result_image)
-                img = concatenate_two_images(result_image, original_img)
-                self.handle_displaying_image_on_canvas(img)
+                self.process_and_display_image()
 
             
             self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_closing_kernel, value="re", command=on_select)
@@ -1033,7 +973,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_binary_greyscale_closing_kernel_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.binary_greyscale_closing_kernel_size_slider.set(default_value_kernel_size)
@@ -1059,7 +999,7 @@ class PreprocessingTab:
                 resolution=1,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_closing_mask_size_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_closing_mask_size_slider.set(default_value_mask_size)
@@ -1079,7 +1019,7 @@ class PreprocessingTab:
                 resolution=0.05,
                 orient=tk.HORIZONTAL,
                 length=150,
-                command=self.update_gaussian_greyscale_closing_sigma_slider_onChange
+                command=self.update_sliders_onChange
             )
 
             self.gaussian_greyscale_closing_sigma_slider.set(default_value_sigma)
@@ -1311,7 +1251,10 @@ class PreprocessingTab:
             error_msg = f"Error creating header labels: {e}"
             logger.error(error_msg)
 
-    def update_gaussian_filter_slider_onChange(self, event=None):
+    def update_sliders_onChange(self, event=None):
+        self.process_and_display_image()
+
+    def process_and_display_image(self):
         params = {}
         index = self.current_data_index
         focuse_widget = self.root.focus_get()
@@ -1325,288 +1268,3 @@ class PreprocessingTab:
             result_image = Image.fromarray(result_image)
         img = concatenate_two_images(result_image, original_img)
         self.handle_displaying_image_on_canvas(img)
-
-    def update_nl_mean_denois_param_slider_onChange(self, enevt=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-    
-    def update_erosion_kernel_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_erosion_iterations_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_binary_greyscale_erosion_kernel_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_erosion_mask_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_erosion_sigma_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_binary_greyscale_dilation_kernel_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_dilation_mask_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_dilation_sigma_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_binary_greyscale_opening_kernel_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_opening_mask_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_opening_sigma_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-    
-    def update_binary_greyscale_closing_kernel_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_closing_mask_size_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-
-    def update_gaussian_greyscale_closing_sigma_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)
-    
-    def update_gamma_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)    
-
-    def update_contrast_stretching_min_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)  
-
-    def update_contrast_stretching_max_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img)  
-
-    def update_limit_slider_onChange(self, event=None):
-        params = {}
-        index = self.current_data_index
-        focuse_widget = self.root.focus_get()
-        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
-
-        original_img = get_greyscale_image_at_index(data_for_preprocessing, index)
-
-        self.get_values_from_preprocess_menu_items(params)
-        result_image, _ = self.apply_preprocessing_operation(params, img)
-        if isinstance(result_image, np.ndarray):
-            result_image = Image.fromarray(result_image)
-        img = concatenate_two_images(result_image, original_img)
-        self.handle_displaying_image_on_canvas(img) 
