@@ -80,3 +80,59 @@ def RegionLeveling(img):
     leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
 
     return leveled_image_normalized
+
+def ThreePointLeveling(img):
+
+    image = np.array(img)
+
+    # Callback function to capture the points clicked by the user
+    def click_event(event, x, y, flags, params):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            points.append((x, y))
+            cv2.circle(image_display, (x, y), 5, (255, 0, 0), -1)
+            cv2.imshow("Select three points to define a plane", image_display)
+            if len(points) == 3:
+                cv2.destroyAllWindows()
+
+    image_display = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+    # Display the image and set up the callback for capturing points
+    points = []
+    cv2.imshow("Select three points to define a plane", image_display)
+    cv2.setMouseCallback("Select three points to define a plane", click_event)
+    cv2.waitKey(0)
+
+    # Ensure three points are selected
+    if len(points) != 3:
+        raise ValueError("You must select exactly three points.")
+
+    # Extract the coordinates of the selected points
+    (x1, y1), (x2, y2), (x3, y3) = points
+
+    # Get the pixel values at the selected points
+    z1 = image[y1, x1]
+    z2 = image[y2, x2]
+    z3 = image[y3, x3]
+
+    # Create matrices to solve for plane coefficients
+    A = np.array([[x1, y1, 1], [x2, y2, 1], [x3, y3, 1]])
+    B = np.array([z1, z2, z3])
+
+    # Solve for plane coefficients
+    plane_params = np.linalg.solve(A, B)
+    a, b, c = plane_params
+    print(f'Plane parameters: a={a}, b={b}, c={c}')
+
+    # Create the fitted plane for the whole image
+    rows, cols = image.shape
+    X, Y = np.meshgrid(np.arange(cols), np.arange(rows))
+    fitted_plane = a * X + b * Y + c
+
+    # Subtract the fitted plane from the original image
+    leveled_image = image - fitted_plane
+
+    leveled_image_normalized = cv2.normalize(leveled_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
+
+    return leveled_image_normalized
+

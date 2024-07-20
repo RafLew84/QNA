@@ -27,5 +27,6 @@ preprocess_params = {
     "Gamma Adjustment": {"gamma": 3.5},
     "Contrast Stretching": {"min": 2, "max": 98},
     "Adaptive Equalization": {"limit": 0.03},
-    "Leveling": {}
+    "Region Leveling": {},
+    "Three Point Leveling": {}
 }

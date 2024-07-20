@@ -42,7 +42,8 @@ from data.processing.preprocessing.intensity import (
 )
 
 from data.processing.preprocessing.leveling import (
-    RegionLeveling
+    RegionLeveling,
+    ThreePointLeveling
 )
 
 def perform_gaussian_blur(params, img):
@@ -235,4 +236,9 @@ def perform_adaptive_equalization(params, img):
 def perform_region_leveling(params, img):
     process_name = "Region Leveling"
     result_image = RegionLeveling(img)
+    return process_name, result_image
+
+def perform_three_point_leveling(params, img):
+    process_name = "Three Point Leveling"
+    result_image = ThreePointLeveling(img)
     return process_name, result_image
