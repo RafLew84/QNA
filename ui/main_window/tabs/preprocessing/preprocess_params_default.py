@@ -26,5 +26,6 @@ preprocess_params = {
     "Gaussian Greyscale Closing": {"mask_size": 3, "sigma": 1.0},
     "Gamma Adjustment": {"gamma": 3.5},
     "Contrast Stretching": {"min": 2, "max": 98},
-    "Adaptive Equalization": {"limit": 0.03}
+    "Adaptive Equalization": {"limit": 0.03},
+    "Leveling": {}
 }

@@ -61,7 +61,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_binary_greyscale_closing,
     perform_gamma_adjustment,
     perform_contrast_stretching,
-    perform_adaptive_equalization
+    perform_adaptive_equalization,
+    perform_region_leveling
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -465,6 +466,8 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gaussian_filter_slider)
 
             row += 1
+        elif selected_option == "Leveling":
+            pass
         elif selected_option == "Gamma Adjustment":
             label = tk.Label(self.preprocess_section_menu, text="gamma", width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
@@ -1089,7 +1092,8 @@ class PreprocessingTab:
             "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing,
             "Gamma Adjustment": perform_gamma_adjustment,
             "Contrast Stretching": perform_contrast_stretching,
-            "Adaptive Equalization": perform_adaptive_equalization
+            "Adaptive Equalization": perform_adaptive_equalization,
+            "Leveling": perform_region_leveling
         }
 
         if self.selected_preprocess_option in preprocess_operations:

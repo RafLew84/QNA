@@ -41,6 +41,10 @@ from data.processing.preprocessing.intensity import (
     AdaptiveEqualization
 )
 
+from data.processing.preprocessing.leveling import (
+    RegionLeveling
+)
+
 def perform_gaussian_blur(params, img):
     """
     Apply Gaussian blur to an image.
@@ -227,3 +231,8 @@ def perform_adaptive_equalization(params, img):
     )
     image_uint8 = (result_image * 255).astype(np.uint8)
     return process_name, image_uint8
+
+def perform_region_leveling(params, img):
+    process_name = "Region Leveling"
+    result_image = RegionLeveling(img)
+    return process_name, result_image
