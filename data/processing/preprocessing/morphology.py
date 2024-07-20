@@ -60,7 +60,7 @@ def GaussianGreyscaleClosing(img, mask_size, sigma):
     return closed_image_gaussian
 
 def GammaAdjustment(img, gamma):
-    exposed_image = exposure.adjust_gamma(image, gamma)
+    exposed_image = exposure.adjust_gamma(img, gamma)
     return exposed_image
 
 def binary_kernel(kernel_type, kernel_size):
