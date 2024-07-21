@@ -48,7 +48,8 @@ from data.processing.preprocessing.intensity import (
 
 from data.processing.preprocessing.leveling import (
     RegionLeveling,
-    ThreePointLeveling
+    ThreePointLeveling,
+    PolynomialLeveling
 )
 
 def perform_gaussian_blur(params, img):
@@ -267,3 +268,11 @@ def perform_propagation(params, img):
     )
     image_uint8 = (result_image * 255).astype(np.uint8)
     return process_name, image_uint8
+
+def perform_polynomial_leveling(params, img):
+    process_name = "Polynomial Leveling"
+    result_image = PolynomialLeveling(
+        img=np.array(img),
+        order=params['order']
+    )
+    return process_name, result_image

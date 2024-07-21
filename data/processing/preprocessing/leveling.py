@@ -14,6 +14,8 @@ import numpy as np
 from scipy.optimize import least_squares
 from skimage import img_as_float
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 def fit_plane(image, region=None):
     rows, cols = image.shape
@@ -136,3 +138,37 @@ def ThreePointLeveling(img):
 
     return leveled_image_normalized
 
+def fit_polynomial_surface(image, order=3):
+    """Fit a polynomial surface to the image."""
+    m, n = image.shape
+    Y, X = np.mgrid[:m, :n]
+    X = X.flatten()
+    Y = Y.flatten()
+    Z = image.flatten()
+
+    poly = PolynomialFeatures(degree=order)
+    X_poly = poly.fit_transform(np.column_stack((X, Y)))
+
+    model = LinearRegression()
+    model.fit(X_poly, Z)
+    Z_poly = model.predict(X_poly)
+
+    fitted_surface = Z_poly.reshape(m, n)
+    return fitted_surface
+
+def level_image_polynomial(image, order):
+    """Level the image by subtracting the fitted polynomial surface."""
+    polynomial_surface = fit_polynomial_surface(image, order=order)
+    leveled_image = image - polynomial_surface
+    return leveled_image
+
+def PolynomialLeveling(img, order):
+    image = img_as_float(img)
+
+    # Level the image using polynomial fitting
+    leveled_image = level_image_polynomial(image, order=order)
+
+    leveled_image_normalized = cv2.normalize(leveled_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
+
+    return leveled_image_normalized

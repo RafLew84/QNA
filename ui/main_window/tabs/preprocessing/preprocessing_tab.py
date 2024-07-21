@@ -65,7 +65,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_region_leveling,
     perform_three_point_leveling,
     perform_gaussian_sharpening,
-    perform_propagation
+    perform_propagation,
+    perform_polynomial_leveling
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -425,6 +426,7 @@ class PreprocessingTab:
             self.parameter_preprocess_buttons = []
             self.parameter_preprocess_sliders = []
             self.parameter_preprocess_radio = []
+            self.parameter_preprocess_dropdown = []
         except Exception as e:
             error_msg = f"Error displaying preprocess options menu: {e}"
             logger.error(error_msg)
@@ -442,13 +444,14 @@ class PreprocessingTab:
         self.selected_preprocess_option = selected_option
         for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
                        *self.parameter_preprocess_buttons, *self.parameter_preprocess_sliders,
-                       *self.parameter_preprocess_radio]:
+                       *self.parameter_preprocess_radio, *self.parameter_preprocess_dropdown]:
             widget.destroy()
         self.parameter_preprocess_entries.clear()
         self.parameter_preprocess_labels.clear()
         self.parameter_preprocess_buttons.clear()
         self.parameter_preprocess_sliders.clear()
         self.parameter_preprocess_radio.clear()
+        self.parameter_preprocess_dropdown.clear()
         # Update labels with function parameters based on selected option
         row = 2
         if selected_option == "GaussianFilter":
@@ -505,6 +508,35 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.limit_slider)
 
             row += 1
+        elif selected_option == "Polynomial Leveling":
+            default_value_order = preprocess_params["Polynomial Leveling"]["order"]
+
+            label = tk.Label(self.preprocess_section_menu, text="order", width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["order"] = label
+
+            # Create a StringVar to hold the selected option
+            self.polynomial_order_selected_option_var = tk.IntVar()
+            self.polynomial_order_selected_option_var.set(default_value_order)
+
+            # Create a list of values from 2 to 20
+            values = list(range(2, 21))
+
+            # Create the OptionMenu (dropdown) widget
+            self.polynomial_order_dropdown = tk.OptionMenu(
+                self.preprocess_section_menu, 
+                self.polynomial_order_selected_option_var, 
+                *values,
+                command=self.polynomial_order_dropdown_onChange
+                )
+            
+            self.polynomial_order_dropdown.config(width=20)
+            self.polynomial_order_dropdown.grid(row=row+1, column=0, padx=5, pady=1, sticky="n")
+
+            self.parameter_preprocess_dropdown.append(self.polynomial_order_dropdown)
+
+            row += 3
         elif selected_option == "Contrast Stretching":
             default_value_min = preprocess_params["Contrast Stretching"]["min"]
             default_value_max = preprocess_params["Contrast Stretching"]["max"]
@@ -1182,7 +1214,8 @@ class PreprocessingTab:
             "Region Leveling": perform_region_leveling,
             "Three Point Leveling": perform_three_point_leveling,
             "Gaussian Sharpening": perform_gaussian_sharpening,
-            "Propagation": perform_propagation
+            "Propagation": perform_propagation,
+            "Polynomial Leveling": perform_polynomial_leveling
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1211,6 +1244,9 @@ class PreprocessingTab:
             }),
             "Gamma Adjustment": lambda: params.update({'gamma': self.gamma_slider.get()}),
             "Adaptive Equalization": lambda: params.update({'limit': self.limit_slider.get()}),
+            "Polynomial Leveling": lambda: params.update({
+                'order': self.polynomial_order_selected_option_var.get()
+            }),
             "Contrast Stretching": lambda: params.update({
                 'min': self.contrast_stretching_min_slider.get(),
                 'max': self.contrast_stretching_max_slider.get()
@@ -1345,6 +1381,9 @@ class PreprocessingTab:
             logger.error(error_msg)
 
     def update_sliders_onChange(self, event=None):
+        self.process_and_display_image()
+    
+    def polynomial_order_dropdown_onChange(self, event=None):
         self.process_and_display_image()
 
     def process_and_display_image(self):
