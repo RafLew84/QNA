@@ -36,7 +36,8 @@ from data.processing.preprocessing.morphology import (
     BinaryGreyscaleOpening,
     GaussianGreyscaleOpening,
     BinaryGreyscaleClosing,
-    GaussianGreyscaleClosing
+    GaussianGreyscaleClosing,
+    Propagation
 )
 
 from data.processing.preprocessing.intensity import (
@@ -247,12 +248,22 @@ def perform_three_point_leveling(params, img):
     result_image = ThreePointLeveling(img)
     return process_name, result_image
 
-def perfor_gaussian_sharpening(params, img):
+def perform_gaussian_sharpening(params, img):
     process_name = "Gaussian Sharpening"
     result_image = GaussianSharpening(
         img=np.array(img),
         radius=params['radius'],
         amount=params['amount']
+    )
+    image_uint8 = (result_image * 255).astype(np.uint8)
+    return process_name, image_uint8
+
+def perform_propagation(params, img):
+    process_name = "Propagation"
+    result_image = Propagation(
+        img=np.array(img),
+        type=params['type'],
+        marker_value=params['marker_value']
     )
     image_uint8 = (result_image * 255).astype(np.uint8)
     return process_name, image_uint8

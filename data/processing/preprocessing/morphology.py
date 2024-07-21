@@ -12,7 +12,8 @@ sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import cv2
 from scipy import ndimage
-from skimage import exposure
+from skimage.morphology import reconstruction
+from skimage import img_as_float
 
 def Erosion(img, kernel_type="re", kernel_size=(5,5), iterations=1):
     kernel = binary_kernel(kernel_type, kernel_size)
@@ -59,9 +60,19 @@ def GaussianGreyscaleClosing(img, mask_size, sigma):
     closed_image_gaussian = ndimage.grey_closing(img, structure=gm)
     return closed_image_gaussian
 
-def GammaAdjustment(img, gamma):
-    exposed_image = exposure.adjust_gamma(img, gamma)
-    return exposed_image
+def Propagation(img, type, marker_value):
+    marker = None
+    img = img_as_float(img)
+    if type == "dilation":
+        marker = img - marker_value
+        marker[marker < 0] = 0
+    elif type == "erosion":
+        marker = img + marker_value
+
+    # Perform morphological reconstruction by dilation
+    reconstructed_image = reconstruction(marker, img, method=type)
+
+    return reconstructed_image
 
 def binary_kernel(kernel_type, kernel_size):
     kernel = None

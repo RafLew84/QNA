@@ -29,5 +29,6 @@ preprocess_params = {
     "Adaptive Equalization": {"limit": 0.03},
     "Region Leveling": {},
     "Three Point Leveling": {},
-    "Gaussian Sharpening": {"radius": 1.0, "amount": 1.0}
+    "Gaussian Sharpening": {"radius": 1.0, "amount": 1.0},
+    "Propagation": {"type": "dilation", "marker_value": 0.3}
 }

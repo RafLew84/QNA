@@ -64,7 +64,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_adaptive_equalization,
     perform_region_leveling,
     perform_three_point_leveling,
-    perfor_gaussian_sharpening
+    perform_gaussian_sharpening,
+    perform_propagation
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -1077,6 +1078,45 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gaussian_sharpening_amount_slider)
 
             row += 4
+        elif selected_option == "Propagation":
+            default_value_marker_value = preprocess_params["Propagation"]["marker_value"]
+            self.selected_propagation_method = tk.StringVar()
+            self.selected_propagation_method.set("dilation")  # Set default value
+
+            def on_select():
+                self.process_and_display_image()
+
+            
+            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Dilation", variable=self.selected_propagation_method, value="dilation", command=on_select)
+            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Erosion", variable=self.selected_propagation_method, value="erosion", command=on_select)
+
+            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_radio.append(self.radio1)
+            self.parameter_preprocess_radio.append(self.radio2)
+
+            label = tk.Label(self.preprocess_section_menu, text="Marker value", width=20)
+            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["marker_value"] = label
+
+            self.propagation_marker_value_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.01,
+                to=0.99,
+                resolution=0.01,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_sliders_onChange
+            )
+
+            self.propagation_marker_value_slider.set(default_value_marker_value)
+            self.propagation_marker_value_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.propagation_marker_value_slider)
+
+            row += 3
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
@@ -1141,7 +1181,8 @@ class PreprocessingTab:
             "Adaptive Equalization": perform_adaptive_equalization,
             "Region Leveling": perform_region_leveling,
             "Three Point Leveling": perform_three_point_leveling,
-            "Gaussian Sharpening": perfor_gaussian_sharpening
+            "Gaussian Sharpening": perform_gaussian_sharpening,
+            "Propagation": perform_propagation
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1178,6 +1219,10 @@ class PreprocessingTab:
                 'kernel_type': self.selected_kernel.get(),
                 'iterations': self.erosion_iterations_slider.get(),
                 'kernel_size': add_odd_value(self.erosion_kernel_size_slider)
+            }),
+            "Propagation": lambda: params.update({
+                'type': self.selected_propagation_method.get(),
+                'marker_value': self.propagation_marker_value_slider.get()
             }),
             "Binary Greyscale Erosion": lambda: params.update({
                 'kernel_type': self.selected_binary_grayscale_erosion_kernel.get(),
