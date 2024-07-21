@@ -49,7 +49,8 @@ from data.processing.preprocessing.intensity import (
 from data.processing.preprocessing.leveling import (
     RegionLeveling,
     ThreePointLeveling,
-    PolynomialLeveling
+    PolynomialLeveling,
+    AdaptiveLeveling
 )
 
 def perform_gaussian_blur(params, img):
@@ -274,5 +275,13 @@ def perform_polynomial_leveling(params, img):
     result_image = PolynomialLeveling(
         img=np.array(img),
         order=params['order']
+    )
+    return process_name, result_image
+
+def perform_adaptive_leveling(params, img):
+    process_name = "Adaptive Leveling"
+    result_image = AdaptiveLeveling(
+        img=np.array(img),
+        disk_size=params['disk_size']
     )
     return process_name, result_image

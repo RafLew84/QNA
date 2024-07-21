@@ -16,6 +16,7 @@ from skimage import img_as_float
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
+from skimage.morphology import disk, opening
 
 def fit_plane(image, region=None):
     rows, cols = image.shape
@@ -171,4 +172,13 @@ def PolynomialLeveling(img, order):
     leveled_image_normalized = cv2.normalize(leveled_image, None, 0, 255, cv2.NORM_MINMAX)
     leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
 
+    return leveled_image_normalized
+
+def AdaptiveLeveling(img, disk_size=50):
+    """Level the image using morphological opening."""
+    selem = disk(disk_size)
+    background = opening(img, selem)
+    leveled_image = img - background
+    leveled_image_normalized = cv2.normalize(leveled_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
     return leveled_image_normalized

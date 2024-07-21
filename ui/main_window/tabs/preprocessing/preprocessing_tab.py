@@ -66,7 +66,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_three_point_leveling,
     perform_gaussian_sharpening,
     perform_propagation,
-    perform_polynomial_leveling
+    perform_polynomial_leveling,
+    perform_adaptive_leveling
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -528,7 +529,7 @@ class PreprocessingTab:
                 self.preprocess_section_menu, 
                 self.polynomial_order_selected_option_var, 
                 *values,
-                command=self.polynomial_order_dropdown_onChange
+                command=self.dropdown_onChange
                 )
             
             self.polynomial_order_dropdown.config(width=20)
@@ -537,6 +538,35 @@ class PreprocessingTab:
             self.parameter_preprocess_dropdown.append(self.polynomial_order_dropdown)
 
             row += 3
+        elif selected_option == "Adaptive Leveling":
+            default_value_disk_size = preprocess_params["Adaptive Leveling"]["disk_size"]
+
+            label = tk.Label(self.preprocess_section_menu, text="disk size", width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["disk size"] = label
+
+            # Create a StringVar to hold the selected option
+            self.adaptive_leveling_disk_size_var = tk.IntVar()
+            self.adaptive_leveling_disk_size_var.set(default_value_disk_size)
+
+            # Create a list of values from 2 to 20
+            values = list(range(2, 100, 2))
+
+            # Create the OptionMenu (dropdown) widget
+            self.disk_size_dropdown = tk.OptionMenu(
+                self.preprocess_section_menu, 
+                self.adaptive_leveling_disk_size_var, 
+                *values,
+                command=self.dropdown_onChange
+                )
+            
+            self.disk_size_dropdown.config(width=20)
+            self.disk_size_dropdown.grid(row=row+1, column=0, padx=5, pady=1, sticky="n")
+
+            self.parameter_preprocess_dropdown.append(self.disk_size_dropdown)
+
+            row += 1
         elif selected_option == "Contrast Stretching":
             default_value_min = preprocess_params["Contrast Stretching"]["min"]
             default_value_max = preprocess_params["Contrast Stretching"]["max"]
@@ -1215,7 +1245,8 @@ class PreprocessingTab:
             "Three Point Leveling": perform_three_point_leveling,
             "Gaussian Sharpening": perform_gaussian_sharpening,
             "Propagation": perform_propagation,
-            "Polynomial Leveling": perform_polynomial_leveling
+            "Polynomial Leveling": perform_polynomial_leveling,
+            "Adaptive Leveling": perform_adaptive_leveling
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1244,6 +1275,9 @@ class PreprocessingTab:
             }),
             "Gamma Adjustment": lambda: params.update({'gamma': self.gamma_slider.get()}),
             "Adaptive Equalization": lambda: params.update({'limit': self.limit_slider.get()}),
+            "Adaptive Leveling": lambda: params.update({
+                'disk_size': self.adaptive_leveling_disk_size_var.get()
+            }),
             "Polynomial Leveling": lambda: params.update({
                 'order': self.polynomial_order_selected_option_var.get()
             }),
@@ -1383,7 +1417,7 @@ class PreprocessingTab:
     def update_sliders_onChange(self, event=None):
         self.process_and_display_image()
     
-    def polynomial_order_dropdown_onChange(self, event=None):
+    def dropdown_onChange(self, event=None):
         self.process_and_display_image()
 
     def process_and_display_image(self):

@@ -31,5 +31,6 @@ preprocess_params = {
     "Three Point Leveling": {},
     "Gaussian Sharpening": {"radius": 1.0, "amount": 1.0},
     "Propagation": {"type": "dilation", "marker_value": 0.3},
-    "Polynomial Leveling": {"order": 3}
+    "Polynomial Leveling": {"order": 3},
+    "Adaptive Leveling": {"disk_size": 50}
 }
