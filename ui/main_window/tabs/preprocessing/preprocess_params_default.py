@@ -28,5 +28,6 @@ preprocess_params = {
     "Contrast Stretching": {"min": 2, "max": 98},
     "Adaptive Equalization": {"limit": 0.03},
     "Region Leveling": {},
-    "Three Point Leveling": {}
+    "Three Point Leveling": {},
+    "Gaussian Sharpening": {"radius": 1.0, "amount": 1.0}
 }

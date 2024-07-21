@@ -23,6 +23,10 @@ from data.processing.preprocessing.noise_reduction import (
     NlMeansDenois
 )
 
+from data.processing.preprocessing.sharpening import (
+    GaussianSharpening
+)
+
 from data.processing.preprocessing.morphology import (
     Erosion,
     BinaryGreyscaleErosion,
@@ -242,3 +246,13 @@ def perform_three_point_leveling(params, img):
     process_name = "Three Point Leveling"
     result_image = ThreePointLeveling(img)
     return process_name, result_image
+
+def perfor_gaussian_sharpening(params, img):
+    process_name = "Gaussian Sharpening"
+    result_image = GaussianSharpening(
+        img=np.array(img),
+        radius=params['radius'],
+        amount=params['amount']
+    )
+    image_uint8 = (result_image * 255).astype(np.uint8)
+    return process_name, image_uint8

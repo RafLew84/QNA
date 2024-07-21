@@ -63,7 +63,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_contrast_stretching,
     perform_adaptive_equalization,
     perform_region_leveling,
-    perform_three_point_leveling
+    perform_three_point_leveling,
+    perfor_gaussian_sharpening
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -1030,6 +1031,52 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.gaussian_greyscale_closing_sigma_slider)
 
             row += 4
+
+        elif selected_option == "Gaussian Sharpening":
+            default_value_radius = preprocess_params["Gaussian Sharpening"]["radius"]
+            default_value_amount = preprocess_params["Gaussian Sharpening"]["amount"]
+
+            label = tk.Label(self.preprocess_section_menu, text="Radius", width=20)
+            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["radius"] = label
+
+            self.gaussian_sharpening_radius_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.1,
+                to=10.0,
+                resolution=0.05,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_sliders_onChange
+            )
+
+            self.gaussian_sharpening_radius_slider.set(default_value_radius)
+            self.gaussian_sharpening_radius_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.gaussian_sharpening_radius_slider)
+
+            label = tk.Label(self.preprocess_section_menu, text="Amount", width=20)
+            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["amount"] = label
+
+            self.gaussian_sharpening_amount_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=0.1,
+                to=10.0,
+                resolution=0.05,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_sliders_onChange
+            )
+
+            self.gaussian_sharpening_amount_slider.set(default_value_amount)
+            self.gaussian_sharpening_amount_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.gaussian_sharpening_amount_slider)
+
+            row += 4
         else:
             for param_name, param_value in self.preprocess_params[selected_option].items():
                 self.create_preprocess_menu_items(row, param_name, param_value)
@@ -1093,7 +1140,8 @@ class PreprocessingTab:
             "Contrast Stretching": perform_contrast_stretching,
             "Adaptive Equalization": perform_adaptive_equalization,
             "Region Leveling": perform_region_leveling,
-            "Three Point Leveling": perform_three_point_leveling
+            "Three Point Leveling": perform_three_point_leveling,
+            "Gaussian Sharpening": perfor_gaussian_sharpening
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1162,6 +1210,10 @@ class PreprocessingTab:
             "Gaussian Greyscale Closing": lambda: params.update({
                 'mask_size': add_odd_value(self.gaussian_greyscale_closing_mask_size_slider),
                 'sigma': self.gaussian_greyscale_closing_sigma_slider.get()
+            }),
+            "Gaussian Sharpening": lambda: params.update({
+                'radius': self.gaussian_sharpening_radius_slider.get(),
+                'amount':  self.gaussian_sharpening_amount_slider.get()
             })
         }
 
