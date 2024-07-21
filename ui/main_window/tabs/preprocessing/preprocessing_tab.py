@@ -1216,19 +1216,19 @@ class PreprocessingTab:
 
     def get_header_labels_from_stp_file(self, index):
         header_info = get_header_info_at_index(data_for_preprocessing, index)
-        filename = get_filename_at_index(index, data_for_preprocessing)
+        filename = get_filename_at_index(data_for_preprocessing, index)
         stp_labels = get_stp_labels(header_info, filename)
         return stp_labels
     
     def get_header_labels_from_s94_file(self, index):
         header_info = get_header_info_at_index(data_for_preprocessing, index)
-        filename = get_filename_at_index(index, data_for_preprocessing)
+        filename = get_filename_at_index(data_for_preprocessing, index)
         s94_labels = get_s94_labels(header_info, filename)
         return s94_labels
 
     def get_header_labels_from_mpp_file(self, index):
         header_info = get_header_info_at_index(data_for_preprocessing, index)
-        filename = get_filename_at_index(index, data_for_preprocessing)
+        filename = get_filename_at_index(data_for_preprocessing, index)
         framenumber = get_framenumber_at_index(data_for_preprocessing, index)
         mpp_labels = get_mpp_labels(header_info, filename, framenumber)
         return mpp_labels
