@@ -446,860 +446,204 @@ class PreprocessingTab:
             selected_option (str): The selected preprocessing option from the dropdown menu.
         """
         self.selected_preprocess_option = selected_option
-        for widget in [*self.parameter_preprocess_entries.values(), *self.parameter_preprocess_labels.values(),
-                       *self.parameter_preprocess_buttons, *self.parameter_preprocess_sliders,
-                       *self.parameter_preprocess_radio, *self.parameter_preprocess_dropdown]:
+        for widget in [*self.parameter_preprocess_entries.values(),
+                    *self.parameter_preprocess_labels.values(),
+                    *self.parameter_preprocess_buttons,
+                    *self.parameter_preprocess_sliders,
+                    *self.parameter_preprocess_radio,
+                    *self.parameter_preprocess_dropdown]:
             widget.destroy()
+    
+        # Clear the collections
         self.parameter_preprocess_entries.clear()
         self.parameter_preprocess_labels.clear()
         self.parameter_preprocess_buttons.clear()
         self.parameter_preprocess_sliders.clear()
         self.parameter_preprocess_radio.clear()
         self.parameter_preprocess_dropdown.clear()
-        # Update labels with function parameters based on selected option
-        row = 2
-        if selected_option == "GaussianFilter":
-            label = tk.Label(self.preprocess_section_menu, text="sigma", width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.gaussian_filter_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=4.0,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                command=self.update_sliders_onChange
-            )
-            default_value = preprocess_params["GaussianFilter"]["sigma"]
-            self.gaussian_filter_slider.set(default_value)
-            self.gaussian_filter_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
 
-            self.parameter_preprocess_sliders.append(self.gaussian_filter_slider)
+        self.options_config = {
+            "GaussianFilter": {
+                "label_text": "sigma",
+                "slider_config": {"from_": 0.1, "to": 4.0, "resolution": 0.05, "value": self.preprocess_params["GaussianFilter"]["sigma"]}
+            },
+            "Gamma Adjustment": {
+                "label_text": "gamma",
+                "slider_config": {"from_": 0.1, "to": 10.0, "resolution": 0.05, "value": self.preprocess_params["Gamma Adjustment"]["gamma"]}
+            },
+            "Adaptive Equalization": {
+                "label_text": "limit",
+                "slider_config": {"from_": 0.01, "to": 0.20, "resolution": 0.005, "value": self.preprocess_params["Adaptive Equalization"]["limit"]}
+            },
+            "Contrast Stretching": {
+                "labels": [("min", self.preprocess_params["Contrast Stretching"]["min"]), ("max", self.preprocess_params["Contrast Stretching"]["max"])],
+                "sliders": [
+                    {"from_": 1, "to": 99, "resolution": 1, "value": self.preprocess_params["Contrast Stretching"]["min"]},
+                    {"from_": 1, "to": 99, "resolution": 1, "value": self.preprocess_params["Contrast Stretching"]["max"]}
+                ]
+            },
+            "Non-local Mean Denoising": {
+                "labels": [
+                    ("h", self.preprocess_params["Non-local Mean Denoising"]["h"]),
+                    ("Template Window Size", self.preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]),
+                    ("Search Window Size", self.preprocess_params["Non-local Mean Denoising"]["searchWindowSize"])
+                ],
+                "sliders": [
+                    {"from_": 0.1, "to": 10.0, "resolution": 0.1, "value": self.preprocess_params["Non-local Mean Denoising"]["h"]},
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]},
+                    {"from_": 3, "to": 51, "resolution": 1, "value": self.preprocess_params["Non-local Mean Denoising"]["searchWindowSize"]}
+                ]
+            },
+            "Erosion": {
+                "radio_buttons": [("Rectangle", "re"), ("Ellipse", "el"), ("Cross", "cr")],
+                "labels": [("Kernel Size", self.preprocess_params["Erosion"]["kernel_size"]), ("Iterations", self.preprocess_params["Erosion"]["iterations"])],
+                "sliders": [
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Erosion"]["kernel_size"]},
+                    {"from_": 1, "to": 5, "resolution": 1, "value": self.preprocess_params["Erosion"]["iterations"]}
+                ]
+            },
+            "Propagation": {
+                "radio_buttons": [("Dilation", "dilation"), ("Erosion", "erosion")],
+                "labels": [("Margker value", self.preprocess_params["Propagation"]["marker_value"])],
+                "sliders": [
+                    {"from_": 0.05, "to": 0.95, "resolution": 0.05, "value": self.preprocess_params["Propagation"]["marker_value"]}
+                ]
+            },
+            "Polynomial Leveling": {
+                "labels": [("Order", self.preprocess_params["Polynomial Leveling"]["order"])],
+                "sliders": [
+                    {"from_": 2, "to": 20, "resolution": 1, "value": self.preprocess_params["Polynomial Leveling"]["order"]}
+                ]
+            },
+            "Adaptive Leveling": {
+                "labels": [("Disk size", self.preprocess_params["Adaptive Leveling"]["disk_size"])],
+                "sliders": [
+                    {"from_": 2, "to": 50, "resolution": 1, "value": self.preprocess_params["Adaptive Leveling"]["disk_size"]}
+                ]
+            },
+            "Local Median Filter": {
+                "labels": [("Size", self.preprocess_params["Local Median Filter"]["size"])],
+                "sliders": [
+                    {"from_": 2, "to": 20, "resolution": 1, "value": self.preprocess_params["Local Median Filter"]["size"]}
+                ]
+            },
+            "Binary Greyscale Erosion": {
+                "radio_buttons": [("Rectangle", "re"), ("Ellipse", "el"), ("Cross", "cr")],
+                "label_text": "Kernel Size",
+                "slider_config": {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Binary Greyscale Erosion"]["kernel_size"]}
+            },
+            "Gaussian Greyscale Erosion": {
+                "labels": [("Mask Size", self.preprocess_params["Gaussian Greyscale Erosion"]["mask_size"]), ("Sigma", self.preprocess_params["Gaussian Greyscale Erosion"]["sigma"])],
+                "sliders": [
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Gaussian Greyscale Erosion"]["mask_size"]},
+                    {"from_": 0.1, "to": 10, "resolution": 0.05, "value": self.preprocess_params["Gaussian Greyscale Erosion"]["sigma"]}
+                ]
+            },
+            "Binary Greyscale Dilation": {
+                "radio_buttons": [("Rectangle", "re"), ("Ellipse", "el"), ("Cross", "cr")],
+                "label_text": "Kernel Size",
+                "slider_config": {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Binary Greyscale Dilation"]["kernel_size"]}
+            },
+            "Gaussian Greyscale Dilation": {
+                "labels": [("Mask Size", self.preprocess_params["Gaussian Greyscale Dilation"]["mask_size"]), ("Sigma", self.preprocess_params["Gaussian Greyscale Dilation"]["sigma"])],
+                "sliders": [
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Gaussian Greyscale Dilation"]["mask_size"]},
+                    {"from_": 0.1, "to": 10, "resolution": 0.05, "value": self.preprocess_params["Gaussian Greyscale Dilation"]["sigma"]}
+                ]
+            },
+            "Binary Greyscale Opening": {
+                "radio_buttons": [("Rectangle", "re"), ("Ellipse", "el"), ("Cross", "cr")],
+                "label_text": "Kernel Size",
+                "slider_config": {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Binary Greyscale Opening"]["kernel_size"]}
+            },
+            "Gaussian Greyscale Opening": {
+                "labels": [("Mask Size", self.preprocess_params["Gaussian Greyscale Opening"]["mask_size"]), ("Sigma", self.preprocess_params["Gaussian Greyscale Opening"]["sigma"])],
+                "sliders": [
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Gaussian Greyscale Opening"]["mask_size"]},
+                    {"from_": 0.1, "to": 10, "resolution": 0.05, "value": self.preprocess_params["Gaussian Greyscale Opening"]["sigma"]}
+                ]
+            },
+            "Binary Greyscale Closing": {
+                "radio_buttons": [("Rectangle", "re"), ("Ellipse", "el"), ("Cross", "cr")],
+                "label_text": "Kernel Size",
+                "slider_config": {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Binary Greyscale Closing"]["kernel_size"]}
+            },
+            "White Top Hat": {
+                "radio_buttons": [("Disk", "disk"), ("Square", "square"), ("Diamond", "diamond"), ("Star", "star")],
+                "label_text": "Selem Size",
+                "slider_config": {"from_": 2, "to": 30, "resolution": 1, "value": self.preprocess_params["White Top Hat"]["selem_size"]}
+            },
+            "Black Top Hat": {
+                "radio_buttons": [("Disk", "disk"), ("Square", "square"), ("Diamond", "diamond"), ("Star", "star")],
+                "label_text": "Selem Size",
+                "slider_config": {"from_": 2, "to": 30, "resolution": 1, "value": self.preprocess_params["Black Top Hat"]["selem_size"]}
+            },
+            "Gaussian Greyscale Closing": {
+                "labels": [("Mask Size", self.preprocess_params["Gaussian Greyscale Closing"]["mask_size"]), ("Sigma", self.preprocess_params["Gaussian Greyscale Closing"]["sigma"])],
+                "sliders": [
+                    {"from_": 3, "to": 21, "resolution": 1, "value": self.preprocess_params["Gaussian Greyscale Closing"]["mask_size"]},
+                    {"from_": 0.1, "to": 10, "resolution": 0.05, "value": self.preprocess_params["Gaussian Greyscale Closing"]["sigma"]}
+                ]
+            },
+            "Gaussian Sharpening": {
+                "labels": [("Radius", self.preprocess_params["Gaussian Sharpening"]["radius"]), ("Amount", self.preprocess_params["Gaussian Sharpening"]["amount"])],
+                "sliders": [
+                    {"from_": 0.1, "to": 10.0, "resolution": 0.05, "value": self.preprocess_params["Gaussian Sharpening"]["radius"]},
+                    {"from_": 0.1, "to": 10.0, "resolution": 0.05, "value": self.preprocess_params["Gaussian Sharpening"]["amount"]}
+                ]
+            }
+        }
 
-            row += 1
-        elif selected_option == "Gamma Adjustment":
-            label = tk.Label(self.preprocess_section_menu, text="gamma", width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.parameter_preprocess_labels["gamma"] = label
-            self.gamma_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10.0,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                command=self.update_sliders_onChange
-            )
-            default_value = preprocess_params["Gamma Adjustment"]["gamma"]
-            self.gamma_slider.set(default_value)
-            self.gamma_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
+        config = self.options_config.get(selected_option, {})
+        row = 2 # Initialize row for layout
 
-            self.parameter_preprocess_sliders.append(self.gamma_slider)
-
-            row += 1
-        elif selected_option == "Local Median Filter":
-            label = tk.Label(self.preprocess_section_menu, text="size", width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.parameter_preprocess_labels["size"] = label
-
-            self.local_median_filter_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=1,
-                to=25,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                command=self.update_sliders_onChange
-            )
-            default_value = preprocess_params["Local Median Filter"]["size"]
-            self.local_median_filter_size_slider.set(default_value)
-            self.local_median_filter_size_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.local_median_filter_size_slider)
-
-            row += 1
-        elif selected_option == "Adaptive Equalization":
-            label = tk.Label(self.preprocess_section_menu, text="limit", width=15)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.limit_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.01,
-                to=0.20,
-                resolution=0.005,
-                orient=tk.HORIZONTAL,
-                command=self.update_sliders_onChange
-            )
-            default_value = preprocess_params["Adaptive Equalization"]["limit"]
-            self.limit_slider.set(default_value)
-            self.limit_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.limit_slider)
-
-            row += 1
-        elif selected_option == "Polynomial Leveling":
-            default_value_order = preprocess_params["Polynomial Leveling"]["order"]
-
-            label = tk.Label(self.preprocess_section_menu, text="order", width=20)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["order"] = label
-
-            # Create a StringVar to hold the selected option
-            self.polynomial_order_selected_option_var = tk.IntVar()
-            self.polynomial_order_selected_option_var.set(default_value_order)
-
-            # Create a list of values from 2 to 20
-            values = list(range(2, 21))
-
-            # Create the OptionMenu (dropdown) widget
-            self.polynomial_order_dropdown = tk.OptionMenu(
-                self.preprocess_section_menu, 
-                self.polynomial_order_selected_option_var, 
-                *values,
-                command=self.dropdown_onChange
-                )
+        # Handle radio buttons
+        if "radio_buttons" in config:
+            self.selected_option_var = tk.StringVar()
+            self.selected_option_var.set(config["radio_buttons"][0][1])  # Set default value
             
-            self.polynomial_order_dropdown.config(width=20)
-            self.polynomial_order_dropdown.grid(row=row+1, column=0, padx=5, pady=1, sticky="n")
-
-            self.parameter_preprocess_dropdown.append(self.polynomial_order_dropdown)
-
-            row += 3
-        elif selected_option == "Adaptive Leveling":
-            default_value_disk_size = preprocess_params["Adaptive Leveling"]["disk_size"]
-
-            label = tk.Label(self.preprocess_section_menu, text="disk size", width=20)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["disk size"] = label
-
-            # Create a StringVar to hold the selected option
-            self.adaptive_leveling_disk_size_var = tk.IntVar()
-            self.adaptive_leveling_disk_size_var.set(default_value_disk_size)
-
-            # Create a list of values from 2 to 20
-            values = list(range(2, 100, 2))
-
-            # Create the OptionMenu (dropdown) widget
-            self.disk_size_dropdown = tk.OptionMenu(
-                self.preprocess_section_menu, 
-                self.adaptive_leveling_disk_size_var, 
-                *values,
-                command=self.dropdown_onChange
-                )
-            
-            self.disk_size_dropdown.config(width=20)
-            self.disk_size_dropdown.grid(row=row+1, column=0, padx=5, pady=1, sticky="n")
-
-            self.parameter_preprocess_dropdown.append(self.disk_size_dropdown)
-
-            row += 1
-        elif selected_option == "Contrast Stretching":
-            default_value_min = preprocess_params["Contrast Stretching"]["min"]
-            default_value_max = preprocess_params["Contrast Stretching"]["max"]
-
-            label = tk.Label(self.preprocess_section_menu, text="min", width=20)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["min"] = label
-
-            self.contrast_stretching_min_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=1,
-                to=99,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.contrast_stretching_min_slider.set(default_value_min)
-            self.contrast_stretching_min_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
-
-            label = tk.Label(self.preprocess_section_menu, text="max", width=20)
-            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["max"] = label
-
-            self.contrast_stretching_max_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=1,
-                to=99,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.contrast_stretching_max_slider.set(default_value_max)
-            self.contrast_stretching_max_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.contrast_stretching_min_slider)
-            self.parameter_preprocess_sliders.append(self.contrast_stretching_max_slider)
-
-            row += 3
-        elif selected_option == "Non-local Mean Denoising":
-            default_value_h = preprocess_params["Non-local Mean Denoising"]["h"]
-            default_value_templateWindowSize = preprocess_params["Non-local Mean Denoising"]["templateWindowSize"]
-            default_value_searchWindowSize = preprocess_params["Non-local Mean Denoising"]["searchWindowSize"]
-
-            label = tk.Label(self.preprocess_section_menu, text="h", width=20)
-            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["h"] = label
-
-            self.nl_mean_denois_h_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10.0,
-                resolution=0.1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.nl_mean_denois_h_slider.set(default_value_h)
-            self.nl_mean_denois_h_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
-
-            label = tk.Label(self.preprocess_section_menu, text="Template Window Size", width=20)
-            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["templateWindowSize"] = label
-
-            self.nl_mean_denois_templateWindowSize_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.nl_mean_denois_templateWindowSize_slider.set(default_value_templateWindowSize)
-            self.nl_mean_denois_templateWindowSize_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
-
-            label = tk.Label(self.preprocess_section_menu, text="Search Window Size", width=20)
-            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["searchWindowSize"] = label
-
-            self.nl_mean_denois_searchWindowSize_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=51,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.nl_mean_denois_searchWindowSize_slider.set(default_value_searchWindowSize)
-            self.nl_mean_denois_searchWindowSize_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.nl_mean_denois_h_slider)
-            self.parameter_preprocess_sliders.append(self.nl_mean_denois_searchWindowSize_slider)
-            self.parameter_preprocess_sliders.append(self.nl_mean_denois_templateWindowSize_slider)
-
-            self.parameter_preprocess_labels
-
-            row += 5
-        elif selected_option == "Erosion":
-            default_value_kernel_size = preprocess_params["Erosion"]["kernel_size"]
-            default_value_iterations = preprocess_params["Erosion"]["iterations"]
-            self.selected_kernel = tk.StringVar()
-            self.selected_kernel.set("re")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_kernel, value="re", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_kernel, value="el", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_kernel, value="cr", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-
-            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["kernel_size"] = label
-
-            self.erosion_kernel_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.erosion_kernel_size_slider.set(default_value_kernel_size)
-            self.erosion_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.erosion_kernel_size_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Iterations", width=20)
-            label.grid(row=row+5, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["iterations"] = label
-
-            self.erosion_iterations_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=1,
-                to=5,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.erosion_iterations_slider.set(default_value_iterations)
-            self.erosion_iterations_slider.grid(row=row + 6, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.erosion_iterations_slider)
-
-            row += 6
-        elif selected_option == "White Top Hat":
-            default_value_selem_size = preprocess_params["White Top Hat"]["selem_size"]
-            self.wh_selected_selem = tk.StringVar()
-            self.wh_selected_selem.set("disk")
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Disk", variable=self.wh_selected_selem, value="disk", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Square", variable=self.wh_selected_selem, value="square", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Diamond", variable=self.wh_selected_selem, value="diamond", command=on_select)
-            self.radio4 = tk.Radiobutton(self.preprocess_section_menu, text="Star", variable=self.wh_selected_selem, value="star", command=on_select)
-
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-            self.radio4.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-            self.parameter_preprocess_radio.append(self.radio4)
-
-            label = tk.Label(self.preprocess_section_menu, text="Selem Size", width=20)
-            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["selem_size"] = label
-
-            self.white_hat_selem_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=30,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.white_hat_selem_size_slider.set(default_value_selem_size)
-            self.white_hat_selem_size_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.white_hat_selem_size_slider)
-
-            row += 5
-        elif selected_option == "Black Top Hat":
-            default_value_selem_size = preprocess_params["Black Top Hat"]["selem_size"]
-            self.bh_selected_selem = tk.StringVar()
-            self.bh_selected_selem.set("disk")
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Disk", variable=self.bh_selected_selem, value="disk", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Square", variable=self.bh_selected_selem, value="square", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Diamond", variable=self.bh_selected_selem, value="diamond", command=on_select)
-            self.radio4 = tk.Radiobutton(self.preprocess_section_menu, text="Star", variable=self.bh_selected_selem, value="star", command=on_select)
-
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-            self.radio4.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-            self.parameter_preprocess_radio.append(self.radio4)
-
-            label = tk.Label(self.preprocess_section_menu, text="Selem Size", width=20)
-            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["selem_size"] = label
-
-            self.black_hat_selem_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=30,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.black_hat_selem_size_slider.set(default_value_selem_size)
-            self.black_hat_selem_size_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.black_hat_selem_size_slider)
-
-            row += 5
-        elif selected_option == "Binary Greyscale Erosion":
-            default_value_kernel_size = preprocess_params["Binary Greyscale Erosion"]["kernel_size"]
-            self.selected_binary_grayscale_erosion_kernel = tk.StringVar()
-            self.selected_binary_grayscale_erosion_kernel.set("re")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_erosion_kernel, value="re", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_binary_grayscale_erosion_kernel, value="el", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_binary_grayscale_erosion_kernel, value="cr", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-
-            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["kernel_size"] = label
-
-            self.binary_greyscale_erosion_kernel_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.binary_greyscale_erosion_kernel_size_slider.set(default_value_kernel_size)
-            self.binary_greyscale_erosion_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.binary_greyscale_erosion_kernel_size_slider)
-
-            row += 4
-
-        elif selected_option == "Gaussian Greyscale Erosion":
-            default_value_mask_size = preprocess_params["Gaussian Greyscale Erosion"]["mask_size"]
-            default_value_sigma = preprocess_params["Gaussian Greyscale Erosion"]["sigma"]
-
-            label = tk.Label(self.preprocess_section_menu, text="Mask Size", width=20)
-            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["mask_size"] = label
-
-            self.gaussian_greyscale_erosion_mask_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_erosion_mask_size_slider.set(default_value_mask_size)
-            self.gaussian_greyscale_erosion_mask_size_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_erosion_mask_size_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Sigma", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["sigma"] = label
-
-            self.gaussian_greyscale_erosion_sigma_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_erosion_sigma_slider.set(default_value_sigma)
-            self.gaussian_greyscale_erosion_sigma_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_erosion_sigma_slider)
-
-            row += 4
-
-        elif selected_option == "Binary Greyscale Dilation":
-            default_value_kernel_size = preprocess_params["Binary Greyscale Dilation"]["kernel_size"]
-            self.selected_binary_grayscale_dilation_kernel = tk.StringVar()
-            self.selected_binary_grayscale_dilation_kernel.set("re")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_dilation_kernel, value="re", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_binary_grayscale_dilation_kernel, value="el", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_binary_grayscale_dilation_kernel, value="cr", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-
-            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["kernel_size"] = label
-
-            self.binary_greyscale_dilation_kernel_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.binary_greyscale_dilation_kernel_size_slider.set(default_value_kernel_size)
-            self.binary_greyscale_dilation_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.binary_greyscale_dilation_kernel_size_slider)
-
-            row += 4
-
-        elif selected_option == "Gaussian Greyscale Dilation":
-            default_value_mask_size = preprocess_params["Gaussian Greyscale Dilation"]["mask_size"]
-            default_value_sigma = preprocess_params["Gaussian Greyscale Dilation"]["sigma"]
-
-            label = tk.Label(self.preprocess_section_menu, text="Mask Size", width=20)
-            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["mask_size"] = label
-
-            self.gaussian_greyscale_dilation_mask_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_dilation_mask_size_slider.set(default_value_mask_size)
-            self.gaussian_greyscale_dilation_mask_size_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_dilation_mask_size_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Sigma", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["sigma"] = label
-
-            self.gaussian_greyscale_dilation_sigma_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_dilation_sigma_slider.set(default_value_sigma)
-            self.gaussian_greyscale_dilation_sigma_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_dilation_sigma_slider)
-
-            row += 4
-
-        elif selected_option == "Binary Greyscale Opening":
-            default_value_kernel_size = preprocess_params["Binary Greyscale Opening"]["kernel_size"]
-            self.selected_binary_grayscale_opening_kernel = tk.StringVar()
-            self.selected_binary_grayscale_opening_kernel.set("re")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_opening_kernel, value="re", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_binary_grayscale_opening_kernel, value="el", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_binary_grayscale_opening_kernel, value="cr", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-
-            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["kernel_size"] = label
-
-            self.binary_greyscale_opening_kernel_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.binary_greyscale_opening_kernel_size_slider.set(default_value_kernel_size)
-            self.binary_greyscale_opening_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.binary_greyscale_opening_kernel_size_slider)
-
-            row += 4
-
-        elif selected_option == "Gaussian Greyscale Opening":
-            default_value_mask_size = preprocess_params["Gaussian Greyscale Opening"]["mask_size"]
-            default_value_sigma = preprocess_params["Gaussian Greyscale Opening"]["sigma"]
-
-            label = tk.Label(self.preprocess_section_menu, text="Mask Size", width=20)
-            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["mask_size"] = label
-
-            self.gaussian_greyscale_opening_mask_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_opening_mask_size_slider.set(default_value_mask_size)
-            self.gaussian_greyscale_opening_mask_size_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_opening_mask_size_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Sigma", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["sigma"] = label
-
-            self.gaussian_greyscale_opening_sigma_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_opening_sigma_slider.set(default_value_sigma)
-            self.gaussian_greyscale_opening_sigma_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_opening_sigma_slider)
-
-            row += 4
-        elif selected_option == "Binary Greyscale Closing":
-            default_value_kernel_size = preprocess_params["Binary Greyscale Closing"]["kernel_size"]
-            self.selected_binary_grayscale_closing_kernel = tk.StringVar()
-            self.selected_binary_grayscale_closing_kernel.set("re")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Rectangle", variable=self.selected_binary_grayscale_closing_kernel, value="re", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Ellipse", variable=self.selected_binary_grayscale_closing_kernel, value="el", command=on_select)
-            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Cross", variable=self.selected_binary_grayscale_closing_kernel, value="cr", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-            self.parameter_preprocess_radio.append(self.radio3)
-
-            label = tk.Label(self.preprocess_section_menu, text="Kernel Size", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["kernel_size"] = label
-
-            self.binary_greyscale_closing_kernel_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.binary_greyscale_closing_kernel_size_slider.set(default_value_kernel_size)
-            self.binary_greyscale_closing_kernel_size_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.binary_greyscale_closing_kernel_size_slider)
-
-            row += 4
-
-        elif selected_option == "Gaussian Greyscale Closing":
-            default_value_mask_size = preprocess_params["Gaussian Greyscale Closing"]["mask_size"]
-            default_value_sigma = preprocess_params["Gaussian Greyscale Closing"]["sigma"]
-
-            label = tk.Label(self.preprocess_section_menu, text="Mask Size", width=20)
-            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["mask_size"] = label
-
-            self.gaussian_greyscale_closing_mask_size_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=3,
-                to=21,
-                resolution=1,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_closing_mask_size_slider.set(default_value_mask_size)
-            self.gaussian_greyscale_closing_mask_size_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_closing_mask_size_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Sigma", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["sigma"] = label
-
-            self.gaussian_greyscale_closing_sigma_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_greyscale_closing_sigma_slider.set(default_value_sigma)
-            self.gaussian_greyscale_closing_sigma_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_greyscale_closing_sigma_slider)
-
-            row += 4
-
-        elif selected_option == "Gaussian Sharpening":
-            default_value_radius = preprocess_params["Gaussian Sharpening"]["radius"]
-            default_value_amount = preprocess_params["Gaussian Sharpening"]["amount"]
-
-            label = tk.Label(self.preprocess_section_menu, text="Radius", width=20)
-            label.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["radius"] = label
-
-            self.gaussian_sharpening_radius_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10.0,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_sharpening_radius_slider.set(default_value_radius)
-            self.gaussian_sharpening_radius_slider.grid(row=row + 2, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_sharpening_radius_slider)
-
-            label = tk.Label(self.preprocess_section_menu, text="Amount", width=20)
-            label.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["amount"] = label
-
-            self.gaussian_sharpening_amount_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.1,
-                to=10.0,
-                resolution=0.05,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.gaussian_sharpening_amount_slider.set(default_value_amount)
-            self.gaussian_sharpening_amount_slider.grid(row=row + 4, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.gaussian_sharpening_amount_slider)
-
-            row += 4
-        elif selected_option == "Propagation":
-            default_value_marker_value = preprocess_params["Propagation"]["marker_value"]
-            self.selected_propagation_method = tk.StringVar()
-            self.selected_propagation_method.set("dilation")  # Set default value
-
-            def on_select():
-                self.process_and_display_image()
-
-            
-            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Dilation", variable=self.selected_propagation_method, value="dilation", command=on_select)
-            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Erosion", variable=self.selected_propagation_method, value="erosion", command=on_select)
-
-            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
-            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_radio.append(self.radio1)
-            self.parameter_preprocess_radio.append(self.radio2)
-
-            label = tk.Label(self.preprocess_section_menu, text="Marker value", width=20)
-            label.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
-
-            self.parameter_preprocess_labels["marker_value"] = label
-
-            self.propagation_marker_value_slider = tk.Scale(
-                self.preprocess_section_menu,
-                from_=0.01,
-                to=0.99,
-                resolution=0.01,
-                orient=tk.HORIZONTAL,
-                length=150,
-                command=self.update_sliders_onChange
-            )
-
-            self.propagation_marker_value_slider.set(default_value_marker_value)
-            self.propagation_marker_value_slider.grid(row=row + 3, column=0, padx=5, pady=2, sticky="w")
-
-            self.parameter_preprocess_sliders.append(self.propagation_marker_value_slider)
-
-            row += 3
-        else:
-            for param_name, param_value in self.preprocess_params[selected_option].items():
-                self.create_preprocess_menu_items(row, param_name, param_value)
+            for text, value in config["radio_buttons"]:
+                radio = tk.Radiobutton(self.preprocess_section_menu, text=text, variable=self.selected_option_var, value=value, command=self.process_and_display_image)
+                radio.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_preprocess_radio.append(radio)
+                row += 1
+
+        # Handle labels and sliders
+        if "labels" in config:
+            for label_text, default_value in config["labels"]:
+                label = tk.Label(self.preprocess_section_menu, text=label_text, width=20)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_preprocess_labels[label_text] = label
+                
+                slider_config = next((item for item in config.get("sliders", []) if item.get("value") == default_value), {})
+                if slider_config:
+                    slider = tk.Scale(self.preprocess_section_menu, from_=slider_config.get("from_", 0), to=slider_config.get("to", 100), resolution=slider_config.get("resolution", 1), orient=tk.HORIZONTAL, command=self.update_sliders_onChange, length=150)
+                    slider.set(default_value)
+                    slider.grid(row=row + 1, column=0, padx=5, pady=2, sticky="w")
+                    self.parameter_preprocess_sliders.append(slider)
+                
                 row += 2
+
+        # Handle single slider configurations
+        if "slider_config" in config:
+            label_text = config["label_text"]
+            default_value = config["slider_config"].get("value")
+            label = tk.Label(self.preprocess_section_menu, text=label_text, width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_preprocess_labels[label_text] = label
+            
+            slider = tk.Scale(self.preprocess_section_menu, from_=config["slider_config"].get("from_", 0), to=config["slider_config"].get("to", 100), resolution=config["slider_config"].get("resolution", 1), orient=tk.HORIZONTAL, command=self.update_sliders_onChange, length=150)
+            slider.set(default_value)
+            slider.grid(row=row + 1, column=0, padx=5, pady=2, sticky="w")
+            self.parameter_preprocess_sliders.append(slider)
+            
+            row += 2
+
         # Apply button
+        self.setup_common_widgets(row)
+    
+    def setup_common_widgets(self, row):
+        """Set up common widgets, such as the Apply button."""
         apply_button = tk.Button(self.preprocess_section_menu, text="Apply", command=self.apply_preprocessing_onClick)
         apply_button.grid(row=row + 2, column=0, padx=5, pady=5)
         self.parameter_preprocess_buttons.append(apply_button)
@@ -1386,79 +730,79 @@ class PreprocessingTab:
             return value + 1 if value % 2 == 0 else value
 
         preprocess_map = {
-            "GaussianFilter": lambda: params.update({'sigma': self.gaussian_filter_slider.get()}),
-            "Non-local Mean Denoising": lambda: params.update({
-                'h': self.nl_mean_denois_h_slider.get(),
-                'templateWindowSize': self.nl_mean_denois_templateWindowSize_slider.get(),
-                'searchWindowSize': add_odd_value(self.nl_mean_denois_searchWindowSize_slider)
-            }),
-            "Local Median Filter": lambda: params.update({
-                'size': self.local_median_filter_size_slider.get()
-            }),
-            "Gamma Adjustment": lambda: params.update({'gamma': self.gamma_slider.get()}),
-            "Adaptive Equalization": lambda: params.update({'limit': self.limit_slider.get()}),
-            "Adaptive Leveling": lambda: params.update({
-                'disk_size': self.adaptive_leveling_disk_size_var.get()
-            }),
-            "Polynomial Leveling": lambda: params.update({
-                'order': self.polynomial_order_selected_option_var.get()
-            }),
+            "GaussianFilter": lambda: params.update({'sigma': self.parameter_preprocess_sliders[0].get()}),
+            "Gamma Adjustment": lambda: params.update({'gamma': self.parameter_preprocess_sliders[0].get()}),
+            "Adaptive Equalization": lambda: params.update({'limit': self.parameter_preprocess_sliders[0].get()}),
             "Contrast Stretching": lambda: params.update({
-                'min': self.contrast_stretching_min_slider.get(),
-                'max': self.contrast_stretching_max_slider.get()
+                'min': self.parameter_preprocess_sliders[0].get(),
+                'max': self.parameter_preprocess_sliders[1].get()
             }),
-            "White Top Hat": lambda: params.update({
-                'selem_type': self.wh_selected_selem.get(),
-                'selem_size': self.white_hat_selem_size_slider.get()
-            }),
-            "Black Top Hat": lambda: params.update({
-                'selem_type': self.bh_selected_selem.get(),
-                'selem_size': self.black_hat_selem_size_slider.get()
+            "Non-local Mean Denoising": lambda: params.update({
+                'h': self.parameter_preprocess_sliders[0].get(),
+                'templateWindowSize': self.parameter_preprocess_sliders[1].get(),
+                'searchWindowSize': add_odd_value(self.parameter_preprocess_sliders[2])
             }),
             "Erosion": lambda: params.update({
-                'kernel_type': self.selected_kernel.get(),
-                'iterations': self.erosion_iterations_slider.get(),
-                'kernel_size': add_odd_value(self.erosion_kernel_size_slider)
+                'kernel_type': self.selected_option_var.get(),
+                'iterations': self.parameter_preprocess_sliders[1].get(),
+                'kernel_size': add_odd_value(self.parameter_preprocess_sliders[0])
             }),
             "Propagation": lambda: params.update({
-                'type': self.selected_propagation_method.get(),
-                'marker_value': self.propagation_marker_value_slider.get()
+                'type': self.selected_option_var.get(),
+                'marker_value': self.parameter_preprocess_sliders[0].get(),
+            }),
+            "Polynomial Leveling": lambda: params.update({
+                'order': self.parameter_preprocess_sliders[0].get(),
+            }),
+            "Adaptive Leveling": lambda: params.update({
+                'disk_size': self.parameter_preprocess_sliders[0].get(),
+            }),
+            "Local Median Filter": lambda: params.update({
+                'size': self.parameter_preprocess_sliders[0].get(),
             }),
             "Binary Greyscale Erosion": lambda: params.update({
-                'kernel_type': self.selected_binary_grayscale_erosion_kernel.get(),
-                'kernel_size': add_odd_value(self.binary_greyscale_erosion_kernel_size_slider)
+                'kernel_type': self.selected_option_var.get(),
+                'kernel_size': add_odd_value(self.parameter_preprocess_sliders[0])
             }),
             "Gaussian Greyscale Erosion": lambda: params.update({
-                'mask_size': add_odd_value(self.gaussian_greyscale_erosion_mask_size_slider),
-                'sigma': self.gaussian_greyscale_erosion_sigma_slider.get()
+                'mask_size': add_odd_value(self.parameter_preprocess_sliders[0]),
+                'sigma': self.parameter_preprocess_sliders[1].get()
             }),
             "Binary Greyscale Dilation": lambda: params.update({
-                'kernel_type': self.selected_binary_grayscale_dilation_kernel.get(),
-                'kernel_size': add_odd_value(self.binary_greyscale_dilation_kernel_size_slider)
+                'kernel_type': self.selected_option_var.get(),
+                'kernel_size': add_odd_value(self.parameter_preprocess_sliders[0])
             }),
             "Gaussian Greyscale Dilation": lambda: params.update({
-                'mask_size': add_odd_value(self.gaussian_greyscale_dilation_mask_size_slider),
-                'sigma': self.gaussian_greyscale_dilation_sigma_slider.get()
+                'mask_size': add_odd_value(self.parameter_preprocess_sliders[0]),
+                'sigma': self.parameter_preprocess_sliders[1].get()
             }),
             "Binary Greyscale Opening": lambda: params.update({
-                'kernel_type': self.selected_binary_grayscale_opening_kernel.get(),
-                'kernel_size': add_odd_value(self.binary_greyscale_opening_kernel_size_slider)
+                'kernel_type': self.selected_option_var.get(),
+                'kernel_size': add_odd_value(self.parameter_preprocess_sliders[0])
             }),
             "Gaussian Greyscale Opening": lambda: params.update({
-                'mask_size': add_odd_value(self.gaussian_greyscale_opening_mask_size_slider),
-                'sigma': self.gaussian_greyscale_opening_sigma_slider.get()
+                'mask_size': add_odd_value(self.parameter_preprocess_sliders[0]),
+                'sigma': self.parameter_preprocess_sliders[1].get()
             }),
             "Binary Greyscale Closing": lambda: params.update({
-                'kernel_type': self.selected_binary_grayscale_closing_kernel.get(),
-                'kernel_size': add_odd_value(self.binary_greyscale_closing_kernel_size_slider)
+                'kernel_type': self.selected_option_var.get(),
+                'kernel_size': add_odd_value(self.parameter_preprocess_sliders[0])
+            }),
+            "White Top Hat": lambda: params.update({
+                'selem_type': self.selected_option_var.get(),
+                'selem_size': self.parameter_preprocess_sliders[0].get()
+            }),
+            "Black Top Hat": lambda: params.update({
+                'selem_type': self.selected_option_var.get(),
+                'selem_size': self.parameter_preprocess_sliders[0].get()
             }),
             "Gaussian Greyscale Closing": lambda: params.update({
-                'mask_size': add_odd_value(self.gaussian_greyscale_closing_mask_size_slider),
-                'sigma': self.gaussian_greyscale_closing_sigma_slider.get()
+                'mask_size': add_odd_value(self.parameter_preprocess_sliders[0]),
+                'sigma': self.parameter_preprocess_sliders[1].get()
             }),
             "Gaussian Sharpening": lambda: params.update({
-                'radius': self.gaussian_sharpening_radius_slider.get(),
-                'amount':  self.gaussian_sharpening_amount_slider.get()
+                'radius': self.parameter_preprocess_sliders[0].get(),
+                'amount': self.parameter_preprocess_sliders[1].get()
             })
         }
 

@@ -32,7 +32,7 @@ preprocess_params = {
     "Gaussian Sharpening": {"radius": 1.0, "amount": 1.0},
     "Propagation": {"type": "dilation", "marker_value": 0.3},
     "Polynomial Leveling": {"order": 3},
-    "Adaptive Leveling": {"disk_size": 50},
+    "Adaptive Leveling": {"disk_size": 5},
     "Local Median Filter": {"size": 5},
     "White Top Hat": {"selem_type": "disk", "selem_size": 12},
     "Black Top Hat": {"selem_type": "disk", "selem_size": 12}
