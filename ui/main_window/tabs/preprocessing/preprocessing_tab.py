@@ -67,7 +67,8 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_gaussian_sharpening,
     perform_propagation,
     perform_polynomial_leveling,
-    perform_adaptive_leveling
+    perform_adaptive_leveling,
+    perform_local_median_filter
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -476,6 +477,7 @@ class PreprocessingTab:
         elif selected_option == "Gamma Adjustment":
             label = tk.Label(self.preprocess_section_menu, text="gamma", width=15)
             label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_preprocess_labels["gamma"] = label
             self.gamma_slider = tk.Scale(
                 self.preprocess_section_menu,
                 from_=0.1,
@@ -489,6 +491,26 @@ class PreprocessingTab:
             self.gamma_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
 
             self.parameter_preprocess_sliders.append(self.gamma_slider)
+
+            row += 1
+        elif selected_option == "Local Median Filter":
+            label = tk.Label(self.preprocess_section_menu, text="size", width=15)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_preprocess_labels["size"] = label
+
+            self.local_median_filter_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=1,
+                to=25,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                command=self.update_sliders_onChange
+            )
+            default_value = preprocess_params["Local Median Filter"]["size"]
+            self.local_median_filter_size_slider.set(default_value)
+            self.local_median_filter_size_slider.grid(row=row+1, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.local_median_filter_size_slider)
 
             row += 1
         elif selected_option == "Adaptive Equalization":
@@ -1246,7 +1268,8 @@ class PreprocessingTab:
             "Gaussian Sharpening": perform_gaussian_sharpening,
             "Propagation": perform_propagation,
             "Polynomial Leveling": perform_polynomial_leveling,
-            "Adaptive Leveling": perform_adaptive_leveling
+            "Adaptive Leveling": perform_adaptive_leveling,
+            "Local Median Filter": perform_local_median_filter
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1272,6 +1295,9 @@ class PreprocessingTab:
                 'h': self.nl_mean_denois_h_slider.get(),
                 'templateWindowSize': self.nl_mean_denois_templateWindowSize_slider.get(),
                 'searchWindowSize': add_odd_value(self.nl_mean_denois_searchWindowSize_slider)
+            }),
+            "Local Median Filter": lambda: params.update({
+                'size': self.local_median_filter_size_slider.get()
             }),
             "Gamma Adjustment": lambda: params.update({'gamma': self.gamma_slider.get()}),
             "Adaptive Equalization": lambda: params.update({'limit': self.limit_slider.get()}),

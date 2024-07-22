@@ -16,7 +16,8 @@ from PIL import Image, ImageTk
 
 from data.processing.preprocessing.smoothing import (
     GaussianBlur,
-    GaussianFilter
+    GaussianFilter,
+    LocalMedianFilter
 )
 
 from data.processing.preprocessing.noise_reduction import (
@@ -283,5 +284,13 @@ def perform_adaptive_leveling(params, img):
     result_image = AdaptiveLeveling(
         img=np.array(img),
         disk_size=params['disk_size']
+    )
+    return process_name, result_image
+
+def perform_local_median_filter(params, img):
+    process_name = "Local Median Filter"
+    result_image = LocalMedianFilter(
+        image=np.array(img),
+        size=params['size']
     )
     return process_name, result_image

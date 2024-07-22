@@ -11,7 +11,9 @@ sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import cv2
 from scipy import ndimage as ndi
-
+from scipy.ndimage import median_filter
+from skimage import img_as_float
+import numpy as np
 
 import logging
 
@@ -67,3 +69,14 @@ def GaussianFilter(img, sigma=4):
         msg = f"GaussianFilter error: {e}"
         logger.error(msg)
         raise ValueError(msg)
+    
+
+def LocalMedianFilter(image, size=5):
+    image = img_as_float(image)
+    """Apply median filter to smooth the background."""
+    smoothed_image = median_filter(image, size=size)
+
+    leveled_image_normalized = cv2.normalize(smoothed_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
+
+    return leveled_image_normalized
