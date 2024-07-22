@@ -45,36 +45,9 @@ from ui.main_window.tabs.canvas_operations import (
     scale_factor_resize_image
 )
 
-from ui.main_window.tabs.preprocessing.preprocessing_operations import (
-    perform_gaussian_blur,
-    perform_gaussian_filter,
-    perform_non_local_denoising,
-    perform_erosion,
-    perform_gaussian_greyscale_erosion,
-    perform_binary_greyscale_erosion,
-    perform_binary_greyscale_dilation,
-    perform_gaussian_greyscale_dilation,
-    perform_binary_greyscale_opening,
-    perform_gaussian_greyscale_opening,
-    perform_gaussian_greyscale_closing,
-    perform_binary_greyscale_closing,
-    perform_gamma_adjustment,
-    perform_contrast_stretching,
-    perform_adaptive_equalization,
-    perform_region_leveling,
-    perform_three_point_leveling,
-    perform_gaussian_sharpening,
-    perform_propagation,
-    perform_polynomial_leveling,
-    perform_adaptive_leveling,
-    perform_local_median_filter,
-    perform_black_top_hat,
-    perform_white_top_hat
-)
-
 from ui.main_window.tabs.preprocessing.preprocess_params_default import preprocess_params
 from ui.main_window.tabs.preprocessing.options_config import (
-    options_config
+    options_config, preprocess_operations
 )
 
 import logging
@@ -555,32 +528,6 @@ class PreprocessingTab:
         self.operations_listbox.selection_set(tk.END)
 
     def apply_preprocessing_operation(self, params, img):
-        preprocess_operations = {
-            "GaussianBlur": perform_gaussian_blur,
-            "Non-local Mean Denoising": perform_non_local_denoising,
-            "GaussianFilter": perform_gaussian_filter,
-            "Erosion": perform_erosion,
-            "Binary Greyscale Erosion": perform_binary_greyscale_erosion,
-            "Gaussian Greyscale Erosion": perform_gaussian_greyscale_erosion,
-            "Binary Greyscale Dilation": perform_binary_greyscale_dilation,
-            "Gaussian Greyscale Dilation": perform_gaussian_greyscale_dilation,
-            "Binary Greyscale Opening": perform_binary_greyscale_opening,
-            "Gaussian Greyscale Opening": perform_gaussian_greyscale_opening,
-            "Binary Greyscale Closing": perform_binary_greyscale_closing,
-            "Gaussian Greyscale Closing": perform_gaussian_greyscale_closing,
-            "Gamma Adjustment": perform_gamma_adjustment,
-            "Contrast Stretching": perform_contrast_stretching,
-            "Adaptive Equalization": perform_adaptive_equalization,
-            "Region Leveling": perform_region_leveling,
-            "Three Point Leveling": perform_three_point_leveling,
-            "Gaussian Sharpening": perform_gaussian_sharpening,
-            "Propagation": perform_propagation,
-            "Polynomial Leveling": perform_polynomial_leveling,
-            "Adaptive Leveling": perform_adaptive_leveling,
-            "Local Median Filter": perform_local_median_filter,
-            "White Top Hat": perform_white_top_hat,
-            "Black Top Hat": perform_black_top_hat
-        }
 
         if self.selected_preprocess_option in preprocess_operations:
             process_function = preprocess_operations[self.selected_preprocess_option]
