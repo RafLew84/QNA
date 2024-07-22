@@ -555,6 +555,10 @@ class PreprocessingTab:
                 'min': self.parameter_preprocess_sliders[0].get(),
                 'max': self.parameter_preprocess_sliders[1].get()
             }),
+            "Gaussian Blur": lambda: params.update({
+                'sigmaY': add_odd_value(self.parameter_preprocess_sliders[0]),
+                'sigmaX': add_odd_value(self.parameter_preprocess_sliders[1])
+            }),
             "Non-local Mean Denoising": lambda: params.update({
                 'h': self.parameter_preprocess_sliders[0].get(),
                 'templateWindowSize': self.parameter_preprocess_sliders[1].get(),

@@ -59,6 +59,13 @@ options_config = {
             {"from_": 1, "to": 99, "resolution": 1, "value": preprocess_params["Contrast Stretching"]["max"]}
         ]
     },
+    "Gaussian Blur": {
+        "labels": [("sigmaY", preprocess_params["Gaussian Blur"]["sigmaY"]), ("sigmaX", preprocess_params["Gaussian Blur"]["sigmaX"])],
+        "sliders": [
+            {"from_": 3, "to": 21, "resolution": 2, "value": preprocess_params["Gaussian Blur"]["sigmaY"]},
+            {"from_": 3, "to": 21, "resolution": 2, "value": preprocess_params["Gaussian Blur"]["sigmaX"]}
+        ]
+    },
     "Non-local Mean Denoising": {
         "labels": [
             ("h", preprocess_params["Non-local Mean Denoising"]["h"]),
@@ -172,7 +179,7 @@ options_config = {
 }
 
 preprocess_operations = {
-    "GaussianBlur": perform_gaussian_blur,
+    "Gaussian Blur": perform_gaussian_blur,
     "Non-local Mean Denoising": perform_non_local_denoising,
     "GaussianFilter": perform_gaussian_filter,
     "Erosion": perform_erosion,
