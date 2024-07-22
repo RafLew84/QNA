@@ -14,6 +14,8 @@ import cv2
 from scipy import ndimage
 from skimage.morphology import reconstruction
 from skimage import img_as_float
+from skimage.morphology import (disk, white_tophat, black_tophat, 
+                                square, diamond, star)
 
 def Erosion(img, kernel_type="re", kernel_size=(5,5), iterations=1):
     kernel = binary_kernel(kernel_type, kernel_size)
@@ -73,6 +75,43 @@ def Propagation(img, type, marker_value):
     reconstructed_image = reconstruction(marker, img, method=type)
 
     return reconstructed_image
+
+def WhiteTopHatTransformation(img, selem_type, selem_size):
+    image = img_as_float(img) 
+    selem = binary_selem(selem_type, selem_size)
+
+    # Apply top-hat transformation
+    tophat_image = white_tophat(image, selem)
+
+    leveled_image_normalized = cv2.normalize(tophat_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
+
+    return leveled_image_normalized
+
+def BlackTopHatTransformation(img, selem_type, selem_size):
+    image = img_as_float(img) 
+    selem = binary_selem(selem_type, selem_size)
+
+    # Apply top-hat transformation
+    tophat_image = black_tophat(image, selem)
+
+    leveled_image_normalized = cv2.normalize(tophat_image, None, 0, 255, cv2.NORM_MINMAX)
+    leveled_image_normalized = leveled_image_normalized.astype(np.uint8)
+
+    return leveled_image_normalized
+
+def binary_selem(selem_type, selem_size):
+    selem = None
+    if selem_type == "disk":
+        selem = disk(selem_size)
+    elif selem_type == "square":
+        selem = square(selem_size)
+    elif selem_type == "diamond":
+        selem = diamond(selem_size)
+    elif selem_type == "star":
+        selem = star(selem_size)
+    
+    return selem
 
 def binary_kernel(kernel_type, kernel_size):
     kernel = None

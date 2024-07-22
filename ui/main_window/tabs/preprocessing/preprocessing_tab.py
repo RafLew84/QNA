@@ -68,7 +68,9 @@ from ui.main_window.tabs.preprocessing.preprocessing_operations import (
     perform_propagation,
     perform_polynomial_leveling,
     perform_adaptive_leveling,
-    perform_local_median_filter
+    perform_local_median_filter,
+    perform_black_top_hat,
+    perform_white_top_hat
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import (
@@ -762,6 +764,98 @@ class PreprocessingTab:
             self.parameter_preprocess_sliders.append(self.erosion_iterations_slider)
 
             row += 6
+        elif selected_option == "White Top Hat":
+            default_value_selem_size = preprocess_params["White Top Hat"]["selem_size"]
+            self.wh_selected_selem = tk.StringVar()
+            self.wh_selected_selem.set("disk")
+
+            def on_select():
+                self.process_and_display_image()
+
+            
+            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Disk", variable=self.wh_selected_selem, value="disk", command=on_select)
+            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Square", variable=self.wh_selected_selem, value="square", command=on_select)
+            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Diamond", variable=self.wh_selected_selem, value="diamond", command=on_select)
+            self.radio4 = tk.Radiobutton(self.preprocess_section_menu, text="Star", variable=self.wh_selected_selem, value="star", command=on_select)
+
+
+            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+            self.radio4.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_radio.append(self.radio1)
+            self.parameter_preprocess_radio.append(self.radio2)
+            self.parameter_preprocess_radio.append(self.radio3)
+            self.parameter_preprocess_radio.append(self.radio4)
+
+            label = tk.Label(self.preprocess_section_menu, text="Selem Size", width=20)
+            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["selem_size"] = label
+
+            self.white_hat_selem_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=30,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_sliders_onChange
+            )
+
+            self.white_hat_selem_size_slider.set(default_value_selem_size)
+            self.white_hat_selem_size_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.white_hat_selem_size_slider)
+
+            row += 5
+        elif selected_option == "Black Top Hat":
+            default_value_selem_size = preprocess_params["Black Top Hat"]["selem_size"]
+            self.bh_selected_selem = tk.StringVar()
+            self.bh_selected_selem.set("disk")
+
+            def on_select():
+                self.process_and_display_image()
+
+            
+            self.radio1 = tk.Radiobutton(self.preprocess_section_menu, text="Disk", variable=self.bh_selected_selem, value="disk", command=on_select)
+            self.radio2 = tk.Radiobutton(self.preprocess_section_menu, text="Square", variable=self.bh_selected_selem, value="square", command=on_select)
+            self.radio3 = tk.Radiobutton(self.preprocess_section_menu, text="Diamond", variable=self.bh_selected_selem, value="diamond", command=on_select)
+            self.radio4 = tk.Radiobutton(self.preprocess_section_menu, text="Star", variable=self.bh_selected_selem, value="star", command=on_select)
+
+
+            self.radio1.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.radio2.grid(row=row+1, column=0, padx=5, pady=1, sticky="w")
+            self.radio3.grid(row=row+2, column=0, padx=5, pady=1, sticky="w")
+            self.radio4.grid(row=row+3, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_radio.append(self.radio1)
+            self.parameter_preprocess_radio.append(self.radio2)
+            self.parameter_preprocess_radio.append(self.radio3)
+            self.parameter_preprocess_radio.append(self.radio4)
+
+            label = tk.Label(self.preprocess_section_menu, text="Selem Size", width=20)
+            label.grid(row=row+4, column=0, padx=5, pady=1, sticky="w")
+
+            self.parameter_preprocess_labels["selem_size"] = label
+
+            self.black_hat_selem_size_slider = tk.Scale(
+                self.preprocess_section_menu,
+                from_=3,
+                to=30,
+                resolution=1,
+                orient=tk.HORIZONTAL,
+                length=150,
+                command=self.update_sliders_onChange
+            )
+
+            self.black_hat_selem_size_slider.set(default_value_selem_size)
+            self.black_hat_selem_size_slider.grid(row=row + 5, column=0, padx=5, pady=2, sticky="w")
+
+            self.parameter_preprocess_sliders.append(self.black_hat_selem_size_slider)
+
+            row += 5
         elif selected_option == "Binary Greyscale Erosion":
             default_value_kernel_size = preprocess_params["Binary Greyscale Erosion"]["kernel_size"]
             self.selected_binary_grayscale_erosion_kernel = tk.StringVar()
@@ -1269,7 +1363,9 @@ class PreprocessingTab:
             "Propagation": perform_propagation,
             "Polynomial Leveling": perform_polynomial_leveling,
             "Adaptive Leveling": perform_adaptive_leveling,
-            "Local Median Filter": perform_local_median_filter
+            "Local Median Filter": perform_local_median_filter,
+            "White Top Hat": perform_white_top_hat,
+            "Black Top Hat": perform_black_top_hat
         }
 
         if self.selected_preprocess_option in preprocess_operations:
@@ -1310,6 +1406,14 @@ class PreprocessingTab:
             "Contrast Stretching": lambda: params.update({
                 'min': self.contrast_stretching_min_slider.get(),
                 'max': self.contrast_stretching_max_slider.get()
+            }),
+            "White Top Hat": lambda: params.update({
+                'selem_type': self.wh_selected_selem.get(),
+                'selem_size': self.white_hat_selem_size_slider.get()
+            }),
+            "Black Top Hat": lambda: params.update({
+                'selem_type': self.bh_selected_selem.get(),
+                'selem_size': self.black_hat_selem_size_slider.get()
             }),
             "Erosion": lambda: params.update({
                 'kernel_type': self.selected_kernel.get(),

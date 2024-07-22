@@ -38,7 +38,9 @@ from data.processing.preprocessing.morphology import (
     GaussianGreyscaleOpening,
     BinaryGreyscaleClosing,
     GaussianGreyscaleClosing,
-    Propagation
+    Propagation,
+    BlackTopHatTransformation,
+    WhiteTopHatTransformation
 )
 
 from data.processing.preprocessing.intensity import (
@@ -292,5 +294,23 @@ def perform_local_median_filter(params, img):
     result_image = LocalMedianFilter(
         image=np.array(img),
         size=params['size']
+    )
+    return process_name, result_image
+
+def perform_white_top_hat(params, img):
+    process_name = "White Top Hat"
+    result_image = WhiteTopHatTransformation(
+        img=np.array(img),
+        selem_type=params['selem_type'],
+        selem_size=params['selem_size']
+    )
+    return process_name, result_image
+
+def perform_black_top_hat(params, img):
+    process_name = "Black Top Hat"
+    result_image = BlackTopHatTransformation(
+        img=np.array(img),
+        selem_type=params['selem_type'],
+        selem_size=params['selem_size']
     )
     return process_name, result_image
