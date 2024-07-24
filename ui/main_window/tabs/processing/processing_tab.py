@@ -629,7 +629,11 @@ class ProcessingTab:
 
 
         process_map = {
-
+            "Local Threshold": lambda: params.update({
+                'method': self.selected_option_var.get(),
+                'block_size': self.parameter_process_sliders[0].get(),
+                'offset': self.parameter_process_sliders[1].get()
+            }),
         }
 
         # Apply the corresponding function based on the selected preprocess option

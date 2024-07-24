@@ -15,7 +15,8 @@ import numpy as np
 from PIL import Image, ImageTk
 
 from data.processing.thresholding import (
-    OtsuThreshold
+    OtsuThreshold,
+    LocalThreshold
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -31,4 +32,14 @@ def perform_otsu_threshold(params, img):
             img=np.array(img)
     )
     
+    return process_name, result_image
+
+def perform_local_threshold(params, img):
+    process_name = "Local Threshold"
+    result_image = LocalThreshold(
+        img=np.array(img),
+        method=params['method'],
+        block_size=params['block_size'],
+        offset=params['offset']
+    )
     return process_name, result_image

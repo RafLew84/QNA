@@ -10,10 +10,23 @@ import os, sys
 
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
-from skimage.filters import threshold_otsu
+from skimage.filters import (
+    threshold_otsu,
+    threshold_local
+)
 
 def OtsuThreshold(img):
     thresh = threshold_otsu(img)
-    binary_global = img > thresh
+    threshold_image = img > thresh
 
-    return binary_global
+    return threshold_image
+
+def LocalThreshold(img, method, block_size, offset):
+    threshold_image = img > threshold_local(
+        image=img, 
+        method=method, 
+        block_size=block_size, 
+        offset=offset
+        )
+
+    return threshold_image
