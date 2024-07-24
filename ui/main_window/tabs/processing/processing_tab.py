@@ -44,7 +44,13 @@ from ui.main_window.tabs.canvas_operations import (
     scale_factor_resize_image
 )
 
-from ui.main_window.tabs.processing.processing_params_default import process_params
+from ui.main_window.tabs.processing.process_params_default import process_params
+from ui.main_window.tabs.processing.process_options_config import (
+    options_config,
+    process_operations
+)
+
+from ui.main_window.tabs.processing.processing_operations import create_process_operation
 
 import logging
 
@@ -383,8 +389,7 @@ class ProcessingTab:
     def display_process_options_menu(self):
         try:
             # Preprocess Dropdown menu options
-            # processing_options = list(self.process_params.keys())
-            processing_options = [1,2,3]
+            processing_options = list(self.process_params.keys())
 
             # Create and place dropdown menu
             choose_process_option_dropdown_var = tk.StringVar()
@@ -411,7 +416,117 @@ class ProcessingTab:
             raise ValueError(error_msg)
         
     def choose_process_options_dropdownOnChange(self, selected_option):
-        pass
+        self.selected_process_option = selected_option
+        for widget in [*self.parameter_process_entries.values(),
+                    *self.parameter_process_labels.values(),
+                    *self.parameter_process_buttons,
+                    *self.parameter_process_sliders,
+                    *self.parameter_process_radio,
+                    *self.parameter_process_dropdown]:
+            widget.destroy()
+    
+        # Clear the collections
+        self.parameter_process_entries.clear()
+        self.parameter_process_labels.clear()
+        self.parameter_process_buttons.clear()
+        self.parameter_process_sliders.clear()
+        self.parameter_process_radio.clear()
+        self.parameter_process_dropdown.clear()
+
+        # options_config
+
+        config = options_config.get(selected_option, {})
+        row = 2 # Initialize row for layout
+
+        # Handle radio buttons
+        if "radio_buttons" in config:
+            self.selected_option_var = tk.StringVar()
+            self.selected_option_var.set(config["radio_buttons"][0][1])  # Set default value
+            
+            for text, value in config["radio_buttons"]:
+                radio = tk.Radiobutton(self.process_section_menu, text=text, variable=self.selected_option_var, value=value, command=self.process_and_display_image)
+                radio.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_process_radio.append(radio)
+                row += 1
+
+        # Handle labels and sliders
+        if "labels" in config:
+            for label_text, default_value in config["labels"]:
+                label = tk.Label(self.process_section_menu, text=label_text, width=20)
+                label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+                self.parameter_process_labels[label_text] = label
+                
+                slider_config = next((item for item in config.get("sliders", []) if item.get("value") == default_value), {})
+                if slider_config:
+                    slider = tk.Scale(self.process_section_menu, from_=slider_config.get("from_", 0), to=slider_config.get("to", 100), resolution=slider_config.get("resolution", 1), orient=tk.HORIZONTAL, command=self.update_sliders_onChange, length=150)
+                    slider.set(default_value)
+                    slider.grid(row=row + 1, column=0, padx=5, pady=2, sticky="w")
+                    self.parameter_process_sliders.append(slider)
+                
+                row += 2
+
+        # Handle single slider configurations
+        if "slider_config" in config:
+            label_text = config["label_text"]
+            default_value = config["slider_config"].get("value")
+            label = tk.Label(self.process_section_menu, text=label_text, width=20)
+            label.grid(row=row, column=0, padx=5, pady=1, sticky="w")
+            self.parameter_process_labels[label_text] = label
+            
+            slider = tk.Scale(self.process_section_menu, from_=config["slider_config"].get("from_", 0), to=config["slider_config"].get("to", 100), resolution=config["slider_config"].get("resolution", 1), orient=tk.HORIZONTAL, command=self.update_sliders_onChange, length=150)
+            slider.set(default_value)
+            slider.grid(row=row + 1, column=0, padx=5, pady=2, sticky="w")
+            self.parameter_process_sliders.append(slider)
+            
+            row += 2
+
+        # Apply button
+        self.setup_common_widgets(row)
+
+    def setup_common_widgets(self, row):
+        """Set up common widgets, such as the Apply button."""
+        apply_button = tk.Button(self.process_section_menu, text="Apply", command=self.apply_processing_onClick)
+        apply_button.grid(row=row + 2, column=0, padx=5, pady=5)
+        self.parameter_process_buttons.append(apply_button)
+    
+    def apply_processing_onClick(self):
+        if self.selected_process_option is None:
+            return  # No option selected
+        params = {}
+        index = self.current_data_index
+        focuse_widget = self.root.focus_get()
+        img = self.get_image_based_on_selected_file_in_listbox(index, focuse_widget)
+
+        result_image = None
+        process_name = None
+
+        self.get_values_from_process_menu_items(params)
+        
+        result_image, process_name = self.apply_processing_operation(params, img)
+        operation = create_process_operation(result_image, process_name, params)
+
+        insert_operation_at_index(data_for_processing, index, operation)
+
+        # Refresh data and display processed image
+        self.refresh_data_in_operations_listbox()
+        operations_index = self.operations_listbox.size() - 1
+        self.display_processed_image(operations_index)
+
+        # Set focus and selection on operations listbox
+        self.operations_listbox.focus()
+        self.operations_listbox.selection_set(tk.END)
+
+    def apply_processing_operation(self, params, img):
+
+        if self.selected_process_option in process_operations:
+            process_function = process_operations[self.selected_process_option]
+            process_name, result_image = process_function(params, img)
+        else:
+            msg = f"Invalid preprocessing option: {self.selected_process_option}"
+            logger.error(msg)
+            raise ValueError(msg)
+            
+        return result_image, process_name
 
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
@@ -505,4 +620,24 @@ class ProcessingTab:
         self.handle_displaying_image_on_canvas(img)
 
     def get_values_from_process_menu_items(self, params):
-        pass
+        option = self.selected_process_option
+
+        def add_odd_value(slider):
+            value = slider.get()
+            return value + 1 if value % 2 == 0 else value
+
+
+        process_map = {
+
+        }
+
+        # Apply the corresponding function based on the selected preprocess option
+        if option in process_map:
+            process_map[option]()
+
+        # Handle any additional parameters from preprocess menu items
+        for param_name, entry in self.parameter_process_entries.items():
+            try:
+                params[param_name] = int(entry.get())
+            except ValueError:
+                params[param_name] = entry.get()

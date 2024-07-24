@@ -46,7 +46,7 @@ from ui.main_window.tabs.canvas_operations import (
 )
 
 from ui.main_window.tabs.preprocessing.preprocess_params_default import preprocess_params
-from ui.main_window.tabs.preprocessing.options_config import (
+from ui.main_window.tabs.preprocessing.preprocess_options_config import (
     options_config, preprocess_operations
 )
 
