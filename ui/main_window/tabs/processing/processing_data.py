@@ -27,7 +27,7 @@ def insert_data(file_ext, item):
         data_for_processing.append({
                 "file_name": item['file_name'],
                 "header_info": item['header_info'],
-                "original_data": item['data'],
+                "data": item['data'],
                 "greyscale_image": convert_data_to_greyscale_image(item['data']),
                 "operations": []
             })
@@ -40,7 +40,7 @@ def insert_data(file_ext, item):
                 "file_name": item['file_name'],
                 "frame_number": i,
                 "header_info": item['header_info'],
-                "original_data": frame,
+                "data": frame,
                 "greyscale_image": convert_data_to_greyscale_image(frame),
                 "operations": []
                 })

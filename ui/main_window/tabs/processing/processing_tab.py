@@ -138,15 +138,15 @@ class ProcessingTab:
         self.data_listbox_processing.config(yscrollcommand=self.listbox_scrollbar_processing.set)
         self.data_listbox_processing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
-        self.save_data_button = tk.Button(
-            self.processing_tab, 
-            text="Save Data", 
-            command=self.save_data_onClick
-        )
-        self.save_data_button.grid(row=3, column=0, padx=5, pady=5)
+    #     self.save_data_button = tk.Button(
+    #         self.processing_tab, 
+    #         text="Save Data", 
+    #         command=self.save_data_onClick
+    #     )
+    #     self.save_data_button.grid(row=3, column=0, padx=5, pady=5)
     
-    def save_data_onClick(self):
-        self.app.update_data(data_for_processing)
+    # def save_data_onClick(self):
+    #     self.app.update_data(data_for_processing)
 
     def load_data_onClick(self):
         try:
@@ -515,6 +515,7 @@ class ProcessingTab:
         # Set focus and selection on operations listbox
         self.operations_listbox.focus()
         self.operations_listbox.selection_set(tk.END)
+        self.app.update_data(data_for_processing)
 
     def apply_processing_operation(self, params, img):
 

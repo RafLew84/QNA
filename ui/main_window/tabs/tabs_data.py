@@ -10,10 +10,6 @@ import os, sys
 
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
-from data.processing.data_process import (
-    convert_data_to_greyscale_image
-)
-
 def get_file_extension(data):
     file_ext = data[0]['file_name'][-3:]
     return file_ext

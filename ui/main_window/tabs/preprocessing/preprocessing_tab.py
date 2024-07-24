@@ -20,7 +20,8 @@ from ui.main_window.tabs.detection.preprocess_operations import create_preproces
 from ui.main_window.tabs.preprocessing.preprocessing_data import (
     data_for_preprocessing,
     insert_data,
-    clear_preprocessing_data
+    clear_preprocessing_data,
+    insert_formatted_data
 )
 
 from ui.main_window.tabs.tabs_data import (
@@ -136,20 +137,21 @@ class PreprocessingTab:
         self.data_listbox_preprocessing.config(yscrollcommand=self.listbox_scrollbar_preprocessing.set)
         self.data_listbox_preprocessing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
-        self.save_data_button = tk.Button(
-            self.preprocessing_tab, 
-            text="Save Data", 
-            command=self.save_data_onClick
-        )
-        self.save_data_button.grid(row=3, column=0, padx=5, pady=5)
+        # self.save_data_button = tk.Button(
+        #     self.preprocessing_tab, 
+        #     text="Save Data", 
+        #     command=self.save_data_onClick
+        # )
+        # self.save_data_button.grid(row=3, column=0, padx=5, pady=5)
     
-    def save_data_onClick(self):
-        self.app.update_data(data_for_preprocessing)
+    # def save_data_onClick(self):
+    #     self.app.update_data(data_for_preprocessing)
 
     def load_data_onClick(self):
         try:
             # self.data_for_detection = self.app.get_data()
             self.insert_formated_data_to_process()
+            
         except Exception as e:
             error_msg = f"Error loading data for spots detection: {e}"
             logger.error(error_msg)
@@ -160,10 +162,15 @@ class PreprocessingTab:
         self.data_listbox_preprocessing.delete(0, tk.END)
 
         data = self.app.get_data()
-        file_ext = data[0]['file_name'][-3:]
-        for item in data:
-            data_name = insert_data(file_ext, item)
+        if 'operations' in data[0]:
+            file_ext = data[0]['file_name'][-3:]
+            data_name = insert_formatted_data(file_ext, data)
             self.data_listbox_preprocessing.insert(tk.END, *data_name)
+        else:
+            file_ext = data[0]['file_name'][-3:]
+            for item in data:
+                data_name = insert_data(file_ext, item)
+                self.data_listbox_preprocessing.insert(tk.END, *data_name)
         self.update_navigation_slider_range()
 
     def show_data_onDataListboxSelect(self, event):
@@ -526,6 +533,7 @@ class PreprocessingTab:
         # Set focus and selection on operations listbox
         self.operations_listbox.focus()
         self.operations_listbox.selection_set(tk.END)
+        self.app.update_data(data_for_preprocessing)
 
     def apply_preprocessing_operation(self, params, img):
 

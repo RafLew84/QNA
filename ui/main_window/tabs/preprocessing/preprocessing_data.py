@@ -45,3 +45,19 @@ def insert_data(file_ext, item):
                 "operations": []
                 })
     return data_name 
+
+def insert_formatted_data(file_ext, data):
+    data_name = []
+    if file_ext.lower() == "stp" or file_ext.lower() == "s94":
+        for item in data:
+            filename_only = os.path.basename(item['file_name'])
+            data_for_preprocessing.append(item)
+            data_name.append(filename_only)
+    elif file_ext.lower() == "mpp":
+        for item in data:
+            filename_only = os.path.basename(item['file_name'])
+            data_for_preprocessing.append(item)
+            i = item['frame_number']
+            frame_name = f"{filename_only}: frame {i}"
+            data_name.append(frame_name)
+    return data_name
