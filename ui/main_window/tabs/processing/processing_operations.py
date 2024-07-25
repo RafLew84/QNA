@@ -19,7 +19,8 @@ from data.processing.thresholding import (
     LocalThreshold,
     NiblackThreshold,
     SauvolaThreshold,
-    YenThreshold
+    YenThreshold,
+    IsodataThreshold
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -69,6 +70,13 @@ def perform_sauvola_threshold(params, img):
 def perform_yen_threshold(params, img):
     process_name = "Yen Threshold"
     result_image = YenThreshold(
+        img=np.array(img)
+    )
+    return process_name, result_image
+
+def perform_isodata_threshold(params, img):
+    process_name = "ISODATA Threshold"
+    result_image = IsodataThreshold(
         img=np.array(img)
     )
     return process_name, result_image

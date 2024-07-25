@@ -16,7 +16,8 @@ from skimage.filters import (
     threshold_multiotsu,
     threshold_niblack, 
     threshold_sauvola,
-    threshold_yen
+    threshold_yen,
+    threshold_isodata
 )
 
 
@@ -48,6 +49,12 @@ def SauvolaThreshold(img, window_size, k, r):
 
 def YenThreshold(img):
     thresh = threshold_yen(img)
+    threshold_image = img > thresh
+
+    return threshold_image
+
+def IsodataThreshold(img):
+    thresh = threshold_isodata(img)
     threshold_image = img > thresh
 
     return threshold_image

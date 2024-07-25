@@ -17,7 +17,8 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_local_threshold,
     perform_niblack_threshold,
     perform_sauvola_threshold,
-    perform_yen_threshold
+    perform_yen_threshold,
+    perform_isodata_threshold
 )
 
 options_config = {
@@ -51,5 +52,6 @@ process_operations = {
     "Local Threshold": perform_local_threshold,
     "Niblack Threshold": perform_niblack_threshold,
     "Sauvola Threshold": perform_sauvola_threshold,
-    "Yen Threshold": perform_yen_threshold
+    "Yen Threshold": perform_yen_threshold,
+    "ISODATA Threshold": perform_isodata_threshold
 }
