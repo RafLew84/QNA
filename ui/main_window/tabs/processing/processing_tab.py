@@ -647,6 +647,10 @@ class ProcessingTab:
                 'footprint_type': self.selected_option_var.get(),
                 'footprint_size': self.parameter_process_sliders[0].get()
             }),
+            "Binary Dilation": lambda: params.update({
+                'footprint_type': self.selected_option_var.get(),
+                'footprint_size': self.parameter_process_sliders[0].get()
+            }),
         }
 
         # Apply the corresponding function based on the selected preprocess option

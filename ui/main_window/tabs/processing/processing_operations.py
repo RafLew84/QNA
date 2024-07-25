@@ -24,7 +24,8 @@ from data.processing.thresholding import (
 )
 
 from data.processing.morphology import (
-    BinaryErosion
+    BinaryErosion,
+    BinaryDilation
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -88,6 +89,15 @@ def perform_isodata_threshold(params, img):
 def perform_binary_erosion(params, img):
     process_name = "Binary Erosion"
     result_image = BinaryErosion(
+        img=np.array(img),
+        footprint_type=params['footprint_type'],
+        footprint_size=params['footprint_size']
+    )
+    return process_name, result_image
+
+def perform_binary_dilation(params, img):
+    process_name = "Binary Dilation"
+    result_image = BinaryDilation(
         img=np.array(img),
         footprint_type=params['footprint_type'],
         footprint_size=params['footprint_size']

@@ -19,7 +19,8 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_sauvola_threshold,
     perform_yen_threshold,
     perform_isodata_threshold,
-    perform_binary_erosion
+    perform_binary_erosion,
+    perform_binary_dilation
 )
 
 options_config = {
@@ -53,6 +54,13 @@ options_config = {
             {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Erosion"]["footprint_size"]}
         ]
     },
+    "Binary Dilation": {
+        "radio_buttons": [("Disk", "disk"), ("Square", "square"), ("Star", "star"), ("Diamond", "diamond")],
+        "labels": [("Footprint Size", process_params["Binary Dilation"]["footprint_size"])],
+        "sliders": [
+            {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Dilation"]["footprint_size"]}
+        ]
+    },
 }
 
 process_operations = {
@@ -62,5 +70,6 @@ process_operations = {
     "Sauvola Threshold": perform_sauvola_threshold,
     "Yen Threshold": perform_yen_threshold,
     "ISODATA Threshold": perform_isodata_threshold,
-    "Binary Erosion": perform_binary_erosion
+    "Binary Erosion": perform_binary_erosion,
+    "Binary Dilation": perform_binary_dilation
 }

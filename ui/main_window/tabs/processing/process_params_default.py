@@ -18,5 +18,6 @@ process_params = {
     "Sauvola Threshold": {"window_size": 5, "k": 0.8, "r": 128},
     "Yen Threshold": {},
     "ISODATA Threshold": {},
-    "Binary Erosion": {"footprint_type": "disk", "footprint_size": 2}
+    "Binary Erosion": {"footprint_type": "disk", "footprint_size": 2},
+    "Binary Dilation": {"footprint_type": "disk", "footprint_size": 2}
 }

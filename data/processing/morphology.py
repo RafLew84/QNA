@@ -23,6 +23,12 @@ def BinaryErosion(img, footprint_type, footprint_size):
 
     return eroded_image
 
+def BinaryDilation(img, footprint_type, footprint_size):
+    footprint = binary_selem(footprint_type, footprint_size)
+    dilated_image = binary_dilation(img, footprint=footprint)
+
+    return dilated_image
+
 
 def binary_selem(selem_type, selem_size):
     selem = None
