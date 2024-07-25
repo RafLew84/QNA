@@ -15,5 +15,6 @@ process_params = {
     "Otsu Threshold": {},
     "Local Threshold": {"method": "gaussian", "block_size": 3, "offset": 10},
     "Niblack Threshold": {"window_size": 5, "k": 0.8},
-    "Sauvola Threshold": {"window_size": 5, "k": 0.8, "r": 128}
+    "Sauvola Threshold": {"window_size": 5, "k": 0.8, "r": 128},
+    "Yen Threshold": {}
 }

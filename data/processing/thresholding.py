@@ -15,7 +15,8 @@ from skimage.filters import (
     threshold_local,
     threshold_multiotsu,
     threshold_niblack, 
-    threshold_sauvola
+    threshold_sauvola,
+    threshold_yen
 )
 
 
@@ -26,7 +27,7 @@ def OtsuThreshold(img):
     return threshold_image
 
 def LocalThreshold(img, method, block_size, offset):
-    threshold_image = img > threshold_local(
+    threshold_image = img < threshold_local(
         image=img, 
         method=method, 
         block_size=block_size, 
@@ -41,6 +42,12 @@ def NiblackThreshold(img, window_size, k):
     return threshold_image
 
 def SauvolaThreshold(img, window_size, k, r):
-    threshold_image = img > threshold_sauvola(img, window_size=window_size, k=k, r=r)
+    threshold_image = img < threshold_sauvola(img, window_size=window_size, k=k, r=r)
+
+    return threshold_image
+
+def YenThreshold(img):
+    thresh = threshold_yen(img)
+    threshold_image = img > thresh
 
     return threshold_image
