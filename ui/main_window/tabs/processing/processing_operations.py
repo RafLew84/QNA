@@ -17,7 +17,8 @@ from PIL import Image, ImageTk
 from data.processing.thresholding import (
     OtsuThreshold,
     LocalThreshold,
-    NiblackThreshold
+    NiblackThreshold,
+    SauvolaThreshold
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -51,5 +52,15 @@ def perform_niblack_threshold(params, img):
         img=np.array(img),
         window_size=params['window_size'],
         k=params['k']
+    )
+    return process_name, result_image
+
+def perform_sauvola_threshold(params, img):
+    process_name = "Sauvola Threshold"
+    result_image = SauvolaThreshold(
+        img=np.array(img),
+        window_size=params['window_size'],
+        k=params['k'],
+        r=params['r']
     )
     return process_name, result_image

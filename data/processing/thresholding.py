@@ -39,3 +39,8 @@ def NiblackThreshold(img, window_size, k):
     threshold_image = img > threshold_niblack(img, window_size=window_size, k=k)
 
     return threshold_image
+
+def SauvolaThreshold(img, window_size, k, r):
+    threshold_image = img > threshold_sauvola(img, window_size=window_size, k=k, r=r)
+
+    return threshold_image

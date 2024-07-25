@@ -15,7 +15,8 @@ from ui.main_window.tabs.processing.process_params_default import process_params
 from ui.main_window.tabs.processing.processing_operations import (
     perform_otsu_threshold,
     perform_local_threshold,
-    perform_niblack_threshold
+    perform_niblack_threshold,
+    perform_sauvola_threshold
 )
 
 options_config = {
@@ -34,10 +35,19 @@ options_config = {
             {"from_": -1.0, "to": 1.0, "resolution": 0.05, "value": process_params["Niblack Threshold"]["k"]}
         ]
     },
+    "Sauvola Threshold": {
+        "labels": [("Window size", process_params["Sauvola Threshold"]["window_size"]), ("k", process_params["Sauvola Threshold"]["k"]), ("r", process_params["Sauvola Threshold"]["r"])],
+        "sliders": [
+            {"from_": 3, "to": 51, "resolution": 2, "value": process_params["Sauvola Threshold"]["window_size"]},
+            {"from_": -1.0, "to": 1.0, "resolution": 0.05, "value": process_params["Sauvola Threshold"]["k"]},
+            {"from_": 32, "to": 512, "resolution": 32, "value": process_params["Sauvola Threshold"]["r"]}
+        ]
+    },
 }
 
 process_operations = {
     "Otsu Threshold": perform_otsu_threshold,
     "Local Threshold": perform_local_threshold,
-    "Niblack Threshold": perform_niblack_threshold
+    "Niblack Threshold": perform_niblack_threshold,
+    "Sauvola Threshold": perform_sauvola_threshold
 }
