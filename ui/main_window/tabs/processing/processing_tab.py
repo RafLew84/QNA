@@ -634,6 +634,10 @@ class ProcessingTab:
                 'block_size': self.parameter_process_sliders[0].get(),
                 'offset': self.parameter_process_sliders[1].get()
             }),
+            "Niblack Threshold": lambda: params.update({
+                'window_size': self.parameter_process_sliders[0].get(),
+                'k': self.parameter_process_sliders[1].get()
+            }),
         }
 
         # Apply the corresponding function based on the selected preprocess option

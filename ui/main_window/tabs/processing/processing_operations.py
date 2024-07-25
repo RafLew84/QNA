@@ -16,7 +16,8 @@ from PIL import Image, ImageTk
 
 from data.processing.thresholding import (
     OtsuThreshold,
-    LocalThreshold
+    LocalThreshold,
+    NiblackThreshold
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -41,5 +42,14 @@ def perform_local_threshold(params, img):
         method=params['method'],
         block_size=params['block_size'],
         offset=params['offset']
+    )
+    return process_name, result_image
+
+def perform_niblack_threshold(params, img):
+    process_name = "Niblack Threshold"
+    result_image = NiblackThreshold(
+        img=np.array(img),
+        window_size=params['window_size'],
+        k=params['k']
     )
     return process_name, result_image
