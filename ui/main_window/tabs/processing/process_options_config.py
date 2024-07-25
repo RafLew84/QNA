@@ -22,7 +22,9 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_binary_erosion,
     perform_binary_dilation,
     perform_binary_opening,
-    perform_binary_closing
+    perform_binary_closing,
+    perform_removing_small_holes,
+    perform_removing_small_objects
 )
 
 options_config = {
@@ -77,6 +79,20 @@ options_config = {
             {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Closing"]["footprint_size"]}
         ]
     },
+    "Remove Small Holes": {
+        "labels": [("Area threshold", process_params["Remove Small Holes"]["area_threshold"]), ("Connectivity", process_params["Remove Small Holes"]["connectivity"])],
+        "sliders": [
+            {"from_": 1, "to": 256, "resolution": 1, "value": process_params["Remove Small Holes"]["area_threshold"]},
+            {"from_": 1, "to": 256, "resolution": 1, "value": process_params["Remove Small Holes"]["connectivity"]},
+        ]
+    },
+    "Remove Small Objects": {
+        "labels": [("Min size", process_params["Remove Small Objects"]["min_size"]), ("Connectivity", process_params["Remove Small Objects"]["connectivity"])],
+        "sliders": [
+            {"from_": 1, "to": 256, "resolution": 1, "value": process_params["Remove Small Objects"]["min_size"]},
+            {"from_": 1, "to": 256, "resolution": 1, "value": process_params["Remove Small Objects"]["connectivity"]},
+        ]
+    },
 }
 
 process_operations = {
@@ -89,5 +105,7 @@ process_operations = {
     "Binary Erosion": perform_binary_erosion,
     "Binary Dilation": perform_binary_dilation,
     "Binary Opening": perform_binary_opening,
-    "Binary Closing": perform_binary_closing
+    "Binary Closing": perform_binary_closing,
+    "Remove Small Holes": perform_removing_small_holes,
+    "Remove Small Objects": perform_removing_small_objects
 }

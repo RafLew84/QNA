@@ -22,4 +22,6 @@ process_params = {
     "Binary Dilation": {"footprint_type": "disk", "footprint_size": 2},
     "Binary Opening": {"footprint_type": "disk", "footprint_size": 2},
     "Binary Closing": {"footprint_type": "disk", "footprint_size": 2},
+    "Remove Small Holes": {"area_threshold": 64, "connectivity": 1},
+    "Remove Small Objects": {"min_size": 64, "connectivity": 1},
 }

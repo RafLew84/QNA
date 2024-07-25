@@ -641,7 +641,7 @@ class ProcessingTab:
             "Sauvola Threshold": lambda: params.update({
                 'window_size': self.parameter_process_sliders[0].get(),
                 'k': self.parameter_process_sliders[1].get(),
-                'r': self.parameter_process_sliders[1].get()
+                'r': self.parameter_process_sliders[2].get()
             }),
             "Binary Erosion": lambda: params.update({
                 'footprint_type': self.selected_option_var.get(),
@@ -658,6 +658,14 @@ class ProcessingTab:
             "Binary Closing": lambda: params.update({
                 'footprint_type': self.selected_option_var.get(),
                 'footprint_size': self.parameter_process_sliders[0].get()
+            }),
+            "Remove Small Holes": lambda: params.update({
+                'area_threshold': self.parameter_process_sliders[0].get(),
+                'connectivity': self.parameter_process_sliders[1].get()
+            }),
+            "Remove Small Objects": lambda: params.update({
+                'min_size': self.parameter_process_sliders[0].get(),
+                'connectivity': self.parameter_process_sliders[1].get()
             }),
         }
 

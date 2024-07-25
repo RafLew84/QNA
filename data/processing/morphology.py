@@ -15,7 +15,7 @@ from scipy import ndimage
 from skimage.morphology import reconstruction
 from skimage import img_as_float
 from skimage.morphology import (disk, binary_erosion, binary_closing, binary_dilation, binary_opening,
-                                square, diamond, star)
+                                square, diamond, star, remove_small_holes, remove_small_objects)
 
 def BinaryErosion(img, footprint_type, footprint_size):
     footprint = binary_selem(footprint_type, footprint_size)
@@ -40,6 +40,14 @@ def BinaryClosing(img, footprint_type, footprint_size):
     closed_image = binary_closing(img, footprint=footprint)
 
     return closed_image
+
+def RemoveSmallHoles(img, area_threshold,connectivity):
+    result_image = remove_small_holes(img, area_threshold, connectivity)
+    return result_image
+
+def RemoveSmallObjects(img, min_size,connectivity):
+    result_image = remove_small_objects(img, min_size, connectivity)
+    return result_image
 
 
 def binary_selem(selem_type, selem_size):

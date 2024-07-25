@@ -27,7 +27,9 @@ from data.processing.morphology import (
     BinaryErosion,
     BinaryDilation,
     BinaryClosing,
-    BinaryOpening
+    BinaryOpening,
+    RemoveSmallHoles,
+    RemoveSmallObjects
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -121,5 +123,23 @@ def perform_binary_closing(params, img):
         img=np.array(img),
         footprint_type=params['footprint_type'],
         footprint_size=params['footprint_size']
+    )
+    return process_name, result_image
+
+def perform_removing_small_holes(params, img):
+    process_name = "Remove Small Holes"
+    result_image = RemoveSmallHoles(
+        img=np.array(img),
+        area_threshold=params['area_threshold'],
+        connectivity=params['connectivity']
+    )
+    return process_name, result_image
+
+def perform_removing_small_objects(params, img):
+    process_name = "Remove Small Objects"
+    result_image = RemoveSmallObjects(
+        img=np.array(img),
+        min_size=params['min_size'],
+        connectivity=params['connectivity']
     )
     return process_name, result_image
