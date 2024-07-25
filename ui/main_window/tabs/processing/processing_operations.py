@@ -25,7 +25,9 @@ from data.processing.thresholding import (
 
 from data.processing.morphology import (
     BinaryErosion,
-    BinaryDilation
+    BinaryDilation,
+    BinaryClosing,
+    BinaryOpening
 )
 
 def create_process_operation(processed_img, process_name, params):
@@ -98,6 +100,24 @@ def perform_binary_erosion(params, img):
 def perform_binary_dilation(params, img):
     process_name = "Binary Dilation"
     result_image = BinaryDilation(
+        img=np.array(img),
+        footprint_type=params['footprint_type'],
+        footprint_size=params['footprint_size']
+    )
+    return process_name, result_image
+
+def perform_binary_opening(params, img):
+    process_name = "Binary Opening"
+    result_image = BinaryOpening(
+        img=np.array(img),
+        footprint_type=params['footprint_type'],
+        footprint_size=params['footprint_size']
+    )
+    return process_name, result_image
+
+def perform_binary_closing(params, img):
+    process_name = "Binary Closing"
+    result_image = BinaryClosing(
         img=np.array(img),
         footprint_type=params['footprint_type'],
         footprint_size=params['footprint_size']

@@ -19,5 +19,7 @@ process_params = {
     "Yen Threshold": {},
     "ISODATA Threshold": {},
     "Binary Erosion": {"footprint_type": "disk", "footprint_size": 2},
-    "Binary Dilation": {"footprint_type": "disk", "footprint_size": 2}
+    "Binary Dilation": {"footprint_type": "disk", "footprint_size": 2},
+    "Binary Opening": {"footprint_type": "disk", "footprint_size": 2},
+    "Binary Closing": {"footprint_type": "disk", "footprint_size": 2},
 }

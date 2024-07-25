@@ -20,7 +20,9 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_yen_threshold,
     perform_isodata_threshold,
     perform_binary_erosion,
-    perform_binary_dilation
+    perform_binary_dilation,
+    perform_binary_opening,
+    perform_binary_closing
 )
 
 options_config = {
@@ -61,6 +63,20 @@ options_config = {
             {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Dilation"]["footprint_size"]}
         ]
     },
+    "Binary Opening": {
+        "radio_buttons": [("Disk", "disk"), ("Square", "square"), ("Star", "star"), ("Diamond", "diamond")],
+        "labels": [("Footprint Size", process_params["Binary Opening"]["footprint_size"])],
+        "sliders": [
+            {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Opening"]["footprint_size"]}
+        ]
+    },
+    "Binary Closing": {
+        "radio_buttons": [("Disk", "disk"), ("Square", "square"), ("Star", "star"), ("Diamond", "diamond")],
+        "labels": [("Footprint Size", process_params["Binary Closing"]["footprint_size"])],
+        "sliders": [
+            {"from_": 1, "to": 50, "resolution": 1, "value": process_params["Binary Closing"]["footprint_size"]}
+        ]
+    },
 }
 
 process_operations = {
@@ -71,5 +87,7 @@ process_operations = {
     "Yen Threshold": perform_yen_threshold,
     "ISODATA Threshold": perform_isodata_threshold,
     "Binary Erosion": perform_binary_erosion,
-    "Binary Dilation": perform_binary_dilation
+    "Binary Dilation": perform_binary_dilation,
+    "Binary Opening": perform_binary_opening,
+    "Binary Closing": perform_binary_closing
 }

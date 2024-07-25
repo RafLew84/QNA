@@ -29,6 +29,18 @@ def BinaryDilation(img, footprint_type, footprint_size):
 
     return dilated_image
 
+def BinaryOpening(img, footprint_type, footprint_size):
+    footprint = binary_selem(footprint_type, footprint_size)
+    opened_image = binary_opening(img, footprint=footprint)
+
+    return opened_image
+
+def BinaryClosing(img, footprint_type, footprint_size):
+    footprint = binary_selem(footprint_type, footprint_size)
+    closed_image = binary_closing(img, footprint=footprint)
+
+    return closed_image
+
 
 def binary_selem(selem_type, selem_size):
     selem = None
