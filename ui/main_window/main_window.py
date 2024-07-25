@@ -21,6 +21,7 @@ from ui.main_window.tabs.noise.noise_analisys_tab import NoiseAnalysisTab
 from ui.main_window.tabs.detection.spots_detection_tab import SpotsDetectionTab
 from ui.main_window.tabs.preprocessing.preprocessing_tab import PreprocessingTab
 from ui.main_window.tabs.processing.processing_tab import ProcessingTab
+from ui.main_window.tabs.measurement.measurement_tab import MeasurementTab
 
 import logging
 
@@ -59,6 +60,7 @@ class App:
         self.load_data_tab = LoadDataTab(self.notebook, self)
         self.preprocessing_tab = PreprocessingTab(self.notebook, self)
         self.processing_tab = ProcessingTab(self.notebook, self)
+        self.measurement_tab = MeasurementTab(self.notebook, self)
         self.spots_detection_tab = SpotsDetectionTab(self.notebook, self)
         self.noise_analisys_tab = NoiseAnalysisTab(self.notebook, self)
 
