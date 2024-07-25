@@ -17,5 +17,6 @@ process_params = {
     "Niblack Threshold": {"window_size": 5, "k": 0.8},
     "Sauvola Threshold": {"window_size": 5, "k": 0.8, "r": 128},
     "Yen Threshold": {},
-    "ISODATA Threshold": {}
+    "ISODATA Threshold": {},
+    "Binary Erosion": {"footprint_type": "disk", "footprint_size": 2}
 }

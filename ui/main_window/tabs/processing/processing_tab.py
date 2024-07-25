@@ -643,6 +643,10 @@ class ProcessingTab:
                 'k': self.parameter_process_sliders[1].get(),
                 'r': self.parameter_process_sliders[1].get()
             }),
+            "Binary Erosion": lambda: params.update({
+                'footprint_type': self.selected_option_var.get(),
+                'footprint_size': self.parameter_process_sliders[0].get()
+            }),
         }
 
         # Apply the corresponding function based on the selected preprocess option
