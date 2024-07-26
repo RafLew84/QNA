@@ -91,7 +91,7 @@ class MeasurementTab:
     def configure_tab(self):
         # Set row and column weights
         self.measurement_tab.grid_rowconfigure(1, weight=1)
-        self.measurement_tab.grid_columnconfigure(2, weight=1)
+        self.measurement_tab.grid_columnconfigure(4, weight=1)
     
     def create_data_ui(self):
         # Button to load data
@@ -118,6 +118,23 @@ class MeasurementTab:
         self.listbox_scrollbar_processing.grid(row=1, column=1, rowspan=2, sticky="ns")
         self.data_listbox_processing.config(yscrollcommand=self.listbox_scrollbar_processing.set)
         self.data_listbox_processing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+
+        # Create listbox to display selected items for measurement
+        self.data_listbox_measurement = tk.Listbox(
+            self.measurement_tab, 
+            width=20, 
+            height=10, 
+            selectmode=tk.SINGLE
+            )
+        self.data_listbox_measurement.grid(row=1, column=2, rowspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_scrollbar_measurement = tk.Scrollbar(
+            self.measurement_tab, 
+            orient=tk.VERTICAL, 
+            command=self.data_listbox_measurement.yview
+            )
+        self.listbox_scrollbar_measurement.grid(row=1, column=3, rowspan=2, sticky="ns")
+        self.data_listbox_measurement.config(yscrollcommand=self.listbox_scrollbar_measurement.set)
+        # self.data_listbox_measurement.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
     
     def load_data_onClick(self):
         try:
@@ -198,18 +215,18 @@ class MeasurementTab:
             orient=tk.HORIZONTAL, 
             command=self.update_image_from_navigation_slider_onChange
             )
-        self.navigation_slider.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="ew")
+        self.navigation_slider.grid(row=4, column=3, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # Navigation buttons
         self.prev_button = tk.Button(self.measurement_tab, text="Prev", command=self.navigate_prev_onClick)
-        self.prev_button.grid(row=4, column=0, padx=5, pady=5)
+        self.prev_button.grid(row=4, column=2, padx=5, pady=5)
         self.next_button = tk.Button(self.measurement_tab, text="Next", command=self.navigate_next_onClick)
-        self.next_button.grid(row=4, column=4, padx=5, pady=5)
+        self.next_button.grid(row=4, column=5, padx=5, pady=5)
     
     def create_scaling_ui(self):
         # Scale factor label and slider
         self.scale_factor_label = tk.Label(self.measurement_tab, text="Scale Factor:")
-        self.scale_factor_label.grid(row=3, column=1, padx=5, pady=5, sticky="e")
+        self.scale_factor_label.grid(row=3, column=3, padx=5, pady=5, sticky="e")
         self.scale_factor_var = tk.DoubleVar()
         self.scale_factor_var.set(1.0)  # Default scale factor
         self.scale_factor_slider = tk.Scale(
@@ -221,27 +238,27 @@ class MeasurementTab:
             variable=self.scale_factor_var, 
             length=200
             )
-        self.scale_factor_slider.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
+        self.scale_factor_slider.grid(row=3, column=4, padx=5, pady=5, sticky="ew")
         
         # Bind event for slider changes
         self.scale_factor_slider.bind("<ButtonRelease-1>", self.update_image_on_rescale_slider_change)
     
     def create_canvas_ui(self):
         self.data_canvas_processing = tk.Canvas(self.measurement_tab, bg="white")
-        self.data_canvas_processing.grid(row=1, column=2, padx=5, pady=5, sticky="nsew")
+        self.data_canvas_processing.grid(row=1, column=4, padx=5, pady=5, sticky="nsew")
         self.vertical_scrollbar_processing = tk.Scrollbar(
             self.measurement_tab, 
             orient=tk.VERTICAL, 
             command=self.data_canvas_processing.yview
             )
-        self.vertical_scrollbar_processing.grid(row=1, column=3, sticky="ns")
+        self.vertical_scrollbar_processing.grid(row=1, column=5, sticky="ns")
         self.data_canvas_processing.configure(yscrollcommand=self.vertical_scrollbar_processing.set)
         self.horizontal_scrollbar_processing = tk.Scrollbar(
             self.measurement_tab, 
             orient=tk.HORIZONTAL, 
             command=self.data_canvas_processing.xview
             )
-        self.horizontal_scrollbar_processing.grid(row=2, column=2, sticky="ew")
+        self.horizontal_scrollbar_processing.grid(row=2, column=4, sticky="ew")
         self.data_canvas_processing.configure(xscrollcommand=self.horizontal_scrollbar_processing.set)
         
         # Bind event for canvas resizing
