@@ -64,7 +64,9 @@ class MeasurementTab:
 
         self.create_measurement_tab()
 
-        self.images_for_measurement = []
+        self.measured_data = {
+            'images': []
+        }
 
         self.current_data_index = 0
 
@@ -151,22 +153,22 @@ class MeasurementTab:
         clear_measurement_data()
         self.data_listbox_processing.delete(0, tk.END)
         self.data_listbox_measurement.delete(0, tk.END)
-        self.images_for_measurement.clear()
-        data_name = []
+        self.measured_data['images'].clear()
 
         data = self.app.get_data()
         if 'operations' in data[0]:
             file_ext = data[0]['file_name'][-3:]
             data_name = insert_formatted_data(file_ext, data)
             self.data_listbox_processing.insert(tk.END, *data_name)
+            self.data_listbox_measurement.insert(tk.END, *data_name)
         else:
             file_ext = data[0]['file_name'][-3:]
             for item in data:
                 data_name = insert_data(file_ext, item)
                 self.data_listbox_processing.insert(tk.END, *data_name)
+                self.data_listbox_measurement.insert(tk.END, *data_name)
         for item in data_for_measurement:
-            self.images_for_measurement.append(item['greyscale_image'])
-        self.data_listbox_measurement.insert(tk.END, *data_name)
+            self.measured_data['images'].append(item['greyscale_image'])
         self.update_navigation_slider_range()
     
     def show_data_onDataListboxSelect(self, event):
@@ -205,7 +207,7 @@ class MeasurementTab:
 
     def display_image_for_measurement(self, index):
         self.data_canvas_processing.delete("all")
-        img = self.images_for_measurement[index]
+        img = self.measured_data['images'][index]
 
         self.handle_displaying_image_on_canvas(img)
 
@@ -381,6 +383,9 @@ class MeasurementTab:
         try:
             # self.display_process_options_menu()
 
+            self.replace_button = tk.Button(self.process_section_menu, text="Replace", command=self.replace_button_onClick)
+            self.replace_button.grid(row=0, column=0, padx=5, pady=5)
+
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.process_section_menu)
             self.operations_listbox.grid(row=0, column=1,rowspan=5, padx=5, pady=5, sticky="nsew")
@@ -395,6 +400,9 @@ class MeasurementTab:
             error_msg = f"Error occurred while creating the detection section menu: {e}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+    
+    def replace_button_onClick(self):
+        pass
         
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
