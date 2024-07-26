@@ -32,6 +32,10 @@ from data.processing.morphology import (
     RemoveSmallObjects
 )
 
+from data.processing.image_edit import (
+    ImageEditRemoveWhite
+)
+
 def create_process_operation(processed_img, process_name, params):
     return {
         "processed_image": processed_img,
@@ -142,4 +146,9 @@ def perform_removing_small_objects(params, img):
         min_size=params['min_size'],
         connectivity=params['connectivity']
     )
+    return process_name, result_image
+
+def perform_manual_white_remove(params, img):
+    process_name = "Manual Edit"
+    result_image = ImageEditRemoveWhite(np.array(img))
     return process_name, result_image

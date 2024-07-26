@@ -24,7 +24,8 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_binary_opening,
     perform_binary_closing,
     perform_removing_small_holes,
-    perform_removing_small_objects
+    perform_removing_small_objects,
+    perform_manual_white_remove
 )
 
 options_config = {
@@ -107,5 +108,6 @@ process_operations = {
     "Binary Opening": perform_binary_opening,
     "Binary Closing": perform_binary_closing,
     "Remove Small Holes": perform_removing_small_holes,
-    "Remove Small Objects": perform_removing_small_objects
+    "Remove Small Objects": perform_removing_small_objects,
+    "Manual Erase": perform_manual_white_remove
 }
