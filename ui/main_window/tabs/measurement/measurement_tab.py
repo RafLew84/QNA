@@ -402,7 +402,11 @@ class MeasurementTab:
             raise ValueError(error_msg)
     
     def replace_button_onClick(self):
-        pass
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.operations_listbox:
+            operations_selected_index = self.operations_listbox.curselection()
+            operations_index = int(operations_selected_index[0])
+            self.measured_data['images'][self.current_data_index] = Image.fromarray(get_preprocessed_image_data_at_index(data_for_measurement, self.current_data_index, operations_index))
         
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
