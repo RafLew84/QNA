@@ -64,6 +64,8 @@ class MeasurementTab:
 
         self.create_measurement_tab()
 
+        self.images_for_measurement = []
+
         self.current_data_index = 0
 
     def create_measurement_tab(self):
@@ -134,7 +136,7 @@ class MeasurementTab:
             )
         self.listbox_scrollbar_measurement.grid(row=1, column=3, rowspan=2, sticky="ns")
         self.data_listbox_measurement.config(yscrollcommand=self.listbox_scrollbar_measurement.set)
-        # self.data_listbox_measurement.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
+        self.data_listbox_measurement.bind("<<ListboxSelect>>", self.show_data_onMeasurementListboxSelect)
     
     def load_data_onClick(self):
         try:
@@ -148,6 +150,9 @@ class MeasurementTab:
     def insert_formated_data_to_process(self):
         clear_measurement_data()
         self.data_listbox_processing.delete(0, tk.END)
+        self.data_listbox_measurement.delete(0, tk.END)
+        self.images_for_measurement.clear()
+        data_name = []
 
         data = self.app.get_data()
         if 'operations' in data[0]:
@@ -159,6 +164,9 @@ class MeasurementTab:
             for item in data:
                 data_name = insert_data(file_ext, item)
                 self.data_listbox_processing.insert(tk.END, *data_name)
+        for item in data_for_measurement:
+            self.images_for_measurement.append(item['greyscale_image'])
+        self.data_listbox_measurement.insert(tk.END, *data_name)
         self.update_navigation_slider_range()
     
     def show_data_onDataListboxSelect(self, event):
@@ -171,6 +179,12 @@ class MeasurementTab:
             self.navigation_slider.set(index + 1)
             self.display_image(index)
             self.refresh_data_in_operations_listbox()
+
+    def show_data_onMeasurementListboxSelect(self, event):
+        selected_index = self.data_listbox_measurement.curselection()
+        if selected_index:
+            index = int(selected_index[0])
+            self.display_image_for_measurement(index)
 
     def refresh_data_in_operations_listbox(self):
         self.operations_listbox.delete(0, tk.END)
@@ -185,6 +199,14 @@ class MeasurementTab:
 
         # Load greyscale image
         img = get_greyscale_image_at_index(data_for_measurement, index)
+        self.handle_displaying_image_on_canvas(img)
+
+        self.display_header_info_labels()
+
+    def display_image_for_measurement(self, index):
+        self.data_canvas_processing.delete("all")
+        img = self.images_for_measurement[index]
+
         self.handle_displaying_image_on_canvas(img)
 
     def handle_displaying_image_on_canvas(self, img):
