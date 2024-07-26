@@ -28,7 +28,7 @@ def insert_formatted_data(file_ext, data):
             filename_only = os.path.basename(item['file_name'])
             data_for_detection.append(item)
             i = item['frame_number']
-            frame_name = f"{filename_only}: frame {i}"
+            frame_name = f"frame {i}"
             data_name.append(frame_name)
     return data_name
 
@@ -47,7 +47,7 @@ def insert_data(file_ext, item):
     elif file_ext.lower() == "mpp":
         filename_only = os.path.basename(item['file_name'])
         for i, frame in enumerate(item['data'], start=1):
-            frame_name = f"{filename_only}: frame {i}"
+            frame_name = f"frame {i}"
             data_name.append(frame_name)
             data_for_detection.append({
                 "file_name": item['file_name'],
