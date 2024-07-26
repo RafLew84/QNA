@@ -75,11 +75,11 @@ class MeasurementTab:
 
         # Display header information labels
         self.header_section_frame = ttk.Frame(self.measurement_tab, padding="5")
-        self.header_section_frame.grid(row=0, column=2, padx=5, pady=2, sticky="nsew")
+        self.header_section_frame.grid(row=0, column=4, padx=5, pady=2, sticky="nsew")
 
         # Header section name label
         self.header_section_name_label = tk.Label(self.header_section_frame, text="Header Info:")
-        self.header_section_name_label.grid(row=0, column=0, padx=5, pady=2, sticky="e")
+        self.header_section_name_label.grid(row=0, column=2, padx=5, pady=2, sticky="e")
 
         # Display Proccess Options
         self.process_section_menu = ttk.Frame(self.measurement_tab, padding="3")
