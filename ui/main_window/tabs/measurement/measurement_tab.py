@@ -44,6 +44,11 @@ from ui.main_window.tabs.canvas_operations import (
     scale_factor_resize_image
 )
 
+from ui.main_window.tabs.measurement.measurement import (
+    label_image,
+    create_color_image
+)
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,11 +70,6 @@ class MeasurementTab:
         self.create_measurement_tab()
 
         self.measured_data = []
-
-        # {
-        #     'names': [],
-        #     'images': []
-        # }
 
         self.current_data_index = 0
 
@@ -126,6 +126,22 @@ class MeasurementTab:
         self.data_listbox_processing.config(yscrollcommand=self.listbox_scrollbar_processing.set)
         self.data_listbox_processing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
+        # Define the options for the dropdown menu
+        measured_image_options = ["Original", "Labeled"]
+
+        # Create a StringVar to hold the current choice
+        self.selected_measured_image = tk.StringVar()
+        self.selected_measured_image.set(measured_image_options[0])  # Set the default value
+
+        # Create the dropdown menu
+        measured_image_dropdown = tk.OptionMenu(
+            self.measurement_tab, 
+            self.selected_measured_image, 
+            *measured_image_options
+            )
+        # measured_image_dropdown.config(width=20)
+        measured_image_dropdown.grid(row=0, column=2, padx=5, pady=1, sticky="n")
+
         # Create listbox to display selected items for measurement
         self.data_listbox_measurement = tk.Listbox(
             self.measurement_tab, 
@@ -176,6 +192,14 @@ class MeasurementTab:
             data_name = insert_formatted_data(file_ext, data)
             self.data_listbox_processing.insert(tk.END, *data_name)
             self.data_listbox_measurement.insert(tk.END, *data_name)
+
+            for name, item in zip(data_name, data_for_measurement):
+                self.measured_data.append({
+                    'name': name,
+                    'image': item['greyscale_image'],
+                    'labeled_image': None,
+                    'labels_num': None
+                })
         else:
             file_ext = data[0]['file_name'][-3:]
             names = []
@@ -186,13 +210,14 @@ class MeasurementTab:
             self.data_listbox_processing.insert(tk.END, *names)
             self.data_listbox_measurement.insert(tk.END, *names)
 
-        for name, item in zip(names, data_for_measurement):
-            self.measured_data.append({
-                'name': name,
-                'image': item['greyscale_image']
-            })
-        # print(len(self.measured_data))
-            # self.measured_data['images'].append(item['greyscale_image'])
+            for name, item in zip(names, data_for_measurement):
+                self.measured_data.append({
+                    'name': name,
+                    'image': item['greyscale_image'],
+                    'labeled_image': None,
+                    'labels_num': None
+                })
+
         self.update_navigation_slider_range()
     
     def show_data_onDataListboxSelect(self, event):
@@ -231,10 +256,12 @@ class MeasurementTab:
 
     def display_image_for_measurement(self, index):
         self.data_canvas_processing.delete("all")
-        img = self.measured_data[index]['image']
-        # img = self.measured_data['images'][index]
-
-        self.handle_displaying_image_on_canvas(img)
+        if self.selected_measured_image.get() == "Original":
+            img = self.measured_data[index]['image']
+            self.handle_displaying_image_on_canvas(img)
+        elif self.selected_measured_image.get() == "Labeled":
+            img = Image.fromarray(create_color_image(self.measured_data[index]['labeled_image']))
+            self.handle_displaying_image_on_canvas(img)
 
     def handle_displaying_image_on_canvas(self, img):
         # Retrieve the scale factor
@@ -421,6 +448,9 @@ class MeasurementTab:
             self.operations_scrollbar = tk.Scrollbar(self.process_section_menu, orient="vertical", command=self.operations_listbox.yview)
             self.operations_scrollbar.grid(row=0, column=2, rowspan=5, padx=5, pady=5, sticky="ns")
             self.operations_listbox.config(yscrollcommand=self.operations_scrollbar.set)
+
+            self.calc_labels_button = tk.Button(self.process_section_menu, text="Calculate Labels", command=self.calculate_labels_button_onClick)
+            self.calc_labels_button.grid(row=6, column=0, padx=5, pady=5, columnspan=2)
         except Exception as e:
             error_msg = f"Error occurred while creating the detection section menu: {e}"
             logger.error(error_msg)
@@ -431,7 +461,20 @@ class MeasurementTab:
         if focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            self.measured_data[self.current_data_index]['image'] = Image.fromarray(get_preprocessed_image_data_at_index(data_for_measurement, self.current_data_index, operations_index))
+            self.measured_data[self.current_data_index]['image'] = Image.fromarray(
+                get_preprocessed_image_data_at_index(
+                    data_for_measurement, 
+                    self.current_data_index, 
+                    operations_index
+                    )
+                )
+
+    def calculate_labels_button_onClick(self):
+        for item in self.measured_data:
+            image = np.array(item['image'])
+            labeled_image, labels_num = label_image(image)
+            item['labeled_image'] = labeled_image
+            item['labels_num'] = labels_num
         
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
