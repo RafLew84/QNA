@@ -667,6 +667,9 @@ class ProcessingTab:
                 'min_size': self.parameter_process_sliders[0].get(),
                 'connectivity': self.parameter_process_sliders[1].get()
             }),
+            "Binary Threshold": lambda: params.update({
+                'threshold': self.parameter_process_sliders[0].get()
+            }),
         }
 
         # Apply the corresponding function based on the selected preprocess option

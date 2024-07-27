@@ -20,7 +20,8 @@ from data.processing.thresholding import (
     NiblackThreshold,
     SauvolaThreshold,
     YenThreshold,
-    IsodataThreshold
+    IsodataThreshold,
+    BinaryThreshold
 )
 
 from data.processing.morphology import (
@@ -151,4 +152,12 @@ def perform_removing_small_objects(params, img):
 def perform_manual_white_remove(params, img):
     process_name = "Manual Edit"
     result_image = ImageEditRemoveWhite(np.array(img))
+    return process_name, result_image
+
+def perform_binary_threshold(params, img):
+    process_name = "Binary Threshold"
+    result_image = BinaryThreshold(
+        img=np.array(img),
+        threshold=params['threshold']
+    )
     return process_name, result_image

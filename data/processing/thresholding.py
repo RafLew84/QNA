@@ -10,6 +10,8 @@ import os, sys
 
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
+import cv2
+
 from skimage.filters import (
     threshold_otsu,
     threshold_local,
@@ -58,3 +60,7 @@ def IsodataThreshold(img):
     threshold_image = img > thresh
 
     return threshold_image
+
+def BinaryThreshold(img, threshold):
+    _, binary_image = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+    return binary_image

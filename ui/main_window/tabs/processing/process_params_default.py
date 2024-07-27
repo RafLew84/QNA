@@ -24,5 +24,6 @@ process_params = {
     "Binary Closing": {"footprint_type": "disk", "footprint_size": 2},
     "Remove Small Holes": {"area_threshold": 64, "connectivity": 1},
     "Remove Small Objects": {"min_size": 64, "connectivity": 1},
-    "Manual Erase": {}
+    "Manual Erase": {},
+    "Binary Threshold": {"threshold": 127}
 }

@@ -25,10 +25,17 @@ from ui.main_window.tabs.processing.processing_operations import (
     perform_binary_closing,
     perform_removing_small_holes,
     perform_removing_small_objects,
-    perform_manual_white_remove
+    perform_manual_white_remove,
+    perform_binary_threshold
 )
 
 options_config = {
+    "Binary Threshold": {
+        "labels": [("Threshold", process_params["Binary Threshold"]["threshold"])],
+        "sliders": [
+            {"from_": 1, "to": 254, "resolution": 1, "value": process_params["Binary Threshold"]["threshold"]}
+        ]
+    },
     "Local Threshold": {
         "radio_buttons": [("Gaussian", "gaussian"), ("Mean", "mean"), ("Median", "median")],
         "labels": [("Block Size", process_params["Local Threshold"]["block_size"]), ("Offset", process_params["Local Threshold"]["offset"])],
@@ -109,5 +116,6 @@ process_operations = {
     "Binary Closing": perform_binary_closing,
     "Remove Small Holes": perform_removing_small_holes,
     "Remove Small Objects": perform_removing_small_objects,
-    "Manual Erase": perform_manual_white_remove
+    "Manual Erase": perform_manual_white_remove,
+    "Binary Threshold": perform_binary_threshold
 }
