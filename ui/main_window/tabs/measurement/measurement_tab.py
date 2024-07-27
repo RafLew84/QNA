@@ -134,6 +134,10 @@ class MeasurementTab:
             selectmode=tk.SINGLE
             )
         self.data_listbox_measurement.grid(row=1, column=2, rowspan=2, padx=5, pady=5, sticky="nsew")
+
+        self.remove_button = tk.Button(self.measurement_tab, text="Remove", command=self.remove_from_measurement_onClick)
+        self.remove_button.grid(row=3, column=2, padx=5, pady=5)
+
         self.listbox_scrollbar_measurement = tk.Scrollbar(
             self.measurement_tab, 
             orient=tk.VERTICAL, 
@@ -142,6 +146,14 @@ class MeasurementTab:
         self.listbox_scrollbar_measurement.grid(row=1, column=3, rowspan=2, sticky="ns")
         self.data_listbox_measurement.config(yscrollcommand=self.listbox_scrollbar_measurement.set)
         self.data_listbox_measurement.bind("<<ListboxSelect>>", self.show_data_onMeasurementListboxSelect)
+    
+    def remove_from_measurement_onClick(self):
+        focuse_widget = self.root.focus_get()
+        if focuse_widget == self.data_listbox_measurement:
+            data_selected_index = self.data_listbox_measurement.curselection()
+            remove_index = int(data_selected_index[0])
+            del self.measured_data[remove_index]
+            self.data_listbox_measurement.delete(remove_index)
     
     def load_data_onClick(self):
         try:
@@ -166,15 +178,20 @@ class MeasurementTab:
             self.data_listbox_measurement.insert(tk.END, *data_name)
         else:
             file_ext = data[0]['file_name'][-3:]
+            names = []
             for item in data:
                 data_name = insert_data(file_ext, item)
-                self.data_listbox_processing.insert(tk.END, *data_name)
-                self.data_listbox_measurement.insert(tk.END, *data_name)
-        for name, item in zip(data_name, data_for_measurement):
+                names.append(data_name)
+            names = [item for sublist in names for item in sublist]
+            self.data_listbox_processing.insert(tk.END, *names)
+            self.data_listbox_measurement.insert(tk.END, *names)
+
+        for name, item in zip(names, data_for_measurement):
             self.measured_data.append({
                 'name': name,
                 'image': item['greyscale_image']
             })
+        # print(len(self.measured_data))
             # self.measured_data['images'].append(item['greyscale_image'])
         self.update_navigation_slider_range()
     
