@@ -64,9 +64,12 @@ class MeasurementTab:
 
         self.create_measurement_tab()
 
-        self.measured_data = {
-            'images': []
-        }
+        self.measured_data = []
+
+        # {
+        #     'names': [],
+        #     'images': []
+        # }
 
         self.current_data_index = 0
 
@@ -153,7 +156,7 @@ class MeasurementTab:
         clear_measurement_data()
         self.data_listbox_processing.delete(0, tk.END)
         self.data_listbox_measurement.delete(0, tk.END)
-        self.measured_data['images'].clear()
+        self.measured_data.clear()
 
         data = self.app.get_data()
         if 'operations' in data[0]:
@@ -167,8 +170,12 @@ class MeasurementTab:
                 data_name = insert_data(file_ext, item)
                 self.data_listbox_processing.insert(tk.END, *data_name)
                 self.data_listbox_measurement.insert(tk.END, *data_name)
-        for item in data_for_measurement:
-            self.measured_data['images'].append(item['greyscale_image'])
+        for name, item in zip(data_name, data_for_measurement):
+            self.measured_data.append({
+                'name': name,
+                'image': item['greyscale_image']
+            })
+            # self.measured_data['images'].append(item['greyscale_image'])
         self.update_navigation_slider_range()
     
     def show_data_onDataListboxSelect(self, event):
@@ -207,7 +214,8 @@ class MeasurementTab:
 
     def display_image_for_measurement(self, index):
         self.data_canvas_processing.delete("all")
-        img = self.measured_data['images'][index]
+        img = self.measured_data[index]['image']
+        # img = self.measured_data['images'][index]
 
         self.handle_displaying_image_on_canvas(img)
 
@@ -406,7 +414,7 @@ class MeasurementTab:
         if focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            self.measured_data['images'][self.current_data_index] = Image.fromarray(get_preprocessed_image_data_at_index(data_for_measurement, self.current_data_index, operations_index))
+            self.measured_data[self.current_data_index]['image'] = Image.fromarray(get_preprocessed_image_data_at_index(data_for_measurement, self.current_data_index, operations_index))
         
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
