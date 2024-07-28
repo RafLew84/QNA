@@ -44,6 +44,11 @@ from ui.main_window.tabs.canvas_operations import (
     scale_factor_resize_image
 )
 
+from data.processing.file_process import (
+    calculate_avg_nm_per_px, 
+    calculate_pixel_to_nm_coefficients
+)
+
 from ui.main_window.tabs.measurement.measurement import (
     label_image,
     create_color_image
@@ -70,7 +75,10 @@ class MeasurementTab:
         self.create_measurement_tab()
 
         self.measured_data = []
+        self.current_size_x_coefficient = 0
+        self.current_size_y_coefficient = 0
 
+        self.current_area_coefficient = 0
         self.current_data_index = 0
 
     def create_measurement_tab(self):
@@ -187,8 +195,9 @@ class MeasurementTab:
         self.measured_data.clear()
 
         data = self.app.get_data()
+        file_ext = data[0]['file_name'][-3:]
         if 'operations' in data[0]:
-            file_ext = data[0]['file_name'][-3:]
+            # file_ext = data[0]['file_name'][-3:]
             data_name = insert_formatted_data(file_ext, data)
             self.data_listbox_processing.insert(tk.END, *data_name)
             self.data_listbox_measurement.insert(tk.END, *data_name)
@@ -201,7 +210,7 @@ class MeasurementTab:
                     'labels_num': None
                 })
         else:
-            file_ext = data[0]['file_name'][-3:]
+            # file_ext = data[0]['file_name'][-3:]
             names = []
             for item in data:
                 data_name = insert_data(file_ext, item)
@@ -231,11 +240,35 @@ class MeasurementTab:
             self.display_image(index)
             self.refresh_data_in_operations_listbox()
 
+            header_info = data_for_measurement[self.current_data_index]['header_info']
+            file_ext = get_file_extension(data_for_measurement)
+            self.current_size_x_coefficient, self.current_size_y_coefficient = calculate_pixel_to_nm_coefficients(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
+            self.current_area_coefficient = calculate_avg_nm_per_px(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
     def show_data_onMeasurementListboxSelect(self, event):
         selected_index = self.data_listbox_measurement.curselection()
         if selected_index:
             index = int(selected_index[0])
             self.display_image_for_measurement(index)
+
+            header_info = data_for_measurement[index]['header_info']
+            file_ext = get_file_extension(data_for_measurement)
+            self.current_size_x_coefficient, self.current_size_y_coefficient = calculate_pixel_to_nm_coefficients(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
+            self.current_area_coefficient = calculate_avg_nm_per_px(
+                header_info= header_info,
+                file_ext= file_ext
+            )
 
     def refresh_data_in_operations_listbox(self):
         self.operations_listbox.delete(0, tk.END)
@@ -429,7 +462,7 @@ class MeasurementTab:
                 widget.destroy()
             # Header info labels
             header_labels = []
-
+            
             selected_index = self.data_listbox_processing.curselection()
             if selected_index:
                 index = int(selected_index[0])
@@ -503,6 +536,17 @@ class MeasurementTab:
             operations_index = int(operations_selected_index[0])
 
             self.display_processed_image(operations_index)
+            header_info = data_for_measurement[self.current_data_index]['header_info']
+            file_ext = get_file_extension(data_for_measurement)
+            self.current_size_x_coefficient, self.current_size_y_coefficient = calculate_pixel_to_nm_coefficients(
+                header_info= header_info,
+                file_ext= file_ext
+            )
+
+            self.current_area_coefficient = calculate_avg_nm_per_px(
+                header_info= header_info,
+                file_ext= file_ext
+            )
         except IndexError:
             pass
 
