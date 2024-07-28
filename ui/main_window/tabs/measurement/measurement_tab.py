@@ -261,19 +261,30 @@ class MeasurementTab:
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Labeled":
             img = Image.fromarray(create_color_image(self.measured_data[index]['labeled_image']))
-            self.handle_displaying_image_on_canvas(img)
+            labels_num = self.measured_data[index]['labels_num']
+            self.handle_displaying_image_on_canvas(img, f"Region number: {labels_num}")
 
-    def handle_displaying_image_on_canvas(self, img):
+    def handle_displaying_image_on_canvas(self, img, text=None):
         # Retrieve the scale factor
         scale_factor = self.scale_factor_var.get()
         # Resize the image
         img = scale_factor_resize_image(img, scale_factor)
 
         # Convert the PIL image to a Tkinter PhotoImage
+        image_width, image_height = img.size
         photo = ImageTk.PhotoImage(img)
 
         # Display the image on the canvas
         self.data_canvas_processing.create_image(0, 0, anchor="nw", image=photo)
+        if text:
+            self.data_canvas_processing.create_text(
+                20, 
+                image_height + 10, 
+                text=text, 
+                anchor=tk.NW, 
+                font=("Arial", 16), 
+                fill="black"
+            )
 
         # Save a reference to the PhotoImage to prevent garbage collection
         self.data_canvas_processing.image = photo
