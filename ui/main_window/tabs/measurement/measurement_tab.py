@@ -11,9 +11,11 @@ import os, sys
 sys.path.insert(1, "/".join(os.path.realpath(__file__).split("/")[0:-2]))
 
 import tkinter as tk
+import cv2
 import numpy as np
 from tkinter import ttk
 from PIL import Image, ImageTk
+from collections import defaultdict
 
 from ui.main_window.tabs.measurement.measurement_data import (
     data_for_measurement,
@@ -51,7 +53,13 @@ from data.processing.file_process import (
 
 from ui.main_window.tabs.measurement.measurement import (
     label_image,
-    create_color_image
+    create_color_image,
+    calculate_regions,
+    compute_nearest_neighbor_distances,
+    track_spots,
+    analyze_images,
+    overlay_labels_on_original,
+    convert_to_tk_image
 )
 
 import logging
@@ -135,7 +143,7 @@ class MeasurementTab:
         self.data_listbox_processing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
         # Define the options for the dropdown menu
-        measured_image_options = ["Original", "Labeled"]
+        measured_image_options = ["Selected", "Original", "Labeled", "Contours"]
 
         # Create a StringVar to hold the current choice
         self.selected_measured_image = tk.StringVar()
@@ -205,9 +213,13 @@ class MeasurementTab:
             for name, item in zip(data_name, data_for_measurement):
                 self.measured_data.append({
                     'name': name,
+                    'original_image': item['greyscale_image'],
                     'image': item['greyscale_image'],
                     'labeled_image': None,
-                    'labels_num': None
+                    'labeled_overlays': None,
+                    'labels_num': None,
+                    'areas': None,
+                    'nearest_neighbour_distances': None
                 })
         else:
             # file_ext = data[0]['file_name'][-3:]
@@ -222,9 +234,13 @@ class MeasurementTab:
             for name, item in zip(names, data_for_measurement):
                 self.measured_data.append({
                     'name': name,
+                    'original_image': item['greyscale_image'],
                     'image': item['greyscale_image'],
                     'labeled_image': None,
-                    'labels_num': None
+                    'labeled_overlays': None,
+                    'labels_num': None,
+                    'areas': None,
+                    'nearest_neighbour_distances': None
                 })
 
         self.update_navigation_slider_range()
@@ -289,8 +305,14 @@ class MeasurementTab:
 
     def display_image_for_measurement(self, index):
         self.data_canvas_processing.delete("all")
-        if self.selected_measured_image.get() == "Original":
+        if self.selected_measured_image.get() == "Selected":
             img = self.measured_data[index]['image']
+            self.handle_displaying_image_on_canvas(img)
+        elif self.selected_measured_image.get() == "Original":
+            img = self.measured_data[index]['original_image']
+            self.handle_displaying_image_on_canvas(img)
+        elif self.selected_measured_image.get() == "Contours":
+            img = self.measured_data[index]['labeled_overlays']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Labeled":
             img = Image.fromarray(create_color_image(self.measured_data[index]['labeled_image']))
@@ -514,11 +536,27 @@ class MeasurementTab:
                 )
 
     def calculate_labels_button_onClick(self):
+        images = []
         for item in self.measured_data:
-            image = np.array(item['image'])
-            labeled_image, labels_num = label_image(image)
-            item['labeled_image'] = labeled_image
-            item['labels_num'] = labels_num
+            images.append(np.array(item['image']))
+        
+        all_areas, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num = analyze_images(images)
+        original_images = []
+        labeled = []
+        for i, item in enumerate(self.measured_data):
+            original_images.append(np.array(item['original_image']))
+            labeled.append(labeled_images[i])
+            item['labeled_image'] = labeled_images[i]
+            item['labels_num'] = all_labels_num[i]
+            item['areas'] = all_areas[i]
+            item['nearest_neighbour_distances'] = nearest_neighbor_distances_list[i]
+        
+        labeled_overlays = overlay_labels_on_original(original_images, labeled)
+
+        for i, item in enumerate(self.measured_data):
+            item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
+
+
         
     def get_image_based_on_selected_file_in_listbox(self, index, focuse_widget):
         img = None
