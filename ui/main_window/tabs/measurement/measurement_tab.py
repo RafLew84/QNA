@@ -15,10 +15,13 @@ import cv2
 import numpy as np
 from tkinter import ttk
 from PIL import Image, ImageTk
+import copy
 from collections import defaultdict
 
 from ui.main_window.tabs.measurement.measurement_data import (
     data_for_measurement,
+    measured_data,
+    spots_tracking,
     insert_data,
     clear_measurement_data,
     insert_formatted_data
@@ -82,7 +85,6 @@ class MeasurementTab:
 
         self.create_measurement_tab()
 
-        self.measured_data = []
         self.current_size_x_coefficient = 0
         self.current_size_y_coefficient = 0
 
@@ -184,7 +186,7 @@ class MeasurementTab:
         if focuse_widget == self.data_listbox_measurement:
             data_selected_index = self.data_listbox_measurement.curselection()
             remove_index = int(data_selected_index[0])
-            del self.measured_data[remove_index]
+            del measured_data[remove_index]
             self.data_listbox_measurement.delete(remove_index)
     
     def load_data_onClick(self):
@@ -200,7 +202,7 @@ class MeasurementTab:
         clear_measurement_data()
         self.data_listbox_processing.delete(0, tk.END)
         self.data_listbox_measurement.delete(0, tk.END)
-        self.measured_data.clear()
+        measured_data.clear()
 
         data = self.app.get_data()
         file_ext = data[0]['file_name'][-3:]
@@ -211,7 +213,7 @@ class MeasurementTab:
             self.data_listbox_measurement.insert(tk.END, *data_name)
 
             for name, item in zip(data_name, data_for_measurement):
-                self.measured_data.append({
+                measured_data.append({
                     'name': name,
                     'original_image': item['greyscale_image'],
                     'image': item['greyscale_image'],
@@ -219,6 +221,7 @@ class MeasurementTab:
                     'labeled_overlays': None,
                     'labels_num': None,
                     'areas': None,
+                    'lables_names': None,
                     'nearest_neighbour_distances': None
                 })
         else:
@@ -232,13 +235,14 @@ class MeasurementTab:
             self.data_listbox_measurement.insert(tk.END, *names)
 
             for name, item in zip(names, data_for_measurement):
-                self.measured_data.append({
+                measured_data.append({
                     'name': name,
                     'original_image': item['greyscale_image'],
                     'image': item['greyscale_image'],
                     'labeled_image': None,
                     'labeled_overlays': None,
                     'labels_num': None,
+                    'lables_names': None,
                     'areas': None,
                     'nearest_neighbour_distances': None
                 })
@@ -306,17 +310,17 @@ class MeasurementTab:
     def display_image_for_measurement(self, index):
         self.data_canvas_processing.delete("all")
         if self.selected_measured_image.get() == "Selected":
-            img = self.measured_data[index]['image']
+            img = measured_data[index]['image']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Original":
-            img = self.measured_data[index]['original_image']
+            img = measured_data[index]['original_image']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Contours":
-            img = self.measured_data[index]['labeled_overlays']
+            img = measured_data[index]['labeled_overlays']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Labeled":
-            img = Image.fromarray(create_color_image(self.measured_data[index]['labeled_image']))
-            labels_num = self.measured_data[index]['labels_num']
+            img = Image.fromarray(create_color_image(measured_data[index]['labeled_image']))
+            labels_num = measured_data[index]['labels_num']
             self.handle_displaying_image_on_canvas(img, f"Region number: {labels_num}")
 
     def handle_displaying_image_on_canvas(self, img, text=None):
@@ -527,7 +531,7 @@ class MeasurementTab:
         if focuse_widget == self.operations_listbox:
             operations_selected_index = self.operations_listbox.curselection()
             operations_index = int(operations_selected_index[0])
-            self.measured_data[self.current_data_index]['image'] = Image.fromarray(
+            measured_data[self.current_data_index]['image'] = Image.fromarray(
                 get_preprocessed_image_data_at_index(
                     data_for_measurement, 
                     self.current_data_index, 
@@ -537,24 +541,29 @@ class MeasurementTab:
 
     def calculate_labels_button_onClick(self):
         images = []
-        for item in self.measured_data:
+        for item in measured_data:
             images.append(np.array(item['image']))
         
-        all_areas, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num = analyze_images(images)
+        all_areas, all_labels_names, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num = analyze_images(images)
         original_images = []
         labeled = []
-        for i, item in enumerate(self.measured_data):
+        labels_names = []
+        for i, item in enumerate(measured_data):
             original_images.append(np.array(item['original_image']))
+            labels_names.append(all_labels_names[i])
             labeled.append(labeled_images[i])
             item['labeled_image'] = labeled_images[i]
             item['labels_num'] = all_labels_num[i]
             item['areas'] = all_areas[i]
+            item['labels_names'] = all_labels_names[i]
             item['nearest_neighbour_distances'] = nearest_neighbor_distances_list[i]
         
-        labeled_overlays = overlay_labels_on_original(original_images, labeled)
+        labeled_overlays = overlay_labels_on_original(original_images, labeled, labels_names)
 
-        for i, item in enumerate(self.measured_data):
+        for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
+
+        spots_tracking = spot_tracks
 
 
         

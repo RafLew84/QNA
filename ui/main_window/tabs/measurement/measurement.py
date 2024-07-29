@@ -27,8 +27,10 @@ from PIL import Image, ImageTk
 #     return labeled_image, regions
 
 def label_image(img):
-    labeled_image, regions_num = morphology.label(img, 0, True)
-    return labeled_image, regions_num
+    labeled_image = morphology.label(img)
+    regions_num = np.max(labeled_image)  # The number of distinct regions (excluding the background)
+    names = ["{:03}".format(i) for i in range(1, regions_num + 1)]  # Creating label names for regions
+    return labeled_image, regions_num, names
 
 def calculate_regions(labeled_image):
     regions = measure.regionprops(labeled_image)
@@ -65,15 +67,17 @@ def analyze_images(images, threshold=5):
     all_centroids = []
     all_areas = []
     all_labels_num = []
+    all_labels_names = []
     nearest_neighbor_distances_list = []
     spot_tracks = defaultdict(list)
     labeled_images = []
     
     for frame_index, img in enumerate(images):
-        labeled_image, labels_num = label_image(img)
+        labeled_image, labels_num, labels_names = label_image(img)
         regions = calculate_regions(labeled_image)
         labeled_images.append(labeled_image)
         all_labels_num.append(labels_num)
+        all_labels_names.append(labels_names)
 
         all_regions.append(regions)
         
@@ -101,7 +105,7 @@ def analyze_images(images, threshold=5):
                 new_spot_index = max_existing_index + 1 + i
                 spot_tracks[new_spot_index].append((frame_index, centroids[spot_idx], areas[spot_idx]))
     
-    return all_areas, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num
+    return all_areas, all_labels_names, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num
 
 # def overlay_labels_on_original(original_images, labeled_images):
 #     labeled_overlays = []
@@ -114,9 +118,23 @@ def analyze_images(images, threshold=5):
 #         labeled_overlays.append(overlay)
 #     return labeled_overlays
 
-def overlay_labels_on_original(original_images, labeled_images):
+# def overlay_labels_on_original(original_images, labeled_images):
+#     labeled_overlays = []
+#     for original_image, labeled_image in zip(original_images, labeled_images):
+#         overlay = original_image.copy()
+        
+#         # Perform Canny edge detection on the labeled image
+#         edges = feature.canny(labeled_image > 0.5)  # Canny edge detector expects a binary image
+        
+#         # Overlay edges on the original image
+#         overlay[edges] = 255  # Marking edge points as white
+        
+#         labeled_overlays.append(overlay)
+#     return labeled_overlays
+
+def overlay_labels_on_original(original_images, labeled_images, label_names):
     labeled_overlays = []
-    for original_image, labeled_image in zip(original_images, labeled_images):
+    for original_image, labeled_image, label_name in zip(original_images, labeled_images, label_names):
         overlay = original_image.copy()
         
         # Perform Canny edge detection on the labeled image
@@ -124,6 +142,22 @@ def overlay_labels_on_original(original_images, labeled_images):
         
         # Overlay edges on the original image
         overlay[edges] = 255  # Marking edge points as white
+
+        # Ensure label_name is a string
+        label_name = str(label_name)
+        
+        # Convert labeled image to 8-bit single channel image for findContours
+        labeled_image_8bit = (labeled_image > 0).astype(np.uint8)
+        
+        contours, _ = cv2.findContours(labeled_image_8bit, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for i, contour in enumerate(contours):
+            M = cv2.moments(contour)
+            name = label_name.strip("[]'")
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                overlay = cv2.putText(overlay, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
         
         labeled_overlays.append(overlay)
     return labeled_overlays

@@ -15,6 +15,9 @@ from data.processing.data_process import (
 )
 
 data_for_measurement = []
+measured_data = []
+spots_tracking = {}
+
 
 def clear_measurement_data():
     data_for_measurement.clear()
