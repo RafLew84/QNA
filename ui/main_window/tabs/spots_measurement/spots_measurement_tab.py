@@ -543,21 +543,23 @@ class SpotsMeasurementTab:
         for item in measured_data:
             images.append(np.array(item['image']))
         
-        all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num = analyze_images(images)
+        all_centrodids, all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num = analyze_images(images)
         original_images = []
         labeled = []
         labels_names = []
+        centroids = []
         for i, item in enumerate(measured_data):
             original_images.append(np.array(item['original_image']))
             labels_names.append(all_labels_names[i])
             labeled.append(labeled_images[i])
+            centroids.append(all_centrodids[i])
             item['labeled_image'] = labeled_images[i]
             item['labels_num'] = all_labels_num[i]
             item['areas'] = all_areas[i]
             item['labels_names'] = all_labels_names[i]
             item['nearest_neighbour_distances'] = nearest_neighbor_distances_list[i]
         
-        labeled_overlays = overlay_labels_on_original(original_images, labeled, labels_names)
+        labeled_overlays = overlay_labels_on_original(original_images, labeled, labels_names, centroids)
 
         for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])

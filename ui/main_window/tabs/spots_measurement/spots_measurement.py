@@ -101,7 +101,7 @@ def analyze_images(images, threshold=5):
         #         new_spot_index = max_existing_index + 1 + i
         #         spot_tracks[new_spot_index].append((frame_index, centroids[spot_idx], areas[spot_idx]))
     
-    return all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num
+    return all_centroids, all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num
 
 # def overlay_labels_on_original(original_images, labeled_images):
 #     labeled_overlays = []
@@ -128,33 +128,34 @@ def analyze_images(images, threshold=5):
 #         labeled_overlays.append(overlay)
 #     return labeled_overlays
 
-def overlay_labels_on_original(original_images, labeled_images, label_names):
+def overlay_labels_on_original(original_images, labeled_images, label_names, centroids):
     labeled_overlays = []
-    print(label_names[0])
-    for original_image, labeled_image, label_name in zip(original_images, labeled_images, label_names):
+    for original_image, labeled_image, label_name, centroid in zip(original_images, labeled_images, label_names, centroids):
         overlay = original_image.copy()
         
         # Perform Canny edge detection on the labeled image
         edges = feature.canny(labeled_image > 0.5)  # Canny edge detector expects a binary image
         
         # Overlay edges on the original image
-        overlay[edges] = 255  # Marking edge points as white
+        overlay[edges] = 0  # Marking edge points as white
 
         # Ensure label_name is a string
         # label_name = str(label_name)
         
         # Convert labeled image to 8-bit single channel image for findContours
         labeled_image_8bit = (labeled_image > 0).astype(np.uint8)
+        for label, center in zip(label_name, centroid):
+            overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 1)
         
-        contours, _ = cv2.findContours(labeled_image_8bit, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # contours, _ = cv2.findContours(labeled_image_8bit, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        for i, contour in enumerate(contours):
-            M = cv2.moments(contour)
-            name = label_name[i]
-            if M["m00"] != 0:
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-                overlay = cv2.putText(overlay, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
+        # for i, contour in enumerate(contours):
+        #     M = cv2.moments(contour)
+        #     name = label_name[i]
+        #     if M["m00"] != 0:
+        #         cX = int(M["m10"] / M["m00"])
+        #         cY = int(M["m01"] / M["m00"])
+        #         overlay = cv2.putText(overlay, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
         
         labeled_overlays.append(overlay)
     return labeled_overlays
