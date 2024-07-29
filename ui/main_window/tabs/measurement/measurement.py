@@ -21,10 +21,6 @@ from skimage import feature
 import tkinter as tk
 from PIL import Image, ImageTk
 
-# def process_image(image):
-#     labeled_image = morphology.label(image)
-#     regions = (labeled_image)
-#     return labeled_image, regions
 
 def label_image(img):
     labeled_image = morphology.label(img)
@@ -69,7 +65,7 @@ def analyze_images(images, threshold=5):
     all_labels_num = []
     all_labels_names = []
     nearest_neighbor_distances_list = []
-    spot_tracks = defaultdict(list)
+    # spot_tracks = defaultdict(list)
     labeled_images = []
     
     for frame_index, img in enumerate(images):
@@ -90,22 +86,22 @@ def analyze_images(images, threshold=5):
         nearest_neighbor_distances = compute_nearest_neighbor_distances(centroids)
         nearest_neighbor_distances_list.append(nearest_neighbor_distances)
         
-        if frame_index == 0:
-            for i, (centroid, area) in enumerate(zip(centroids, areas)):
-                spot_tracks[i].append((frame_index, centroid, area))
-        else:
-            previous_centroids = all_centroids[frame_index - 1]
-            matched_indices, new_spots = track_spots(previous_centroids, centroids, threshold)
+        # if frame_index == 0:
+        #     for i, (centroid, area) in enumerate(zip(centroids, areas)):
+        #         spot_tracks[i].append((frame_index, centroid, area))
+        # else:
+        #     previous_centroids = all_centroids[frame_index - 1]
+        #     matched_indices, new_spots = track_spots(previous_centroids, centroids, threshold)
             
-            for current_idx, prev_idx in matched_indices:
-                spot_tracks[prev_idx].append((frame_index, centroids[current_idx], areas[current_idx]))
+        #     for current_idx, prev_idx in matched_indices:
+        #         spot_tracks[prev_idx].append((frame_index, centroids[current_idx], areas[current_idx]))
             
-            max_existing_index = max(spot_tracks.keys()) if spot_tracks else -1
-            for i, spot_idx in enumerate(new_spots):
-                new_spot_index = max_existing_index + 1 + i
-                spot_tracks[new_spot_index].append((frame_index, centroids[spot_idx], areas[spot_idx]))
+        #     max_existing_index = max(spot_tracks.keys()) if spot_tracks else -1
+        #     for i, spot_idx in enumerate(new_spots):
+        #         new_spot_index = max_existing_index + 1 + i
+        #         spot_tracks[new_spot_index].append((frame_index, centroids[spot_idx], areas[spot_idx]))
     
-    return all_areas, all_labels_names, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num
+    return all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num
 
 # def overlay_labels_on_original(original_images, labeled_images):
 #     labeled_overlays = []

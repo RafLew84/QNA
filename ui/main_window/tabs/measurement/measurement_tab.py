@@ -21,7 +21,6 @@ from collections import defaultdict
 from ui.main_window.tabs.measurement.measurement_data import (
     data_for_measurement,
     measured_data,
-    spots_tracking,
     insert_data,
     clear_measurement_data,
     insert_formatted_data
@@ -562,8 +561,6 @@ class MeasurementTab:
 
         for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
-
-        spots_tracking = spot_tracks
 
 
         
