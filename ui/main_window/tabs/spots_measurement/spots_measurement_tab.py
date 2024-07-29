@@ -18,7 +18,7 @@ from PIL import Image, ImageTk
 import copy
 from collections import defaultdict
 
-from ui.main_window.tabs.measurement.measurement_data import (
+from ui.main_window.tabs.spots_measurement.spots_measurement_data import (
     data_for_measurement,
     measured_data,
     insert_data,
@@ -53,7 +53,7 @@ from data.processing.file_process import (
     calculate_pixel_to_nm_coefficients
 )
 
-from ui.main_window.tabs.measurement.measurement import (
+from ui.main_window.tabs.spots_measurement.spots_measurement import (
     label_image,
     create_color_image,
     calculate_regions,
@@ -68,13 +68,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class MeasurementTab:
+class SpotsMeasurementTab:
     """Class representing the tab for spots detection in the application."""
 
     def __init__(self, notebook, app):
 
         self.measurement_tab = ttk.Frame(notebook)
-        notebook.add(self.measurement_tab, text="Measurement")
+        notebook.add(self.measurement_tab, text="Spots Measurement")
         self.app = app
         self.root = app.root
 
@@ -543,7 +543,7 @@ class MeasurementTab:
         for item in measured_data:
             images.append(np.array(item['image']))
         
-        all_areas, all_labels_names, nearest_neighbor_distances_list, spot_tracks, labeled_images, all_labels_num = analyze_images(images)
+        all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num = analyze_images(images)
         original_images = []
         labeled = []
         labels_names = []

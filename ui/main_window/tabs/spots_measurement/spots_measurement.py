@@ -130,6 +130,7 @@ def analyze_images(images, threshold=5):
 
 def overlay_labels_on_original(original_images, labeled_images, label_names):
     labeled_overlays = []
+    print(label_names[0])
     for original_image, labeled_image, label_name in zip(original_images, labeled_images, label_names):
         overlay = original_image.copy()
         
@@ -140,7 +141,7 @@ def overlay_labels_on_original(original_images, labeled_images, label_names):
         overlay[edges] = 255  # Marking edge points as white
 
         # Ensure label_name is a string
-        label_name = str(label_name)
+        # label_name = str(label_name)
         
         # Convert labeled image to 8-bit single channel image for findContours
         labeled_image_8bit = (labeled_image > 0).astype(np.uint8)
@@ -149,7 +150,7 @@ def overlay_labels_on_original(original_images, labeled_images, label_names):
 
         for i, contour in enumerate(contours):
             M = cv2.moments(contour)
-            name = label_name.strip("[]'")
+            name = label_name[i]
             if M["m00"] != 0:
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
