@@ -38,11 +38,18 @@ def create_color_image(labeled_image):
     color_image = (color_image * 255).astype(np.uint8)  # Convert to 8-bit color
     return color_image
 
-def compute_nearest_neighbor_distances(centroids):
+# def compute_nearest_neighbor_distances(centroids):
+#     tree = KDTree(centroids)
+#     distances, _ = tree.query(centroids, k=2)  # k=2 because the first neighbor is the point itself
+#     nearest_neighbor_distances = distances[:, 1]  # The second column contains the nearest neighbor distances
+#     return nearest_neighbor_distances
+
+def compute_nearest_neighbor_distances(centroids, names):
     tree = KDTree(centroids)
-    distances, _ = tree.query(centroids, k=2)  # k=2 because the first neighbor is the point itself
+    distances, indices = tree.query(centroids, k=2)  # k=2 because the first neighbor is the point itself
     nearest_neighbor_distances = distances[:, 1]  # The second column contains the nearest neighbor distances
-    return nearest_neighbor_distances
+    nearest_neighbor_names = [names[idx[1]] for idx in indices]  # Retrieve names of the nearest neighbors
+    return nearest_neighbor_distances, nearest_neighbor_names
 
 def track_spots(previous_centroids, current_centroids, threshold=5):
     tree = KDTree(previous_centroids)
@@ -65,6 +72,7 @@ def analyze_images(images, threshold=5):
     all_labels_num = []
     all_labels_names = []
     nearest_neighbor_distances_list = []
+    nearest_neighbor_names = []
     # spot_tracks = defaultdict(list)
     labeled_images = []
     
@@ -83,8 +91,9 @@ def analyze_images(images, threshold=5):
         all_centroids.append(centroids)
         all_areas.append(areas)
         
-        nearest_neighbor_distances = compute_nearest_neighbor_distances(centroids)
+        nearest_neighbor_distances, nearest_neighbor_name = compute_nearest_neighbor_distances(centroids, labels_names)
         nearest_neighbor_distances_list.append(nearest_neighbor_distances)
+        nearest_neighbor_names.append(nearest_neighbor_name)
         
         # if frame_index == 0:
         #     for i, (centroid, area) in enumerate(zip(centroids, areas)):
@@ -101,7 +110,7 @@ def analyze_images(images, threshold=5):
         #         new_spot_index = max_existing_index + 1 + i
         #         spot_tracks[new_spot_index].append((frame_index, centroids[spot_idx], areas[spot_idx]))
     
-    return all_centroids, all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num
+    return all_centroids, all_areas, all_labels_names, nearest_neighbor_distances_list, nearest_neighbor_names, labeled_images, all_labels_num
 
 # def overlay_labels_on_original(original_images, labeled_images):
 #     labeled_overlays = []

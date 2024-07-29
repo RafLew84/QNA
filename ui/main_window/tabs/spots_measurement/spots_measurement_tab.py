@@ -221,7 +221,8 @@ class SpotsMeasurementTab:
                     'labels_num': None,
                     'areas': None,
                     'lables_names': None,
-                    'nearest_neighbour_distances': None
+                    'nearest_neighbor_distances': None,
+                    'nearest_neighbor_name': None
                 })
         else:
             # file_ext = data[0]['file_name'][-3:]
@@ -243,7 +244,8 @@ class SpotsMeasurementTab:
                     'labels_num': None,
                     'lables_names': None,
                     'areas': None,
-                    'nearest_neighbour_distances': None
+                    'nearest_neighbor_distances': None,
+                    'nerest_neighbor_name': None
                 })
 
         self.update_navigation_slider_range()
@@ -543,7 +545,7 @@ class SpotsMeasurementTab:
         for item in measured_data:
             images.append(np.array(item['image']))
         
-        all_centrodids, all_areas, all_labels_names, nearest_neighbor_distances_list, labeled_images, all_labels_num = analyze_images(images)
+        all_centrodids, all_areas, all_labels_names, nearest_neighbor_distances_list, nearest_neighbor_names, labeled_images, all_labels_num = analyze_images(images)
         original_images = []
         labeled = []
         labels_names = []
@@ -555,14 +557,20 @@ class SpotsMeasurementTab:
             centroids.append(all_centrodids[i])
             item['labeled_image'] = labeled_images[i]
             item['labels_num'] = all_labels_num[i]
-            item['areas'] = all_areas[i]
+            item['areas'] = all_areas[i] * self.current_area_coefficient
             item['labels_names'] = all_labels_names[i]
-            item['nearest_neighbour_distances'] = nearest_neighbor_distances_list[i]
+            item['nearest_neighbor_distances'] = nearest_neighbor_distances_list[i] * self.current_size_x_coefficient
+            item['nearest_neighbor_name'] = nearest_neighbor_names[i]
         
         labeled_overlays = overlay_labels_on_original(original_images, labeled, labels_names, centroids)
 
         for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
+        
+        for i, frame in enumerate(measured_data):
+            print(f"frame {frame['name']}")
+            for name, area, distance, nname in zip(frame['labels_names'], frame['areas'], frame['nearest_neighbor_distances'], frame['nearest_neighbor_name']):
+                print(f"name: {name} - area: {area} - distance: {distance} - neighbor: {nname}")
 
 
         
