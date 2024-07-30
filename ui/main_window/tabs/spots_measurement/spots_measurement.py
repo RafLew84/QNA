@@ -146,25 +146,10 @@ def overlay_labels_on_original(original_images, labeled_images, label_names, cen
         edges = feature.canny(labeled_image > 0.5)  # Canny edge detector expects a binary image
         
         # Overlay edges on the original image
-        overlay[edges] = 0  # Marking edge points as white
-
-        # Ensure label_name is a string
-        # label_name = str(label_name)
+        overlay[edges] = 0
         
-        # Convert labeled image to 8-bit single channel image for findContours
-        labeled_image_8bit = (labeled_image > 0).astype(np.uint8)
         for label, center in zip(label_name, centroid):
             overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 1)
-        
-        # contours, _ = cv2.findContours(labeled_image_8bit, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # for i, contour in enumerate(contours):
-        #     M = cv2.moments(contour)
-        #     name = label_name[i]
-        #     if M["m00"] != 0:
-        #         cX = int(M["m10"] / M["m00"])
-        #         cY = int(M["m01"] / M["m00"])
-        #         overlay = cv2.putText(overlay, name, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255), 1)
         
         labeled_overlays.append(overlay)
     return labeled_overlays

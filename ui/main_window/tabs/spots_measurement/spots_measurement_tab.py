@@ -107,7 +107,7 @@ class SpotsMeasurementTab:
 
         # Display Proccess Options
         self.process_section_menu = ttk.Frame(self.measurement_tab, padding="3")
-        self.process_section_menu.grid(row=0, column=5,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
+        self.process_section_menu.grid(row=0, column=7,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
         self.display_header_info_labels()
         self.display_detection_section_menu()
@@ -179,6 +179,34 @@ class SpotsMeasurementTab:
         self.listbox_scrollbar_measurement.grid(row=1, column=3, rowspan=2, sticky="ns")
         self.data_listbox_measurement.config(yscrollcommand=self.listbox_scrollbar_measurement.set)
         self.data_listbox_measurement.bind("<<ListboxSelect>>", self.show_data_onMeasurementListboxSelect)
+
+        self.measurement_results_treeview = ttk.Treeview(self.measurement_tab)
+        self.measurement_results_treeview.grid(row=1, column=6, sticky="ns")
+
+        # Define columns
+        self.measurement_results_treeview["columns"] = ("label", "area", "distance", "neighbor")
+        self.measurement_results_treeview.column("#0", width=120, minwidth=25)
+        self.measurement_results_treeview.column("label", width=60, minwidth=25)
+        self.measurement_results_treeview.column("area", width=60, minwidth=25)
+        self.measurement_results_treeview.column("distance", width=60, minwidth=25)
+        self.measurement_results_treeview.column("neighbor", width=60, minwidth=25)
+
+        # Define headings
+        self.measurement_results_treeview.heading("#0", text="Frame", anchor=tk.W)
+        self.measurement_results_treeview.heading("label", text="Label", anchor=tk.W)
+        self.measurement_results_treeview.heading("area", text="Area", anchor=tk.W)
+        self.measurement_results_treeview.heading("distance", text="Distance", anchor=tk.W)
+        self.measurement_results_treeview.heading("neighbor", text="Neighbor", anchor=tk.W)
+
+    def load_data_to_treeview(self):
+        # Insert data into the Treeview widget
+        for i, frame in enumerate(measured_data):
+            frame_id = self.measurement_results_treeview.insert("", "end", text=frame['name'], open=True)
+            for name, area, distance, nname in zip(frame['labels_names'], frame['areas'], frame['nearest_neighbor_distances'], frame['nearest_neighbor_name']):
+                formatted_area = f"{area:.3f}"
+                formatted_distance = f"{distance:.3f}"
+                self.measurement_results_treeview.insert(frame_id, "end", values=(name, formatted_area, formatted_distance, nname))
+
     
     def remove_from_measurement_onClick(self):
         focuse_widget = self.root.focus_get()
@@ -567,10 +595,12 @@ class SpotsMeasurementTab:
         for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
         
-        for i, frame in enumerate(measured_data):
-            print(f"frame {frame['name']}")
-            for name, area, distance, nname in zip(frame['labels_names'], frame['areas'], frame['nearest_neighbor_distances'], frame['nearest_neighbor_name']):
-                print(f"name: {name} - area: {area} - distance: {distance} - neighbor: {nname}")
+        # for i, frame in enumerate(measured_data):
+        #     print(f"frame {frame['name']}")
+        #     for name, area, distance, nname in zip(frame['labels_names'], frame['areas'], frame['nearest_neighbor_distances'], frame['nearest_neighbor_name']):
+        #         print(f"name: {name} - area: {area} - distance: {distance} - neighbor: {nname}")
+        
+        self.load_data_to_treeview()
 
 
         
