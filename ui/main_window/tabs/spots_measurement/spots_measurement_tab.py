@@ -61,6 +61,7 @@ from ui.main_window.tabs.spots_measurement.spots_measurement import (
     track_spots,
     analyze_images,
     overlay_labels_on_original,
+    overlay_selected_label,
     convert_to_tk_image
 )
 
@@ -107,7 +108,7 @@ class SpotsMeasurementTab:
 
         # Display Proccess Options
         self.process_section_menu = ttk.Frame(self.measurement_tab, padding="3")
-        self.process_section_menu.grid(row=0, column=7,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
+        self.process_section_menu.grid(row=0, column=8,rowspan=2, columnspan=2, padx=5, pady=2, sticky="nsew")
 
         self.display_header_info_labels()
         self.display_detection_section_menu()
@@ -183,6 +184,15 @@ class SpotsMeasurementTab:
         self.measurement_results_treeview = ttk.Treeview(self.measurement_tab)
         self.measurement_results_treeview.grid(row=1, column=6, sticky="ns")
 
+        self.treeview_scrollbar_measurement = tk.Scrollbar(
+            self.measurement_tab, 
+            orient=tk.VERTICAL, 
+            command=self.measurement_results_treeview.yview
+            )
+        self.treeview_scrollbar_measurement.grid(row=1, column=7, rowspan=2, sticky="ns")
+
+        self.measurement_results_treeview.bind("<<TreeviewSelect>>", self.treeview_onSelect)
+
         # Define columns
         self.measurement_results_treeview["columns"] = ("label", "area", "distance", "neighbor")
         self.measurement_results_treeview.column("#0", width=120, minwidth=25)
@@ -206,6 +216,69 @@ class SpotsMeasurementTab:
                 formatted_area = f"{area:.3f}"
                 formatted_distance = f"{distance:.3f}"
                 self.measurement_results_treeview.insert(frame_id, "end", values=(name, formatted_area, formatted_distance, nname))
+
+    def treeview_onSelect(self, event=None):
+        # Callback function for when an item is selected
+        selected_item = self.measurement_results_treeview.selection()[0]
+        item = self.measurement_results_treeview.item(selected_item)
+        
+        # Navigate up to get the parent frame if a child item is selected
+        parent_item = self.measurement_results_treeview.parent(selected_item)
+        if parent_item:
+            frame_name = self.measurement_results_treeview.item(parent_item)['text']
+        else:
+            frame_name = item['text']
+
+        selected_data = []
+        
+        for data in measured_data:
+            if data['name'] == frame_name:
+                selected_data = data
+        
+        # print(selected_data)
+        if item['values']:
+            index = item['values'][0] - 1
+            # print(index)
+            # overlay_labels_on_original(original_images, labeled, labels_names, centroids)
+            original_image = selected_data['original_image']
+            labeled_image = selected_data['labeled_image']
+            lebels_names = selected_data['labels_names']
+            centroids = selected_data['centroids']
+
+            # selected_label = lebels_names[index]
+            # centroid = centroids[index]
+
+
+            image_data = overlay_selected_label(
+                original_image=np.array(original_image),
+                labeled_image=labeled_image,
+                label_names=lebels_names,
+                centroids=centroids,
+                index=index
+            )
+
+            img = Image.fromarray(image_data)
+
+            self.handle_displaying_image_on_canvas(img)
+
+
+        # Get column headers
+        # columns = self.measurement_results_treeview["columns"]
+        # header_names = ["Frame"] + list(columns)
+        
+        # # Get item values
+        # item_values = [frame_name] + item["values"]
+        
+        # Print headers and corresponding values
+        # selected_info = dict(zip(header_names, item_values))
+        # print("Selected Item Details:")
+        # for header, value in selected_info.items():
+        #     print(f"{header}: {value}")
+
+        # print(frame_name)
+        # print(item['values'])
+
+        # print(measured_data)
 
     
     def remove_from_measurement_onClick(self):
@@ -248,7 +321,7 @@ class SpotsMeasurementTab:
                     'labeled_overlays': None,
                     'labels_num': None,
                     'areas': None,
-                    'lables_names': None,
+                    'labels_names': None,
                     'nearest_neighbor_distances': None,
                     'nearest_neighbor_name': None
                 })
@@ -270,7 +343,7 @@ class SpotsMeasurementTab:
                     'labeled_image': None,
                     'labeled_overlays': None,
                     'labels_num': None,
-                    'lables_names': None,
+                    'labels_names': None,
                     'areas': None,
                     'nearest_neighbor_distances': None,
                     'nerest_neighbor_name': None
@@ -586,6 +659,7 @@ class SpotsMeasurementTab:
             item['labeled_image'] = labeled_images[i]
             item['labels_num'] = all_labels_num[i]
             item['areas'] = all_areas[i] * self.current_area_coefficient
+            item['centroids'] = all_centrodids[i]
             item['labels_names'] = all_labels_names[i]
             item['nearest_neighbor_distances'] = nearest_neighbor_distances_list[i] * self.current_size_x_coefficient
             item['nearest_neighbor_name'] = nearest_neighbor_names[i]

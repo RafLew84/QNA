@@ -137,22 +137,69 @@ def analyze_images(images, threshold=5):
 #         labeled_overlays.append(overlay)
 #     return labeled_overlays
 
-def overlay_labels_on_original(original_images, labeled_images, label_names, centroids):
+def overlay_labels_on_original(original_images, labeled_images, label_names, centroids, color='black'):
     labeled_overlays = []
     for original_image, labeled_image, label_name, centroid in zip(original_images, labeled_images, label_names, centroids):
         overlay = original_image.copy()
         
         # Perform Canny edge detection on the labeled image
         edges = feature.canny(labeled_image > 0.5)  # Canny edge detector expects a binary image
-        
+
+        edges_color = 0
+        text_color = (0,0,0)
+
+        if color == 'white':
+            edges_color = 255
+            text_color = (255,255,255)
         # Overlay edges on the original image
-        overlay[edges] = 0
+        overlay[edges] = edges_color
         
         for label, center in zip(label_name, centroid):
-            overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 1)
+            overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
         
         labeled_overlays.append(overlay)
     return labeled_overlays
+
+def overlay_selected_label(
+        original_image, 
+        labeled_image, 
+        label_names, 
+        centroids,
+        index,
+        label_colors="white"
+    ):
+    overlay = original_image.copy()
+    selected_label = label_names[index]
+    
+    edges = feature.canny(labeled_image > 0.5)
+
+    text_color = (0,0,0)
+    edges_color = 0
+
+    if label_colors == "white":
+        text_color = (255,255,255)
+        edges_color = 255
+    elif label_colors == "black":
+        text_color = (0,0,0)
+        edges_color = 0
+
+    overlay[edges] = edges_color
+
+    for label, center in zip(label_names, centroids):
+        if label == selected_label:
+            if label_colors == "white":
+                    text_color = (0,0,0)
+            elif label_colors == "black":
+                    text_color = (255,255,255)
+        else:
+            if label_colors == "white":
+                text_color = (255,255,255)
+            elif label_colors == "black":
+                text_color = (0,0,0) 
+        overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
+    return overlay
+
+    
 
 def convert_to_tk_image(image):
     image = Image.fromarray(image)
