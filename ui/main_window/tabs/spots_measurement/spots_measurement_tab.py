@@ -17,6 +17,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 import copy
 from collections import defaultdict
+from tkinter import filedialog
 
 from ui.main_window.tabs.spots_measurement.spots_measurement_data import (
     data_for_measurement,
@@ -64,6 +65,8 @@ from ui.main_window.tabs.spots_measurement.spots_measurement import (
     overlay_selected_label,
     convert_to_tk_image
 )
+
+from ui.main_window.tabs.spots_measurement.save_data_to_file import save_measured_data
 
 import logging
 
@@ -599,6 +602,9 @@ class SpotsMeasurementTab:
             checkbox = tk.Checkbutton(self.process_section_menu, text="Change Color", variable=self.checkbox_color_var, onvalue=255, offvalue=0)
             checkbox.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
+            self.save_data_button = tk.Button(self.process_section_menu, text="Save", command=self.save_data_button_onClick)
+            self.save_data_button.grid(row=2, column=0, padx=5, pady=5)
+
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.process_section_menu)
             self.operations_listbox.grid(row=0, column=1,rowspan=5, padx=5, pady=5, sticky="nsew")
@@ -616,6 +622,11 @@ class SpotsMeasurementTab:
             error_msg = f"Error occurred while creating the detection section menu: {e}"
             logger.error(error_msg)
             raise ValueError(error_msg)
+        
+    def save_data_button_onClick(self):
+        folder_selected = filedialog.askdirectory()
+        if folder_selected:
+            save_measured_data(measured_data, folder_selected)
     
     def replace_button_onClick(self):
         focuse_widget = self.root.focus_get()
