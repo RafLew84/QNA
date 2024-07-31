@@ -288,10 +288,13 @@ class SpotsMeasurementTab:
             self.data_listbox_measurement.insert(tk.END, *data_name)
 
             for name, item in zip(data_name, data_for_measurement):
+                img_for_analisys = item['greyscale_image']
+                if item['operations']:
+                    img_for_analisys = Image.fromarray(item['operations'][-1]['processed_image'])
                 measured_data.append({
                     'name': name,
                     'original_image': item['greyscale_image'],
-                    'image': item['greyscale_image'],
+                    'image': img_for_analisys,
                     'labeled_image': None,
                     'labeled_overlays': None,
                     'labeled_overlays_white': None,
