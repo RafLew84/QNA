@@ -145,7 +145,7 @@ class SpotsMeasurementTab:
         self.data_listbox_processing.bind("<<ListboxSelect>>", self.show_data_onDataListboxSelect)
 
         # Define the options for the dropdown menu
-        measured_image_options = ["Selected", "Original", "Labeled", "Contours"]
+        measured_image_options = ["Selected", "Original", "Labeled", "Contours", "WContours"]
 
         # Create a StringVar to hold the current choice
         self.selected_measured_image = tk.StringVar()
@@ -238,47 +238,22 @@ class SpotsMeasurementTab:
         # print(selected_data)
         if item['values']:
             index = item['values'][0] - 1
-            # print(index)
-            # overlay_labels_on_original(original_images, labeled, labels_names, centroids)
             original_image = selected_data['original_image']
             labeled_image = selected_data['labeled_image']
             lebels_names = selected_data['labels_names']
             centroids = selected_data['centroids']
-
-            # selected_label = lebels_names[index]
-            # centroid = centroids[index]
-
 
             image_data = overlay_selected_label(
                 original_image=np.array(original_image),
                 labeled_image=labeled_image,
                 label_names=lebels_names,
                 centroids=centroids,
-                index=index
+                index=index,
+                label_colors=self.checkbox_color_var.get()
             )
 
             img = Image.fromarray(image_data)
-
             self.handle_displaying_image_on_canvas(img)
-
-
-        # Get column headers
-        # columns = self.measurement_results_treeview["columns"]
-        # header_names = ["Frame"] + list(columns)
-        
-        # # Get item values
-        # item_values = [frame_name] + item["values"]
-        
-        # Print headers and corresponding values
-        # selected_info = dict(zip(header_names, item_values))
-        # print("Selected Item Details:")
-        # for header, value in selected_info.items():
-        #     print(f"{header}: {value}")
-
-        # print(frame_name)
-        # print(item['values'])
-
-        # print(measured_data)
 
     
     def remove_from_measurement_onClick(self):
@@ -319,6 +294,7 @@ class SpotsMeasurementTab:
                     'image': item['greyscale_image'],
                     'labeled_image': None,
                     'labeled_overlays': None,
+                    'labeled_overlays_white': None,
                     'labels_num': None,
                     'areas': None,
                     'labels_names': None,
@@ -342,6 +318,7 @@ class SpotsMeasurementTab:
                     'image': item['greyscale_image'],
                     'labeled_image': None,
                     'labeled_overlays': None,
+                    'labeled_overlays_white': None,
                     'labels_num': None,
                     'labels_names': None,
                     'areas': None,
@@ -419,6 +396,9 @@ class SpotsMeasurementTab:
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Contours":
             img = measured_data[index]['labeled_overlays']
+            self.handle_displaying_image_on_canvas(img)
+        elif self.selected_measured_image.get() == "WContours":
+            img = measured_data[index]['labeled_overlays_white']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Labeled":
             img = Image.fromarray(create_color_image(measured_data[index]['labeled_image']))
@@ -610,6 +590,12 @@ class SpotsMeasurementTab:
             self.replace_button = tk.Button(self.process_section_menu, text="Replace", command=self.replace_button_onClick)
             self.replace_button.grid(row=0, column=0, padx=5, pady=5)
 
+            self.checkbox_color_var = tk.IntVar()
+
+            # Create a checkbox and associate it with the IntVar
+            checkbox = tk.Checkbutton(self.process_section_menu, text="Change Color", variable=self.checkbox_color_var, onvalue=255, offvalue=0)
+            checkbox.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
             # Listbox to show all operations
             self.operations_listbox = tk.Listbox(self.process_section_menu)
             self.operations_listbox.grid(row=0, column=1,rowspan=5, padx=5, pady=5, sticky="nsew")
@@ -665,9 +651,11 @@ class SpotsMeasurementTab:
             item['nearest_neighbor_name'] = nearest_neighbor_names[i]
         
         labeled_overlays = overlay_labels_on_original(original_images, labeled, labels_names, centroids)
+        labeled_overlays_white = overlay_labels_on_original(original_images, labeled, labels_names, centroids, 'white')
 
         for i, item in enumerate(measured_data):
             item['labeled_overlays'] = Image.fromarray(labeled_overlays[i])
+            item['labeled_overlays_white'] = Image.fromarray(labeled_overlays_white[i])
         
         # for i, frame in enumerate(measured_data):
         #     print(f"frame {frame['name']}")

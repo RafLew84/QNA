@@ -166,36 +166,29 @@ def overlay_selected_label(
         label_names, 
         centroids,
         index,
-        label_colors="white"
+        label_colors=255
     ):
     overlay = original_image.copy()
     selected_label = label_names[index]
     
     edges = feature.canny(labeled_image > 0.5)
 
-    text_color = (0,0,0)
-    edges_color = 0
-
-    if label_colors == "white":
-        text_color = (255,255,255)
-        edges_color = 255
-    elif label_colors == "black":
-        text_color = (0,0,0)
-        edges_color = 0
+    text_color = (label_colors,label_colors,label_colors)
+    edges_color = label_colors
 
     overlay[edges] = edges_color
 
     for label, center in zip(label_names, centroids):
         if label == selected_label:
-            if label_colors == "white":
+            if label_colors == 255:
                     text_color = (0,0,0)
-            elif label_colors == "black":
+            elif label_colors == 0:
                     text_color = (255,255,255)
         else:
-            if label_colors == "white":
+            if label_colors == 255:
                 text_color = (255,255,255)
-            elif label_colors == "black":
-                text_color = (0,0,0) 
+            elif label_colors == 0:
+                text_color = (0,0,0)
         overlay = cv2.putText(overlay, label, (int(center[1]), int(center[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.3, text_color, 1)
     return overlay
 
