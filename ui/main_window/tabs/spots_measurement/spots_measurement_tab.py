@@ -56,7 +56,6 @@ from data.processing.file_process import (
 
 from ui.main_window.tabs.spots_measurement.spots_measurement import (
     label_image,
-    create_color_image,
     calculate_regions,
     compute_nearest_neighbor_distances,
     track_spots,
@@ -407,7 +406,7 @@ class SpotsMeasurementTab:
             img = measured_data[index]['labeled_overlays_white']
             self.handle_displaying_image_on_canvas(img)
         elif self.selected_measured_image.get() == "Labeled":
-            img = Image.fromarray(create_color_image(measured_data[index]['labeled_image']))
+            img = Image.fromarray(measured_data[index]['labeled_image'])
             labels_num = measured_data[index]['labels_num']
             self.handle_displaying_image_on_canvas(img, f"Region number: {labels_num}")
 

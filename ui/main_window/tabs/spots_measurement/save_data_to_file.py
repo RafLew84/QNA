@@ -49,9 +49,6 @@ def save_measured_data(measured_data, base_path):
     folder_path = os.path.join(base_path, current_time)
 
     # Create directories to save images
-    os.makedirs(os.path.join(folder_path, 'original_images'), exist_ok=True)
-    os.makedirs(os.path.join(folder_path, 'processed_images'), exist_ok=True)
-    os.makedirs(os.path.join(folder_path, 'labeled_images'), exist_ok=True)
     os.makedirs(os.path.join(folder_path, 'labeled_overlays'), exist_ok=True)
     os.makedirs(os.path.join(folder_path, 'labeled_overlays_white'), exist_ok=True)
     excel_file_path = os.path.join(folder_path, f"measured_data_{current_time}.xlsx")
@@ -64,9 +61,6 @@ def save_measured_data(measured_data, base_path):
         name = item['name']
 
                 # Save images using the helper function
-        save_image(item['original_image'], os.path.join(folder_path, f'original_images/{name}_original.bmp'))
-        save_image(item['image'], os.path.join(folder_path, f'processed_images/{name}_processed.bmp'))
-        save_image(item['labeled_image'], os.path.join(folder_path, f'labeled_images/{name}_labeled.bmp'))
         save_image(item['labeled_overlays'], os.path.join(folder_path, f'labeled_overlays/{name}_overlays.bmp'))
         save_image(item['labeled_overlays_white'], os.path.join(folder_path, f'labeled_overlays_white/{name}_overlays_white.bmp'))
         

@@ -32,11 +32,11 @@ def calculate_regions(labeled_image):
     regions = measure.regionprops(labeled_image)
     return regions
 
-def create_color_image(labeled_image):
-    # Create a color map with distinct colors
-    color_image = label2rgb(labeled_image, bg_label=0)
-    color_image = (color_image * 255).astype(np.uint8)  # Convert to 8-bit color
-    return color_image
+# def create_color_image(labeled_image):
+#     # Create a color map with distinct colors
+#     color_image = label2rgb(labeled_image, bg_label=0)
+#     color_image = (color_image * 255).astype(np.uint8)  # Convert to 8-bit color
+#     return color_image
 
 # def compute_nearest_neighbor_distances(centroids):
 #     tree = KDTree(centroids)
