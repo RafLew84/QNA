@@ -211,6 +211,9 @@ class SpotsMeasurementTab:
         self.measurement_results_treeview.heading("neighbor", text="Neighbor", anchor=tk.W)
 
     def load_data_to_treeview(self):
+        # Clear the Treeview widget
+        for item in self.measurement_results_treeview.get_children():
+            self.measurement_results_treeview.delete(item)
         # Insert data into the Treeview widget
         for i, frame in enumerate(measured_data):
             frame_id = self.measurement_results_treeview.insert("", "end", text=frame['name'], open=True)
